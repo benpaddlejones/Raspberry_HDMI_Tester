@@ -34,9 +34,9 @@
         "files.insertFinalNewline": true,
         "shellcheck.enable": true,
         "shellcheck.run": "onType",
-                "github.copilot.chat.reviewSelection.instructions": [
+        "github.copilot.chat.reviewSelection.instructions": [
           {
-            "file": ".github/COPILOT_INSTRUCTIONS.md",
+            "file": ".github/copilot-instructions.md",
             "when": "always"
           },
           {
@@ -44,7 +44,7 @@
             "when": "always"
           },
           {
-            "file": ".github/ARCHITECTURE_STYLE_GUIDE.md",
+            "file": ".github/copilot-codespaces-instructions.md",
             "when": "always"
           }
         ]
