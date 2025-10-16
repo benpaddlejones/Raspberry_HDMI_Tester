@@ -1,0 +1,53 @@
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Build outputs
+build/output/
+build/work/
+*.img
+*.zip
+*.gz
+*.xz
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Cache directories
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node modules (if using any Node tools)
+node_modules/
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Documentation build artifacts
+docs/_build/
+docs/.doctrees/
+
+# Test outputs
+test-results/
+coverage/

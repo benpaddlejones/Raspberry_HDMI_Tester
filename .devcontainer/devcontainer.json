@@ -1,0 +1,111 @@
+{
+  "name": "Raspberry Pi HDMI Tester Development",
+  "dockerFile": "Dockerfile",
+  
+  // Configure properties specific to VS Code
+  "customizations": {
+    "vscode": {
+      // Extensions to install in the container
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens",
+        "ms-vscode.makefile-tools",
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format"
+      ],
+      
+      // Settings for the container
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "icon": "terminal-bash"
+          }
+        },
+        "files.eol": "\n",
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "shellcheck.enable": true,
+        "shellcheck.run": "onType",
+                "github.copilot.chat.reviewSelection.instructions": [
+          {
+            "file": ".github/COPILOT_INSTRUCTIONS.md",
+            "when": "always"
+          },
+          {
+            "file": ".github/copilot-general-instructions.md",
+            "when": "always"
+          },
+          {
+            "file": ".github/ARCHITECTURE_STYLE_GUIDE.md",
+            "when": "always"
+          }
+        ]
+      }
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": false,
+      "upgradePackages": true,
+      "username": "vscode",
+      "uid": "1000",
+      "gid": "1000"
+    }
+  },
+
+  // Set container user
+  "remoteUser": "vscode",
+  
+  // Configure tool-specific properties
+  "mounts": [
+    // Mount docker socket for Docker-in-Docker
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+
+  // Add required capabilities for image building
+  "runArgs": [
+    "--privileged"
+  ],
+
+  // Environment variables
+  "containerEnv": {
+    "DEBIAN_FRONTEND": "noninteractive",
+    "TZ": "UTC"
+  },
+
+  // Increase shared memory size for building
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "32gb"
+  }
+}
