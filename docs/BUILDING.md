@@ -58,6 +58,51 @@ The `build-image.sh` script:
 4. **Deploys assets** - Copies test pattern and audio files
 5. **Runs pi-gen** - Executes the official Raspberry Pi OS builder
 6. **Creates image** - Produces a bootable `.img` file
+7. **Generates detailed logs** - Captures comprehensive build information
+
+### Logging System
+
+The build system uses a **two-tier logging approach**:
+
+#### Terminal Output (Simplified)
+Shows only major milestones for easy monitoring:
+- 🚀 Stage starting
+- ✅ Stage completed
+- ❌ Errors (if any)
+- ⏱️ Duration for each stage
+
+#### Detailed Log File (Comprehensive)
+Captures everything for debugging:
+- **Location**: `build/pi-gen-work/build-detailed.log`
+- **Contents**:
+  - Complete build environment (OS, tools, memory, disk space)
+  - All stdout/stderr output from every command
+  - Stage-by-stage timing information
+  - File checksums for assets and final image
+  - Resource usage (disk, memory) at each checkpoint
+  - Error context with surrounding log lines
+
+**The detailed log is automatically**:
+1. Saved to `build/pi-gen-work/build-detailed.log` during build
+2. Uploaded to GitHub Actions artifacts (retained 90 days)
+3. Committed to repository at `logs/successful-builds/` or `logs/failed-builds/`
+4. Named with timestamp: `build-YYYY-MM-DD_HH-MM-SS_vX.X.X.log`
+
+### Analyzing Build Logs
+
+Use the provided helper scripts to analyze logs:
+
+```bash
+# Analyze a build log (extract errors, timings, checksums)
+./scripts/analyze-logs.sh build/pi-gen-work/build-detailed.log
+
+# Compare two builds to find differences
+./scripts/compare-logs.sh \
+  logs/successful-builds/build-2025-10-17_14-30-45_v1.0.0.log \
+  logs/failed-builds/build-2025-10-17_15-22-10_FAILED.log
+```
+
+See `logs/README.md` for detailed documentation on the logging system.
 
 ### Build Stages
 The build process uses these custom stages:
@@ -75,13 +120,37 @@ The build process uses these custom stages:
 ### Build Output
 After successful build, you'll find:
 ```
-build/pi-gen-work/deploy/
-├── RaspberryPi_HDMI_Tester.img          # Bootable image file
-├── RaspberryPi_HDMI_Tester.img.zip      # Compressed image
-└── build.log                             # Build log
+build/pi-gen-work/
+├── deploy/
+│   ├── RaspberryPi_HDMI_Tester.img      # Bootable image file
+│   └── RaspberryPi_HDMI_Tester.img.zip  # Compressed image
+└── build-detailed.log                    # Comprehensive build log
+
+logs/successful-builds/
+└── build-YYYY-MM-DD_HH-MM-SS_vX.X.X.log # Committed log file
 ```
 
 ## Troubleshooting
+
+### Viewing Build Logs
+
+If your build fails, check the detailed log:
+
+```bash
+# View the complete log
+less build/pi-gen-work/build-detailed.log
+
+# Analyze for errors and warnings
+./scripts/analyze-logs.sh build/pi-gen-work/build-detailed.log
+
+# Search for specific errors
+grep -i "error" build/pi-gen-work/build-detailed.log
+
+# View last 50 lines (shows final error)
+tail -n 50 build/pi-gen-work/build-detailed.log
+```
+
+### Common Build Issues
 
 ### Build Fails with "qemu-arm-static not found"
 **Cause**: This should never happen in Codespaces - the tool is pre-installed.

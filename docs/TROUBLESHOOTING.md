@@ -3,12 +3,225 @@
 This guide helps you diagnose and fix common issues with the Raspberry Pi HDMI Tester in GitHub Codespaces and Windows 11.
 
 ## Table of Contents
+- [Using Build Logs for Debugging](#using-build-logs-for-debugging)
 - [Codespaces Build Problems](#codespaces-build-problems)
 - [Raspberry Pi Boot Issues](#raspberry-pi-boot-issues)
 - [Display Problems](#display-problems)
 - [Audio Problems](#audio-problems)
 - [Performance Issues](#performance-issues)
 - [Windows 11 Flashing Issues](#windows-11-flashing-issues)
+
+---
+
+## Using Build Logs for Debugging
+
+The build system generates comprehensive logs that capture everything for debugging. **Always check the logs first when troubleshooting build issues.**
+
+### Accessing Logs
+
+#### During Build (Local/Codespaces)
+The detailed log is created at:
+```bash
+build/pi-gen-work/build-detailed.log
+```
+
+View it in real-time:
+```bash
+# In another terminal while build is running
+tail -f build/pi-gen-work/build-detailed.log
+```
+
+#### After Build (Repository)
+Logs are automatically committed to the repository:
+```bash
+# Successful builds
+logs/successful-builds/build-YYYY-MM-DD_HH-MM-SS_vX.X.X.log
+
+# Failed builds
+logs/failed-builds/build-YYYY-MM-DD_HH-MM-SS_FAILED.log
+```
+
+#### GitHub Actions (Cloud Builds)
+Logs are available two ways:
+1. **Artifacts**: Download from workflow run (retained 90 days)
+   - Go to Actions → Select workflow run → Download "build-logs-..." artifact
+2. **Repository**: Automatically committed to `logs/` directory
+
+### Analyzing Logs
+
+#### Quick Analysis
+Use the analyze script to extract key information:
+```bash
+./scripts/analyze-logs.sh build/pi-gen-work/build-detailed.log
+```
+
+This shows:
+- Build status and duration
+- Error count and details
+- Stage timings
+- Disk space progression
+- Memory usage
+- File checksums
+- Recommendations
+
+#### Comparing Builds
+Compare a failed build with a successful one:
+```bash
+./scripts/compare-logs.sh \
+  logs/successful-builds/build-2025-10-17_14-30-45_v1.0.0.log \
+  logs/failed-builds/build-2025-10-17_15-22-10_FAILED.log
+```
+
+This highlights:
+- Metadata differences (commits, environment)
+- Error differences
+- Timing differences
+- Resource usage differences
+- Unique errors in each build
+
+#### Manual Search
+Search for specific issues:
+```bash
+# Find all errors
+grep -i "error" build/pi-gen-work/build-detailed.log
+
+# Find disk space issues
+grep -i "no space left\|disk full" build/pi-gen-work/build-detailed.log
+
+# Find memory issues
+grep -i "out of memory\|cannot allocate" build/pi-gen-work/build-detailed.log
+
+# Find network issues
+grep -i "failed to fetch\|404\|connection" build/pi-gen-work/build-detailed.log
+
+# View specific stage
+grep -A 50 "STAGE: Asset Validation" build/pi-gen-work/build-detailed.log
+```
+
+### What the Log Contains
+
+The detailed log includes:
+
+1. **Build Environment**
+   - System info (OS, kernel, architecture)
+   - CPU and memory specs
+   - Disk space availability
+   - Tool versions (qemu, git, debootstrap, etc.)
+   - Environment variables
+
+2. **Build Configuration**
+   - pi-gen config file contents
+   - Custom stage configuration
+   - Asset locations and checksums
+
+3. **Stage-by-Stage Output**
+   - Each stage has its own section
+   - Timestamps for start/end
+   - Duration for each stage
+   - All command output
+   - Resource usage checkpoints
+
+4. **Asset Validation**
+   - Test pattern image (size, dimensions, checksum)
+   - Audio file (size, format, checksum)
+   - File integrity verification
+
+5. **Error Context**
+   - When errors occur, surrounding log lines are captured
+   - Full error messages with stack traces
+   - Failed command details
+
+6. **Build Summary**
+   - Total duration
+   - Success or failure status
+   - Final system state (disk, memory)
+   - Output file locations and sizes
+
+### Common Log Patterns
+
+#### Build Succeeded
+```
+Status: ✅ SUCCESS
+Total Duration: 00:45:23 (2723s)
+```
+
+#### Build Failed
+```
+Status: ❌ FAILED
+Error: pi-gen build.sh failed with exit code 1
+```
+
+#### Disk Space Issue
+```
+ERROR: No space left on device
+Disk Usage at: After pi-gen Build
+Filesystem      Size  Used Avail Use%
+/dev/sda1        32G   32G    0G 100%
+```
+
+#### Memory Issue
+```
+ERROR: Cannot allocate memory
+Memory Usage at: Before pi-gen Build
+              total        used        free
+Mem:          4.0Gi       3.9Gi       100Mi
+```
+
+#### Network/Package Issue
+```
+ERROR: Failed to fetch http://archive.raspberrypi.org/...
+E: Unable to fetch some archives
+```
+
+### Debugging Workflow
+
+When a build fails:
+
+1. **Check the build log immediately**
+   ```bash
+   ./scripts/analyze-logs.sh build/pi-gen-work/build-detailed.log
+   ```
+
+2. **Review the error summary**
+   - Look at error count and types
+   - Check recommendations section
+
+3. **Find the error context**
+   - The log shows surrounding lines for each error
+   - Search for "ERROR CONTEXT" section
+
+4. **Check resource usage**
+   - Was disk space running low?
+   - Was memory exhausted?
+   - Review checkpoints throughout build
+
+5. **Compare with previous successful build**
+   ```bash
+   # Find your last successful build
+   ls -t logs/successful-builds/ | head -n 1
+
+   # Compare
+   ./scripts/compare-logs.sh \
+     logs/successful-builds/<successful>.log \
+     logs/failed-builds/<failed>.log
+   ```
+
+6. **Look for patterns**
+   - Same error every time? = Configuration issue
+   - Random failures? = Resource or network issue
+   - New error after code change? = Code issue
+
+### GitHub Actions Logs
+
+For cloud builds via GitHub Actions:
+
+1. **Go to repository → Actions tab**
+2. **Select the failed workflow run**
+3. **Expand the "Build Raspberry Pi image" step** for terminal output
+4. **Download the "build-logs-..." artifact** for detailed log
+5. **Check the repository's `logs/` directory** for committed log
+
+The committed log will be available even after artifacts expire (90 days).
 
 ---
 

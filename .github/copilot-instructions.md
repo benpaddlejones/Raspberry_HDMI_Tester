@@ -567,20 +567,338 @@ Current implementation status (check README for updates):
 
 ---
 
+## Logging Standards & Requirements
+
+### Mandatory Logging Approach
+
+**ALL NEW SCRIPTS AND MODIFICATIONS MUST USE THE ESTABLISHED LOGGING SYSTEM**
+
+The project uses a comprehensive two-tier logging system. When creating or modifying scripts:
+
+#### 1. **Source the Logging Utilities**
+```bash
+#!/bin/bash
+set -e
+set -u
+
+# Always source logging utilities at the top
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/logging-utils.sh"
+
+# Initialize logging
+LOG_FILE="path/to/logfile.log"
+init_logging "${LOG_FILE}"
+```
+
+#### 2. **Use Two-Tier Output**
+- **Terminal (User-facing)**: Use `log_event()` for major milestones only
+  - 🚀 Starting operations
+  - ✅ Completed successfully
+  - ❌ Failed operations
+  - ⏱️ Important timing info
+
+- **Detailed Log (Debugging)**: Use `log_info()` for verbose details
+  - All command outputs
+  - Internal state changes
+  - Variable values
+  - Detailed progress
+
+#### 3. **Required Logging Elements**
+
+**Environment Capture:**
+```bash
+# At script start
+capture_environment
+```
+
+**Stage Timing:**
+```bash
+start_stage_timer "Stage Name"
+# ... do work ...
+end_stage_timer "Stage Name" ${exit_code}
+```
+
+**Resource Monitoring:**
+```bash
+monitor_disk_space "Checkpoint Name"
+monitor_memory "Checkpoint Name"
+```
+
+**Checksums:**
+```bash
+log_checksum "path/to/file" "Description"
+```
+
+**Error Context:**
+```bash
+if [ ${exit_code} -ne 0 ]; then
+    capture_error_context "Error description"
+    finalize_log "failure" "Error message"
+    exit ${exit_code}
+fi
+```
+
+**Build Summary:**
+```bash
+# At script end
+finalize_log "success"  # or "failure" with error message
+```
+
+#### 4. **Logging Function Reference**
+
+Available functions from `scripts/logging-utils.sh`:
+- `init_logging <log_file>` - Initialize logging system
+- `log_section "Section"` - Create major section header
+- `log_subsection "Subsection"` - Create subsection header
+- `log_event "emoji" "message"` - Terminal + log output
+- `log_info "message"` - Log file only (verbose)
+- `capture_environment` - Capture system info
+- `monitor_disk_space "checkpoint"` - Log disk usage
+- `monitor_memory "checkpoint"` - Log memory usage
+- `log_checksum "file" "description"` - Log file checksum
+- `start_stage_timer "stage"` - Start timing a stage
+- `end_stage_timer "stage" <exit_code>` - End timing
+- `log_build_config "config_file"` - Log configuration
+- `log_asset_validation "path" "type"` - Validate assets
+- `capture_error_context "error"` - Capture error context
+- `finalize_log "success|failure" [error_msg]` - Finalize log
+
+#### 5. **Example Script Template**
+
+```bash
+#!/bin/bash
+set -e
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+source "${SCRIPT_DIR}/logging-utils.sh"
+
+# Setup
+LOG_FILE="${PROJECT_ROOT}/logs/my-script.log"
+init_logging "${LOG_FILE}"
+
+# Capture environment
+capture_environment
+
+# Main work
+start_stage_timer "Main Operation"
+
+log_event "🚀" "Starting main operation..."
+log_info "Detailed: Performing step 1..."
+
+# Do work, capture output to log
+if some_command >> "${BUILD_LOG_FILE}" 2>&1; then
+    log_info "✓ Command succeeded"
+else
+    EXIT_CODE=$?
+    capture_error_context "Command failed"
+    end_stage_timer "Main Operation" ${EXIT_CODE}
+    finalize_log "failure" "Command failed with exit code ${EXIT_CODE}"
+    exit ${EXIT_CODE}
+fi
+
+end_stage_timer "Main Operation" 0
+monitor_disk_space "After Main Operation"
+
+# Finalize
+finalize_log "success"
+log_event "✅" "Operation complete!"
+```
+
+---
+
+## Copilot Workflow Guidelines
+
+### How to Handle User Requests
+
+#### Standard Request Pattern
+
+When user provides a request:
+
+1. **Analyze the request** - Understand what needs to be done
+2. **Gather context** - Read relevant files, check logs
+3. **Perform the work** - Make changes, run commands
+4. **Output summary to chat** - Explain what was done
+
+**CRITICAL: DO NOT create summary documents (e.g., `SUMMARY.md`, `IMPLEMENTATION.md`) unless explicitly requested.**
+
+#### Output Format for Completed Work
+
+After completing work, provide a **chat summary** in this format:
+
+```markdown
+## ✅ [Task Name] Complete!
+
+### What Was Done
+- Item 1
+- Item 2
+- Item 3
+
+### Files Created/Modified
+- `path/to/file1` - Description
+- `path/to/file2` - Description
+
+### Key Changes
+Brief description of important changes
+
+### Next Steps (if applicable)
+1. Step 1
+2. Step 2
+
+### Testing/Verification
+How to test or verify the changes
+```
+
+**DO NOT:**
+- ❌ Create `SUMMARY.md` files after work
+- ❌ Create `IMPLEMENTATION.md` files after work
+- ❌ Create any documentation files unless updating existing docs
+- ❌ Leave loose documentation files in the root directory
+
+**DO:**
+- ✅ Update existing documentation files (README.md, docs/*.md)
+- ✅ Provide comprehensive chat summaries
+- ✅ Explain your work clearly in the chat
+- ✅ Create docs only when explicitly requested
+
+### Specific Command Patterns
+
+#### "Explain last build error"
+
+When user requests build error analysis:
+
+1. **Pull latest logs from repository:**
+   ```bash
+   git pull origin main
+   ```
+
+2. **Find the most recent failed build log:**
+   ```bash
+   LATEST_FAILED=$(ls -t logs/failed-builds/*.log 2>/dev/null | head -n 1)
+   ```
+
+3. **Analyze the log:**
+   ```bash
+   ./scripts/analyze-logs.sh "${LATEST_FAILED}"
+   ```
+
+4. **Read the analysis output and provide:**
+   - Error summary
+   - Root cause analysis
+   - Recommended fixes
+   - Related context from log
+
+5. **Output chat summary with findings**
+
+#### "Compare last two builds"
+
+1. **Pull latest logs:**
+   ```bash
+   git pull origin main
+   ```
+
+2. **Find last successful and failed builds:**
+   ```bash
+   LATEST_SUCCESS=$(ls -t logs/successful-builds/*.log 2>/dev/null | head -n 1)
+   LATEST_FAILED=$(ls -t logs/failed-builds/*.log 2>/dev/null | head -n 1)
+   ```
+
+3. **Compare:**
+   ```bash
+   ./scripts/compare-logs.sh "${LATEST_SUCCESS}" "${LATEST_FAILED}"
+   ```
+
+4. **Provide comparison summary in chat**
+
+#### "Debug build failure"
+
+1. Pull logs: `git pull origin main`
+2. Analyze most recent failed log
+3. Check for common patterns:
+   - Disk space: `grep -i "no space left" <log>`
+   - Memory: `grep -i "out of memory" <log>`
+   - Network: `grep -i "failed to fetch" <log>`
+   - Permissions: `grep -i "permission denied" <log>`
+4. Provide diagnosis and recommendations
+
+#### "Show build history"
+
+1. Pull logs: `git pull origin main`
+2. List recent builds:
+   ```bash
+   echo "Recent successful builds:"
+   ls -lht logs/successful-builds/ | head -5
+   echo ""
+   echo "Recent failed builds:"
+   ls -lht logs/failed-builds/ | head -5
+   ```
+3. Provide summary of build trends
+
+#### "Add new feature" or "Modify script"
+
+When adding features or modifying scripts:
+
+1. **Plan the work** with user if complex
+2. **Implement using logging standards** (see above)
+3. **Test the changes** if possible
+4. **Update relevant documentation** (existing files only)
+5. **Provide chat summary** of changes
+6. **Do NOT create new summary documents**
+
+### Documentation Update Rules
+
+**When to update existing documentation:**
+- New features added → Update README.md, relevant docs/*.md
+- Build process changes → Update BUILDING.md
+- New troubleshooting info → Update TROUBLESHOOTING.md
+- Configuration changes → Update CUSTOMIZATION.md
+- API/script changes → Update relevant documentation
+
+**What NOT to do:**
+- Do NOT create `CHANGES.md` or `UPDATES.md`
+- Do NOT create `IMPLEMENTATION_SUMMARY.md`
+- Do NOT create `FEATURE_NOTES.md`
+- Do NOT create any ad-hoc documentation files
+
+**Principle:** Keep documentation in **established, organized locations**. Avoid documentation sprawl.
+
+---
+
 ## Final Notes for Copilot
 
 When working on this project:
 
 1. **Always check for existing patterns** before creating new approaches
-2. **Test incrementally** - Don't make large changes without validation
-3. **Respect the build system** - pi-gen has specific requirements
-4. **Keep it simple** - Embedded systems value reliability over features
-5. **Document your reasoning** - Future developers need context
+2. **Use the logging system** for all new scripts and modifications
+3. **Pull logs before analysis** - `git pull` to get latest logs from CI/CD
+4. **Test incrementally** - Don't make large changes without validation
+5. **Respect the build system** - pi-gen has specific requirements
+6. **Keep it simple** - Embedded systems value reliability over features
+7. **Document in existing files** - Don't create loose documentation files
+8. **Summarize work in chat** - Provide clear, formatted summaries after completing work
+9. **Follow logging standards** - Two-tier output, comprehensive capture
+
+### Quick Reference Commands
+
+```bash
+# Analyze latest failed build
+git pull && ./scripts/analyze-logs.sh "$(ls -t logs/failed-builds/*.log | head -1)"
+
+# Compare builds
+./scripts/compare-logs.sh logs/successful-builds/<file> logs/failed-builds/<file>
+
+# Monitor build in progress
+tail -f build/pi-gen-work/build-detailed.log
+
+# Search for errors
+grep -i "error" build/pi-gen-work/build-detailed.log
+```
 
 Remember: The end goal is a **reliable, minimal, auto-booting HDMI tester** that works every time without human intervention. Prioritize stability and simplicity over complexity and features.
 
 ---
 
-**Last Updated**: October 16, 2025
+**Last Updated**: October 17, 2025
 **Maintained By**: Project team
 **For Questions**: See GitHub Issues or Discussions

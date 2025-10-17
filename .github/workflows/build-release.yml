@@ -87,26 +87,107 @@ jobs:
         run: |
           echo "🔨 Starting image build..."
           echo "⏱️  This will take approximately 45-60 minutes"
+          echo ""
 
-          # Make script executable
+          # Setup timestamped log filename
+          BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
+          echo "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" >> $GITHUB_ENV
+
+          # Make scripts executable
           chmod +x ./scripts/build-image.sh
+          chmod +x ./scripts/logging-utils.sh
 
-          # Run build - capture exit code
-          set -e  # Exit on error
-          sudo -E ./scripts/build-image.sh
+          # Run build (logging handled by build-image.sh)
+          BUILD_EXIT_CODE=0
+          sudo -E ./scripts/build-image.sh || BUILD_EXIT_CODE=$?
 
-          # Verify deploy directory was created
-          if [ ! -d "build/pi-gen-work/deploy" ]; then
-            echo "❌ Error: Build completed but deploy directory not found!"
-            echo "Build may have failed silently."
-            exit 1
+          # Store exit code for later steps
+          echo "BUILD_EXIT_CODE=${BUILD_EXIT_CODE}" >> $GITHUB_ENV
+
+          # Ensure we can access the log file
+          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+            sudo chown -R runner:runner build/pi-gen-work/build-detailed.log
           fi
 
-          echo "✅ Image build complete"
+          if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
+            echo ""
+            echo "❌ Build failed with exit code ${BUILD_EXIT_CODE}"
+            echo "📝 Detailed log will be uploaded as artifact and committed to repository"
+            exit ${BUILD_EXIT_CODE}
+          fi
 
-          # List what was created
-          echo "📁 Build outputs:"
-          sudo ls -lh build/pi-gen-work/deploy/
+          echo ""
+          echo "✅ Image build complete"
+          echo "� Detailed log available at: build/pi-gen-work/build-detailed.log"
+
+      - name: Upload build logs as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ env.BUILD_TIMESTAMP }}
+          path: build/pi-gen-work/build-detailed.log
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Commit build logs to repository
+        if: always()
+        run: |
+          BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
+          BUILD_EXIT_CODE="${{ env.BUILD_EXIT_CODE }}"
+          VERSION="${{ steps.config.outputs.version }}"
+
+          # Create logs directories
+          mkdir -p logs/successful-builds
+          mkdir -p logs/failed-builds
+
+          # Determine log destination and filename
+          if [ "${BUILD_EXIT_CODE}" = "0" ]; then
+            LOG_DIR="logs/successful-builds"
+            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}.log"
+            echo "📝 Committing successful build log..."
+          else
+            LOG_DIR="logs/failed-builds"
+            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_FAILED.log"
+            echo "📝 Committing failed build log..."
+          fi
+
+          # Copy log to repository
+          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+            cp build/pi-gen-work/build-detailed.log "${LOG_FILE}"
+
+            # Compress if larger than 50MB to stay within GitHub limits
+            LOG_SIZE=$(stat -f%z "${LOG_FILE}" 2>/dev/null || stat -c%s "${LOG_FILE}")
+            if [ ${LOG_SIZE} -gt 52428800 ]; then
+              echo "⚠️  Log file is large ($(( LOG_SIZE / 1048576 ))MB), compressing..."
+              gzip "${LOG_FILE}"
+              LOG_FILE="${LOG_FILE}.gz"
+            fi
+
+            # Configure git
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+
+            # Add and commit log
+            git add "${LOG_FILE}"
+            git add logs/README.md logs/.gitkeep 2>/dev/null || true
+
+            if [ "${BUILD_EXIT_CODE}" = "0" ]; then
+              git commit -m "logs: Add successful build log for v${VERSION} [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
+            else
+              git commit -m "logs: Add failed build log [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
+            fi
+
+            # Push (only if build succeeded - for failed builds we'll push at the end)
+            if [ "${BUILD_EXIT_CODE}" = "0" ]; then
+              git pull --rebase
+              git push || echo "⚠️  Failed to push logs"
+              echo "✅ Build log committed and pushed"
+            else
+              echo "✅ Build log committed (will push at workflow end)"
+            fi
+          else
+            echo "⚠️  Build log file not found at build/pi-gen-work/build-detailed.log"
+          fi
 
       - name: Prepare release assets
         id: assets
@@ -309,17 +390,53 @@ jobs:
             echo "✅ README changes committed and pushed"
           fi
 
-      - name: Build summary
+      - name: Push failed build logs
+        if: failure()
         run: |
-          echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
+          # If build failed, push the committed logs now
+          echo "📝 Pushing failed build logs to repository..."
+
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git pull --rebase || true
+          git push || echo "⚠️  Failed to push logs (may already be pushed)"
+
+          echo "✅ Failed build logs pushed"
+
+      - name: Build summary
+        if: always()
+        run: |
+          BUILD_EXIT_CODE="${{ env.BUILD_EXIT_CODE }}"
+          BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
+
+          if [ "${BUILD_EXIT_CODE}" = "0" ]; then
+            echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Tag:** ${{ steps.config.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Pre-release:** ${{ steps.config.outputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Assets Created:" >> $GITHUB_STEP_SUMMARY
+            echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔗 Release URL:" >> $GITHUB_STEP_SUMMARY
+            echo "[View Release](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/${{ steps.config.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Build Timestamp:** ${BUILD_TIMESTAMP}" >> $GITHUB_STEP_SUMMARY
+            echo "**Exit Code:** ${BUILD_EXIT_CODE}" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag:** ${{ steps.config.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Pre-release:** ${{ steps.config.outputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Assets Created:" >> $GITHUB_STEP_SUMMARY
-          echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Release URL:" >> $GITHUB_STEP_SUMMARY
-          echo "[View Release](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/${{ steps.config.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Build Logs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Detailed Log (Artifact):** Available in workflow artifacts (retained for 90 days)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Committed Log:** Check \`logs/\` directory in repository" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+            LOG_SIZE=$(stat -f%z "build/pi-gen-work/build-detailed.log" 2>/dev/null || stat -c%s "build/pi-gen-work/build-detailed.log")
+            LOG_SIZE_MB=$(( LOG_SIZE / 1048576 ))
+            echo "- **Log Size:** ${LOG_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
+          fi
