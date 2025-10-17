@@ -32,7 +32,16 @@ echo ""
 
 # Check dependencies
 echo "🔍 Checking build dependencies..."
-/usr/local/bin/check-deps
+if [ -x /usr/local/bin/check-deps ]; then
+    /usr/local/bin/check-deps
+else
+    echo "⚠️  check-deps script not found, checking manually..."
+    command -v qemu-arm-static >/dev/null 2>&1 && echo "✓ qemu-arm-static" || echo "✗ qemu-arm-static"
+    command -v debootstrap >/dev/null 2>&1 && echo "✓ debootstrap" || echo "✗ debootstrap"
+    command -v kpartx >/dev/null 2>&1 && echo "✓ kpartx" || echo "✗ kpartx"
+    command -v parted >/dev/null 2>&1 && echo "✓ parted" || echo "✗ parted"
+    command -v git >/dev/null 2>&1 && echo "✓ git" || echo "✗ git"
+fi
 echo ""
 
 # Initialize git hooks (if needed)

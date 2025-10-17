@@ -1,6 +1,9 @@
 {
   "name": "Raspberry Pi HDMI Tester Development",
-  "dockerFile": "Dockerfile",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   
   // Configure properties specific to VS Code
   "customizations": {
@@ -59,26 +62,15 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   // Features to add to the dev container
+  // Note: These features work alongside the Dockerfile
+  // Some tools may already be in the Dockerfile - features add convenience
   "features": {
     "ghcr.io/devcontainers/features/git:1": {
       "version": "latest",
-      "ppa": true
+      "ppa": false
     },
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "moby": true,
-      "dockerDashComposeVersion": "v2"
-    },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "installOhMyZsh": false,
-      "upgradePackages": true,
-      "username": "vscode",
-      "uid": "1000",
-      "gid": "1000"
     }
   },
 
