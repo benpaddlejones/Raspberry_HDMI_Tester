@@ -25,7 +25,7 @@ The Raspberry Pi HDMI Tester project is **25% complete**. The development enviro
 
 ## Immediate Next Steps
 1. Commit Dockerfile fix
-2. Create `build/config` 
+2. Create `build/config`
 3. Implement 4 custom stages
 4. Create build-image.sh
 5. Test the build

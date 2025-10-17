@@ -215,7 +215,7 @@ Project is complete when:
 
 ---
 
-**Last Updated**: October 17, 2025 09:45 UTC  
-**Next Milestone**: Complete build configuration (1 hour)  
-**Project Lead**: benpaddlejones  
+**Last Updated**: October 17, 2025 09:45 UTC
+**Next Milestone**: Complete build configuration (1 hour)
+**Project Lead**: benpaddlejones
 **Repository**: github.com/benpaddlejones/Raspberry_HDMI_Tester
