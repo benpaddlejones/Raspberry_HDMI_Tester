@@ -57,7 +57,12 @@ jobs:
             parted \
             git \
             zip \
-            coreutils
+            coreutils \
+            quilt \
+            libarchive-tools \
+            arch-test \
+            binfmt-support \
+            qemu-utils
 
           echo "✅ Dependencies installed"
 
