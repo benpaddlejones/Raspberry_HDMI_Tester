@@ -50,8 +50,8 @@
    - ❌ `scripts/setup-autostart.sh` - systemd service creation helper (optional)
 
 4. **Testing Scripts**
-   - ❌ `tests/qemu-test.sh` - QEMU emulation testing
-   - ❌ `tests/validate-image.sh` - Image validation
+   - ✅ `tests/qemu-test.sh` - QEMU emulation testing
+   - ✅ `tests/validate-image.sh` - Image validation
 
 5. **Documentation**
    - ❌ `docs/BUILDING.md` - Detailed build instructions
@@ -460,8 +460,9 @@ echo "✅ Boot configuration complete"
 
 ### Phase 5: Testing Scripts (1.5 hours)
 
-#### Task 5.1: QEMU Testing Script
+#### Task 5.1: QEMU Testing Script ✅ COMPLETE
 **File**: `tests/qemu-test.sh`
+**Status**: ✅ QEMU emulation test script created
 
 ```bash
 #!/bin/bash
@@ -502,8 +503,9 @@ qemu-system-arm \
     -no-reboot
 ```
 
-#### Task 5.2: Image Validation Script
+#### Task 5.2: Image Validation Script ✅ COMPLETE
 **File**: `tests/validate-image.sh`
+**Status**: ✅ Image validation script created
 
 ```bash
 #!/bin/bash
@@ -646,12 +648,12 @@ fi
 - [x] 11. Make all scripts executable ✅ DONE
 
 ### Testing Infrastructure
-- [ ] 12. Create qemu-test.sh ⚠️ NEXT
-- [ ] 13. Create validate-image.sh
-- [ ] 14. Create configure-boot.sh ✅ DONE (already created in Phase 4)
+- [x] 12. Create qemu-test.sh ✅ DONE
+- [x] 13. Create validate-image.sh ✅ DONE
+- [x] 14. Create configure-boot.sh ✅ DONE (already created in Phase 4)
 
 ### Documentation
-- [ ] 15. Write BUILDING.md
+- [ ] 15. Write BUILDING.md ⚠️ NEXT
 - [ ] 16. Write FLASHING.md
 - [ ] 17. Write CUSTOMIZATION.md
 - [ ] 18. Write TROUBLESHOOTING.md
