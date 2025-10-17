@@ -1,61 +1,52 @@
 # Building the Raspberry Pi HDMI Tester Image
 
-This guide walks you through building the Raspberry Pi HDMI Tester image from source.
+This guide walks you through building the Raspberry Pi HDMI Tester image using GitHub Codespaces.
 
 ## Prerequisites
 
-### System Requirements
-- **OS**: Ubuntu 24.04 LTS (or compatible Linux distribution)
-- **RAM**: 4GB minimum, 8GB recommended
-- **Disk Space**: 10GB free space minimum
-- **Architecture**: x86_64 (uses QEMU for ARM emulation)
+### GitHub Account
+- Active GitHub account with Codespaces access
+- Repository: https://github.com/benpaddlejones/Raspberry_HDMI_Tester
+
+### System Resources (Provided by Codespaces)
+- **OS**: Ubuntu 24.04 LTS (pre-configured)
+- **RAM**: 4GB minimum, 8GB in Codespaces
+- **Disk Space**: 32GB available in Codespaces
+- **Architecture**: x86_64 with QEMU for ARM emulation
 
 ### Required Tools
-All required tools are pre-installed in the development container. If building outside the container, you need:
+All required tools are **pre-installed** in the GitHub Codespaces environment:
 
 - `qemu-arm-static` - ARM emulation
 - `debootstrap` - Debian bootstrapping
 - `kpartx` - Partition management
 - `parted` - Disk partitioning
 - `git` - Version control
-- `docker` - Containerization (optional)
 - `python3` - Build scripts
+- `pi-gen` - Raspberry Pi OS image builder
 
-To verify tools are installed:
-```bash
-./scripts/check-deps
-```
+Everything is ready to use - no manual installation needed!
 
 ## Quick Start
 
-### Option 1: Using GitHub Codespaces (Recommended)
-1. Open the repository in GitHub Codespaces
-2. Wait for the dev container to build (automatic)
-3. Run the build:
+### Using GitHub Codespaces
+1. **Open the repository** in GitHub Codespaces:
+   - Navigate to https://github.com/benpaddlejones/Raspberry_HDMI_Tester
+   - Click the green **Code** button
+   - Select **Codespaces** tab
+   - Click **Create codespace on main**
+
+2. **Wait for initialization** (first time only, ~2-3 minutes):
+   - Codespaces will automatically build the development container
+   - All tools and dependencies will be configured
+   - You'll see the VS Code interface when ready
+
+3. **Run the build**:
    ```bash
    ./scripts/build-image.sh
    ```
 
-### Option 2: Using VS Code Dev Containers
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/benpaddlejones/Raspberry_HDMI_Tester.git
-   cd Raspberry_HDMI_Tester
-   ```
-2. Open in VS Code with Dev Containers extension
-3. Reopen in container (VS Code will prompt)
-4. Run the build:
-   ```bash
-   ./scripts/build-image.sh
-   ```
-
-### Option 3: Local Build (Advanced)
-1. Install all prerequisites
-2. Clone the repository
-3. Run the build:
-   ```bash
-   ./scripts/build-image.sh
-   ```
+That's it! The build process will start automatically.
 
 ## Build Process
 
@@ -93,10 +84,12 @@ build/pi-gen-work/deploy/
 ## Troubleshooting
 
 ### Build Fails with "qemu-arm-static not found"
-**Solution**: The dev container should have this pre-installed. If building locally:
+**Cause**: This should never happen in Codespaces - the tool is pre-installed.
+
+**Solution**: If you see this error, the container may not have initialized properly:
 ```bash
-sudo apt-get update
-sudo apt-get install qemu-user-static
+# Rebuild the Codespaces container:
+# Command Palette (Ctrl+Shift+P) → "Codespaces: Rebuild Container"
 ```
 
 ### Build Fails with "Permission denied"
@@ -104,27 +97,30 @@ sudo apt-get install qemu-user-static
 ```bash
 # pi-gen requires privileged access for chroot operations
 # The script will prompt for sudo password when needed
+# In Codespaces, you can use sudo without a password
 ```
 
 ### Build Fails with "No space left on device"
-**Solution**:
+**Solution**: Codespaces provides 32GB storage, which should be sufficient.
+
+If you still run out of space:
 1. Check disk space: `df -h`
 2. Clean old builds:
    ```bash
    sudo rm -rf build/pi-gen-work
    ```
-3. Docker cleanup (if using containers):
+3. Check for large files:
    ```bash
-   docker system prune -a
+   du -sh build/* | sort -h
    ```
 
 ### Build Hangs or Takes Too Long
-**Possible causes**:
-- Slow internet connection (downloading packages)
-- Insufficient RAM (increase if using VM)
-- Docker resource limits (increase in Docker settings)
+**Normal build time in Codespaces**: 45-60 minutes (first build)
 
-**Solution**: Be patient on first build. Check `build/pi-gen-work/work.log` for progress.
+**If taking longer**:
+- Check internet connection in Codespaces (status bar)
+- Check `build/pi-gen-work/work.log` for progress
+- Codespaces may throttle during high usage periods
 
 ### Build Succeeds but Image is Too Large
 **Expected size**: ~1.5-2GB for minimal image
@@ -198,7 +194,7 @@ Key settings in `build/config`:
 
 ## Clean Build
 
-To start fresh:
+To start fresh in Codespaces:
 
 ```bash
 # Remove all build artifacts
@@ -207,6 +203,26 @@ sudo rm -rf build/pi-gen-work
 # Rebuild
 ./scripts/build-image.sh
 ```
+
+## Downloading the Built Image
+
+After the build completes, download the image from Codespaces:
+
+### Method 1: Download via VS Code
+1. Navigate to `build/pi-gen-work/deploy/` in the file explorer
+2. Right-click `RaspberryPi_HDMI_Tester.img.zip`
+3. Select **Download**
+4. Save to your local computer
+
+### Method 2: Using the Terminal
+```bash
+# The image is located at:
+ls -lh build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img*
+
+# You can download it through the VS Code interface
+```
+
+The `.zip` file is compressed for faster download. Extract it on your local computer before flashing.
 
 ## Next Steps
 

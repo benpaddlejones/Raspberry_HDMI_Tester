@@ -1,6 +1,6 @@
 # Customizing the HDMI Tester
 
-This guide shows you how to customize the Raspberry Pi HDMI Tester for your needs.
+This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Codespaces.
 
 ## Table of Contents
 - [Replacing the Test Pattern](#replacing-the-test-pattern)
@@ -19,32 +19,32 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester for your need
 - **Size**: < 10MB recommended
 - **Color**: Any (RGB, RGBA)
 
-### Steps
+### Steps in Codespaces
 
-1. **Prepare your image**:
+1. **Upload your image to Codespaces**:
+   - Drag and drop your image into the file explorer
+   - Or use the upload button in VS Code
+
+2. **Prepare your image** (optional - resize if needed):
    ```bash
    # Resize to 1920x1080 if needed
    convert your-image.png -resize 1920x1080! assets/image.png
    ```
 
-2. **Replace the existing file**:
+3. **Replace the existing file**:
    ```bash
    cp your-image.png assets/image.png
    ```
 
-3. **Rebuild the image**:
+4. **Rebuild the image in Codespaces**:
    ```bash
    ./scripts/build-image.sh
    ```
 
-### Alternative: Modify Existing Image
-
-If you've already built and flashed the image:
-
-1. **Mount the SD card** on your computer
-2. **Navigate to the boot partition** and then mount the root partition
-3. **Replace** `/opt/hdmi-tester/test-pattern.png`
-4. **Unmount** and reboot
+5. **Download the new image**:
+   - Navigate to `build/pi-gen-work/deploy/`
+   - Download the `.img.zip` file
+   - Flash to SD card on Windows 11
 
 ## Replacing the Audio File
 
@@ -54,23 +54,29 @@ If you've already built and flashed the image:
 - **Recommended**: Short loops (5-30 seconds) for smaller file size
 - **Size**: < 10MB recommended
 
-### Steps
+### Steps in Codespaces
 
-1. **Prepare your audio**:
+1. **Upload your audio file to Codespaces**:
+   - Drag and drop into the file explorer
+   - Or use the upload button in VS Code
+
+2. **Prepare your audio** (optional - convert if needed):
    ```bash
-   # Convert to MP3 if needed
+   # Convert to MP3 if needed (ffmpeg is available in Codespaces)
    ffmpeg -i your-audio.wav -b:a 96k assets/audio.mp3
    ```
 
-2. **Replace the existing file**:
+3. **Replace the existing file**:
    ```bash
    cp your-audio.mp3 assets/audio.mp3
    ```
 
-3. **Rebuild the image**:
+4. **Rebuild the image in Codespaces**:
    ```bash
    ./scripts/build-image.sh
    ```
+
+5. **Download and flash** the new image
 
 ### Audio Recommendations
 

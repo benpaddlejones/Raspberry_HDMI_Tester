@@ -1,44 +1,57 @@
 # Troubleshooting Guide
 
-This guide helps you diagnose and fix common issues with the Raspberry Pi HDMI Tester.
+This guide helps you diagnose and fix common issues with the Raspberry Pi HDMI Tester in GitHub Codespaces and Windows 11.
 
 ## Table of Contents
-- [Build Problems](#build-problems)
-- [Boot Issues](#boot-issues)
+- [Codespaces Build Problems](#codespaces-build-problems)
+- [Raspberry Pi Boot Issues](#raspberry-pi-boot-issues)
 - [Display Problems](#display-problems)
 - [Audio Problems](#audio-problems)
 - [Performance Issues](#performance-issues)
-- [Network/SSH Issues](#networkssh-issues)
+- [Windows 11 Flashing Issues](#windows-11-flashing-issues)
 
 ---
 
-## Build Problems
+## Codespaces Build Problems
+
+### Codespaces Won't Start
+
+**Symptoms**: Codespace fails to create or times out
+
+**Solutions**:
+1. **Check GitHub status**: https://www.githubstatus.com/
+2. **Try creating a new Codespace**:
+   - Delete the current Codespace
+   - Create a fresh one from the repository
+3. **Check your GitHub plan**:
+   - Free tier has monthly hour limits
+   - May need to wait until next billing cycle
 
 ### Build Fails: "qemu-arm-static not found"
 
 **Symptoms**: Build stops with error about missing qemu-arm-static
 
-**Solution**:
+**Cause**: Container didn't initialize properly
+
+**Solutions**:
 ```bash
-# Check if installed
-which qemu-arm-static
-
-# If not found, install (Ubuntu/Debian)
-sudo apt-get update
-sudo apt-get install qemu-user-static
-
-# Verify installation
-qemu-arm-static --version
+# Rebuild the Codespaces container:
+# 1. Open Command Palette (Ctrl+Shift+P or F1)
+# 2. Type "Codespaces: Rebuild Container"
+# 3. Wait for rebuild to complete (2-3 minutes)
+# 4. Try the build again
 ```
 
 ### Build Fails: "Permission denied"
 
 **Symptoms**: Cannot create directories or files during build
 
-**Solution**:
+**Cause**: sudo permissions issue (should not happen in Codespaces)
+
+**Solutions**:
 ```bash
-# The build script needs sudo for some operations
-# Make sure you can run sudo
+# In Codespaces, you have passwordless sudo
+# Verify sudo works:
 sudo -v
 
 # Check ownership of build directory
@@ -52,7 +65,9 @@ sudo chown -R $USER:$USER build/
 
 **Symptoms**: Build stops with disk space error
 
-**Solution**:
+**Cause**: 32GB Codespaces storage is full
+
+**Solutions**:
 ```bash
 # Check available space
 df -h
@@ -60,40 +75,42 @@ df -h
 # Clean old builds
 sudo rm -rf build/pi-gen-work
 
-# Clean Docker (if using containers)
-docker system prune -a
+# Check large files
+du -sh build/* | sort -h
 
-# Check again
+# After cleanup, check space again
 df -h
 ```
 
 ### Build Takes Forever (> 2 hours)
 
+**Normal time in Codespaces**: 45-60 minutes for first build
+
 **Possible Causes**:
-- Slow internet connection
-- Insufficient RAM
-- Docker resource limits
+- Slow internet connection in Codespaces datacenter
+- GitHub throttling during high usage
+- Codespace is using 2-core machine (standard free tier)
 
 **Solutions**:
 ```bash
-# Check internet speed
+# Check internet speed in Codespaces
 curl -o /dev/null http://speedtest.tele2.net/10MB.zip
 
 # Check RAM usage
 free -h
 
-# If using Docker, increase resources:
-# Docker Desktop → Settings → Resources
-# - CPUs: 2+
-# - Memory: 4GB+
-# - Disk: 20GB+
+# Monitor build progress
+tail -f build/pi-gen-work/work.log
+
+# Be patient - first build downloads many packages
+# Subsequent builds will be faster (30-45 minutes)
 ```
 
 ### Build Succeeds But validate-image.sh Fails
 
 **Symptoms**: Image built but validation reports missing files
 
-**Solution**:
+**Solutions**:
 ```bash
 # Check build log for errors
 less build/pi-gen-work/work.log
@@ -101,14 +118,39 @@ less build/pi-gen-work/work.log
 # Look for failed stages
 grep -i "error\|fail" build/pi-gen-work/work.log
 
-# Try clean rebuild
+# Try clean rebuild in Codespaces
 sudo rm -rf build/pi-gen-work
 ./scripts/build-image.sh
 ```
 
+### Can't Download Built Image from Codespaces
+
+**Symptoms**: Download fails or times out
+
+**Solutions**:
+1. **Download the .zip file** instead of .img (smaller, faster)
+   - Navigate to `build/pi-gen-work/deploy/`
+   - Right-click `RaspberryPi_HDMI_Tester.img.zip`
+   - Select "Download"
+
+2. **Split large files** (if >2GB):
+   ```bash
+   # In Codespaces, split the image
+   split -b 500M build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img image_part_
+   
+   # Download each part separately
+   # Rejoin on Windows 11: copy /b image_part_* complete_image.img
+   ```
+
+3. **Use GitHub CLI to upload to release**:
+   ```bash
+   # Create a release and upload image
+   gh release create v1.0 build/pi-gen-work/deploy/*.img.zip
+   ```
+
 ---
 
-## Boot Issues
+## Raspberry Pi Boot Issues
 
 ### Red LED Only, No Green Activity
 
@@ -116,20 +158,23 @@ sudo rm -rf build/pi-gen-work
 
 **Possible Causes**:
 - SD card not properly flashed
-- Corrupted image
+- Corrupted image file
 - Faulty SD card
 - Incompatible SD card
 
 **Solutions**:
-1. **Reflash the SD card**:
-   ```bash
-   sudo ./tests/validate-image.sh build/pi-gen-work/deploy/*.img
-   # Flash again if validation passes
-   ```
-
-2. **Try a different SD card** (some cards are incompatible)
-
-3. **Check SD card in another device** (verify it's not faulty)
+1. **Reflash the SD card on Windows 11**:
+   - Re-download image from Codespaces
+   - Use Raspberry Pi Imager (recommended)
+   - Select the correct drive letter
+   
+2. **Try a different SD card**:
+   - Use name-brand card (SanDisk, Samsung, Kingston)
+   - Minimum Class 10 speed rating
+   
+3. **Verify image file**:
+   - Check file size (~1.5-2GB uncompressed)
+   - Re-extract from .zip if downloaded compressed
 
 4. **Use a branded SD card** (SanDisk, Samsung, Kingston)
 
@@ -462,40 +507,141 @@ sudo systemctl restart hdmi-audio.service
 
 ### Cannot Connect to WiFi
 
-**Note**: WiFi is **not configured by default**
+**Note**: WiFi is **not configured by default**. The HDMI tester doesn't require network access.
 
-**To Add WiFi**:
-1. Mount SD card
-2. Edit `/etc/wpa_supplicant/wpa_supplicant.conf`:
+**If you need WiFi for troubleshooting**:
+1. **Before building** (in Codespaces):
+   - Add WiFi configuration to build stages
+   - Edit `build/stage-custom/03-autostart/00-run.sh`
+   - Add wpa_supplicant configuration
+
+2. **After flashing** (on Windows 11):
+   - Not recommended - requires Linux to mount ext4 partitions
+   - Easier to rebuild in Codespaces with WiFi preconfigured
+
+---
+
+## Windows 11 Flashing Issues
+
+### SD Card Not Showing in Raspberry Pi Imager
+
+**Symptoms**: Can't see SD card in the flashing tool
+
+**Solutions**:
+1. **Check Windows Disk Management**:
+   - Press `Win + X` → "Disk Management"
+   - Look for your SD card (check size matches)
+   - Should show as "Removable" disk
+   
+2. **Try a different USB port**:
+   - Use USB 2.0 port if USB 3.0 causes issues
+   - Avoid USB hubs - connect directly to PC
+   
+3. **Update card reader drivers**:
+   - Device Manager → Disk Drives
+   - Right-click card reader → Update driver
+   
+4. **Try a different SD card reader**
+
+### "This Disk is Write Protected" Error
+
+**Symptoms**: Windows says disk is write protected
+
+**Solutions**:
+1. **Check physical lock switch**:
+   - On the SD card adapter
+   - Slide to **unlocked** position (away from "LOCK" label)
+   
+2. **Check Windows Registry** (advanced):
    ```
-   network={
-       ssid="YourNetwork"
-       psk="YourPassword"
-   }
+   Win + R → regedit
+   Navigate to: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\StorageDevicePolicies
+   Delete WriteProtect key (or set to 0)
    ```
+   
+3. **Try different SD card** - some have built-in protection
+
+### Windows Shows "You Need to Format the Disk"
+
+**This is NORMAL after flashing!**
+
+Windows cannot read Linux ext4 filesystems.
+
+**What to do**:
+- **Click "Cancel"** - Do NOT format!
+- **Safely eject** the SD card
+- **Ignore the error** - SD card is correctly formatted for Raspberry Pi
+- **Insert into Pi** - it will work fine
+
+### Antivirus Blocking Flash Tool
+
+**Symptoms**: Imager/Etcher blocked or deleted by Windows Defender
+
+**Solutions**:
+1. **Add exception in Windows Security**:
+   - Windows Security → Virus & threat protection → Manage settings
+   - Add exclusion for the flashing tool folder
+   
+2. **Download from official sources only**:
+   - Raspberry Pi Imager: https://www.raspberrypi.com/software/
+   - Balena Etcher: https://www.balena.io/etcher/
+
+### Flash Succeeds but File is Corrupted
+
+**Symptoms**: Flash completes but validation fails, or Pi won't boot
+
+**Solutions**:
+1. **Verify downloaded file**:
+   - Check file size matches expected (~1.5-2GB)
+   - Re-download from Codespaces if needed
+   
+2. **Re-extract from ZIP**:
+   - Use Windows built-in ZIP extraction
+   - Or 7-Zip: https://www.7-zip.org/
+   
+3. **Check SD card health**:
+   - Try a different, known-good SD card
+   - Use H2testw to test for fake/faulty cards
+   
+4. **Try different flashing method**:
+   - If Imager fails, try Balena Etcher
+   - Or vice versa
 
 ---
 
 ## Getting Additional Help
 
-### Viewing Logs
+### Viewing Logs in Codespaces
 
 ```bash
-# On the Pi (connect keyboard)
-journalctl -xe           # System log
-systemctl status hdmi-display.service
-systemctl status hdmi-audio.service
-dmesg                    # Kernel messages
+# Check build logs in Codespaces
+less build/pi-gen-work/work.log
+
+# Search for errors
+grep -i "error\|fail" build/pi-gen-work/work.log
+
+# Check specific stage logs
+ls build/pi-gen-work/stage-custom/
 ```
 
-### Serial Console Access
+### Viewing Logs on Raspberry Pi
+
+```bash
+# On the Pi (connect keyboard and monitor)
+journalctl -xe                        # System log
+systemctl status hdmi-display.service # Display service
+systemctl status hdmi-audio.service   # Audio service
+dmesg                                 # Kernel messages
+```
+
+### Serial Console Access (Advanced)
 
 For advanced debugging:
-1. Connect USB-to-TTL serial adapter
-2. Use minicom/screen:
-   ```bash
-   screen /dev/ttyUSB0 115200
-   ```
+1. Connect USB-to-TTL serial adapter to Pi GPIO
+2. Use PuTTY on Windows 11:
+   - Download: https://www.putty.org/
+   - Speed: 115200
+   - Serial line: COM3 (or your adapter's COM port)
 
 ### Resources
 

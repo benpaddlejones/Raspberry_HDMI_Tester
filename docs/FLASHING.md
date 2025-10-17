@@ -1,8 +1,13 @@
 # Flashing the HDMI Tester Image to SD Card
 
-This guide shows you how to flash the Raspberry Pi HDMI Tester image to an SD card.
+This guide shows you how to flash the Raspberry Pi HDMI Tester image to an SD card after building it in GitHub Codespaces.
 
 ## Prerequisites
+
+### Built Image File
+- You've completed the build in GitHub Codespaces
+- Downloaded `RaspberryPi_HDMI_Tester.img.zip` to your local computer
+- Extracted the `.img` file from the ZIP archive
 
 ### Hardware Requirements
 - **SD Card**: 4GB minimum, 8GB or larger recommended
@@ -10,15 +15,16 @@ This guide shows you how to flash the Raspberry Pi HDMI Tester image to an SD ca
 - **Raspberry Pi**: Any model with HDMI output (Pi 3, 4, 5, Zero 2 W)
 
 ### Software Requirements
-Choose one of these tools:
-- **Raspberry Pi Imager** (recommended, easiest)
-- **Balena Etcher** (cross-platform, user-friendly)
-- **dd command** (Linux/macOS, advanced users)
+Choose one of these flashing tools for your operating system:
+- **Raspberry Pi Imager** (recommended, easiest, works on Windows/macOS/Linux)
+- **Balena Etcher** (cross-platform alternative)
+- **dd command** (Linux/macOS only, advanced users)
+- **Win32 Disk Imager** (Windows alternative)
 
 ## ⚠️ Important Warnings
 
 - **All data on the SD card will be erased!**
-- **Double-check device names** - writing to the wrong device can destroy your system
+- **Double-check device names** - writing to the wrong device can destroy your data
 - **Backup any important data** from the SD card before proceeding
 
 ## Method 1: Raspberry Pi Imager (Recommended)
@@ -31,9 +37,9 @@ Choose one of these tools:
   ```
 
 ### Step 2: Flash the Image
-1. Insert SD card into your computer
+1. Insert SD card into your SD card reader
 2. Open Raspberry Pi Imager
-3. Click "Choose OS" → "Use custom" → Select your `.img` file
+3. Click "Choose OS" → "Use custom" → Select your extracted `.img` file
 4. Click "Choose Storage" → Select your SD card
 5. Click "Write"
 6. Wait for completion (5-10 minutes)
@@ -44,225 +50,162 @@ The imager will verify the write automatically. When it shows "Write Successful"
 
 ## Method 2: Balena Etcher
 
-### Step 1: Download Etcher
-Download from: https://www.balena.io/etcher/
-
-Available for Windows, macOS, and Linux.
-
-### Step 2: Flash the Image
-1. Insert SD card into your computer
-2. Open Balena Etcher
-3. Click "Flash from file" → Select your `.img` file
-4. Click "Select target" → Choose your SD card
-5. Click "Flash!"
-6. Enter admin password if prompted
-7. Wait for completion (5-10 minutes)
-
-### Step 3: Verify
-Etcher validates the flash automatically. When it shows "Flash Complete!", eject the card.
-
-## Method 3: dd Command (Linux/macOS)
-
-### ⚠️ Advanced Users Only
-Using `dd` incorrectly can destroy your system. Proceed with caution.
-
-### Step 1: Identify SD Card Device
-
-**Linux:**
-```bash
-# List all block devices
-lsblk
-
-# Example output:
-# NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-# sda           8:0    0 238.5G  0 disk
-# └─sda1        8:1    0 238.5G  0 part /
-# mmcblk0     179:0    0  14.9G  0 disk       ← This is your SD card
-# └─mmcblk0p1 179:1    0  14.9G  0 part
-```
-
-**macOS:**
-```bash
-# List all disks
-diskutil list
-
-# Example output:
-# /dev/disk0 (internal):
-# /dev/disk2 (external, physical):  ← This is your SD card
-#    0: FDisk_partition_scheme *15.9 GB disk2
-```
-
-### Step 2: Unmount SD Card
-
-**Linux:**
-```bash
-# Unmount all partitions (replace mmcblk0 with your device)
-sudo umount /dev/mmcblk0*
-```
-
-**macOS:**
-```bash
-# Unmount disk (replace disk2 with your device)
-sudo diskutil unmountDisk /dev/disk2
-```
-
-### Step 3: Flash Image
-
-**Linux:**
-```bash
-# Flash the image (replace mmcblk0 with your device)
-sudo dd if=build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img \
-        of=/dev/mmcblk0 \
-        bs=4M \
-        status=progress \
-        conv=fsync
-
-# Sync to ensure all data is written
-sudo sync
-```
-
-**macOS:**
-```bash
-# Flash the image (replace disk2 with your device, use rdisk for faster writes)
-sudo dd if=build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img \
-        of=/dev/rdisk2 \
-        bs=4m \
-        status=progress
-
-# Sync to ensure all data is written
-sudo sync
-```
-
-### Step 4: Verify (Optional)
-
-```bash
-# Read back from SD card and compare (Linux)
-sudo dd if=/dev/mmcblk0 \
-        of=/tmp/verify.img \
-        bs=4M \
-        count=$(stat -c%s build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img | awk '{print int($1/4194304)+1}')
-
-# Compare
-diff build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img /tmp/verify.img
-```
-
-## Method 4: Windows (Win32 Disk Imager)
-
-### Step 1: Download Win32 Disk Imager
-Download from: https://sourceforge.net/projects/win32diskimager/
+### Step 1: Download and Install
+1. Download from: https://www.balena.io/etcher/
+2. Run the installer: `balenaEtcher-Setup-x.x.x.exe`
+3. Follow the installation wizard
+4. Launch **balenaEtcher**
 
 ### Step 2: Flash the Image
-1. Insert SD card into your computer
-2. Open Win32 Disk Imager as Administrator
-3. Click folder icon → Select your `.img` file
-4. Select your SD card drive letter
-5. Click "Write"
-6. Confirm the warning
-7. Wait for completion
+1. **Insert SD card** into your Windows 11 PC
+2. **Open balenaEtcher**
+3. Click **"Flash from file"** → Browse to your extracted `.img` file
+4. Click **"Select target"** → Choose your SD card (verify drive letter!)
+5. Click **"Flash!"**
+6. Click **"Yes"** when User Account Control prompts for permission
+7. **Wait for completion** (5-10 minutes)
+   - Shows progress and speed
+   - Validates automatically after flashing
+8. Click **"Flash another"** or close when done
+
+### Step 3: Safely Remove
+1. **Close** balenaEtcher
+2. **Right-click** the SD card in File Explorer
+3. Select **"Eject"**
+4. **Remove the SD card**
+
+## Method 3: Win32 Disk Imager (Classic Tool)
+
+### Step 1: Download and Install
+1. Download from: https://sourceforge.net/projects/win32diskimager/
+2. Extract the ZIP file
+3. Run **Win32DiskImager.exe** as Administrator
+
+### Step 2: Flash the Image
+1. **Insert SD card** into your Windows 11 PC
+2. **Run Win32 Disk Imager as Administrator**
+   - Right-click → "Run as administrator"
+3. Click the **folder icon** → Browse to your `.img` file
+4. Select your SD card **drive letter** from the dropdown (e.g., E:, F:)
+5. **Double-check** the drive letter is correct!
+6. Click **"Write"**
+7. Click **"Yes"** to confirm
+8. **Wait for completion** (5-15 minutes)
+9. Click **"OK"** when you see "Write Successful"
+
+### Step 3: Safely Remove
+1. **Close** Win32 Disk Imager
+2. **Right-click** the SD card in File Explorer
+3. Select **"Eject"**
+4. **Remove the SD card**
 
 ## After Flashing
 
-### Step 1: Safely Eject
-Always safely eject the SD card:
-- **Windows**: Right-click drive → "Eject"
-- **macOS**: Drag to trash or `diskutil eject /dev/disk2`
-- **Linux**: `sudo eject /dev/mmcblk0`
+### Step 1: Insert into Raspberry Pi
+1. **Remove SD card** from your Windows 11 PC
+2. **Insert** into Raspberry Pi SD card slot
+3. **Connect HDMI cable** to your display
+4. **Connect power supply**
+5. **Pi will boot automatically!**
 
-### Step 2: Insert into Raspberry Pi
-1. Remove SD card from computer
-2. Insert into Raspberry Pi SD card slot
-3. Connect HDMI cable to display
-4. Connect power supply
-5. Pi will boot automatically!
+### Step 2: Expected Behavior
 
-## Expected Behavior
-
-After inserting the SD card and powering on:
+After powering on:
 
 1. **Boot time**: 20-30 seconds
 2. **Display**: Test pattern appears fullscreen at 1920x1080
 3. **Audio**: Test audio plays continuously through HDMI
 4. **LED**: Green activity LED blinks during boot, then steady
 
-## Troubleshooting
+✅ **Success!** Your HDMI tester is now running.
 
-### SD Card Not Recognized by Raspberry Pi
+## Troubleshooting (Windows 11)
 
-**Symptoms**: Red LED on, no display
+### SD Card Not Showing in Imager/Etcher
+
+**Symptoms**: Can't see SD card in the flashing tool
 
 **Solutions**:
-- Try reflashing the image
-- Use a different SD card (some cards are incompatible)
-- Check SD card is properly seated
-- Try a different SD card reader
+1. **Check File Explorer** - Does Windows see the drive?
+2. **Try a different USB port** - Some ports may not work
+3. **Check Disk Management**:
+   - Press `Win + X` → "Disk Management"
+   - Look for your SD card (check size)
+   - If it has partitions, they should show up
+4. **Try a different SD card reader**
 
-### "Not Enough Space" Error When Flashing
+### "Access Denied" or "Permission Error"
+
+**Symptoms**: Can't write to SD card
+
+**Solutions**:
+1. **Run as Administrator**:
+   - Right-click the program
+   - Select "Run as administrator"
+2. **Close File Explorer windows** showing the SD card
+3. **Disable write protection**:
+   - Check physical lock switch on SD card adapter
+   - Slide to unlocked position
+
+### "Not Enough Space" Error
 
 **Cause**: SD card is too small (< 4GB)
 
 **Solution**: Use a 4GB or larger SD card
 
-### Flash Fails or Verifies Incorrectly
+### Flash Completes but Pi Won't Boot
+
+**Symptoms**: Red LED on, no display
 
 **Solutions**:
-1. Try a different SD card (card may be faulty)
-2. Try a different card reader
-3. Check the `.img` file isn't corrupted:
-   ```bash
-   md5sum build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img
-   ```
+1. **Re-flash the image** - May have been corrupted
+2. **Try a different SD card** - Card may be faulty
+3. **Check SD card compatibility**:
+   - Some cards don't work well with Raspberry Pi
+   - Try a name-brand card (SanDisk, Samsung, Kingston)
+4. **Verify the image file**:
+   - Re-download from Codespaces if corrupted
+   - Check file size matches expected (~1.5-2GB)
 
-### "Device is Busy" Error (Linux)
+### Windows Shows "You Need to Format the Disk" After Flashing
 
-**Cause**: SD card is auto-mounted
+**This is NORMAL!**
 
-**Solution**:
-```bash
-# Find what's mounted
-mount | grep mmcblk0
+Windows cannot read Linux filesystems. The SD card is properly formatted for Raspberry Pi.
 
-# Unmount everything
-sudo umount /dev/mmcblk0*
-```
+**Solutions**:
+- **Click "Cancel"** - Don't format!
+- **Safely eject** the SD card
+- **Insert into Raspberry Pi** - It will work fine
 
 ### Write Protected SD Card
 
-**Symptoms**: "Read-only file system" or "Write protected" error
+**Symptoms**: "Disk is write protected" error
 
-**Solution**: Check the physical lock switch on the SD card adapter - slide it to unlocked position
+**Solutions**:
+1. **Check the lock switch** on the SD card adapter
+   - Slide it to the **unlocked** position (opposite from "LOCK")
+2. **Try a different SD card** - Some cards have built-in write protection
 
-## SD Card Recommendations
+## SD Card Recommendations (For Windows 11 Users)
 
 ### Recommended Brands
-- **SanDisk Ultra** (good performance/price)
-- **Samsung EVO** (reliable)
+- **SanDisk Ultra** (good performance/price, widely compatible)
+- **Samsung EVO** (very reliable)
 - **Kingston Canvas Select** (budget-friendly)
 
 ### Avoid
 - No-name/generic cards (often slower or unreliable)
-- Very old cards (may not be compatible)
+- Very old cards (may not be compatible with modern Pi models)
 
 ### Size Recommendations
-- **4GB**: Minimum (tight fit)
-- **8GB**: Recommended (room for logs)
-- **16GB+**: Overkill but works fine
+- **4GB**: Minimum (tight fit, not recommended)
+- **8GB**: Recommended (room for logs, $5-10)
+- **16GB+**: Overkill but works fine (often same price as 8GB)
 
 ### Speed Class
 - **Class 10** or **U1** minimum
-- **U3** or **A1** for best performance
-
-## Expanding the Filesystem (Optional)
-
-The image is sized to fit on 4GB cards. If using a larger card:
-
-```bash
-# On the Raspberry Pi (if you need to access it)
-sudo raspi-config
-# Choose: Advanced Options → Expand Filesystem
-# Reboot
-```
-
-**Note**: Not necessary for HDMI tester use case.
+- **U3** or **A1** for best performance (faster boot times)
 
 ## Next Steps
 
@@ -277,3 +220,4 @@ sudo raspi-config
 - **Raspberry Pi Documentation**: https://www.raspberrypi.com/documentation/
 - **SD Card Compatibility**: https://elinux.org/RPi_SD_cards
 - **GitHub Issues**: https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues
+- **Windows 11 Help**: https://support.microsoft.com/windows
