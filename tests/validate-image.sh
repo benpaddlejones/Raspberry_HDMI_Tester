@@ -121,7 +121,7 @@ for config in "${CONFIG_FILES[@]}"; do
     if [ -f "${MOUNT_POINT}${config}" ]; then
         CONFIG_FOUND=true
         echo "  📝 Found: ${config}"
-        
+
         # Check for HDMI settings
         if grep -q "hdmi_mode=16" "${MOUNT_POINT}${config}"; then
             echo "  ✅ HDMI mode configured (1920x1080@60Hz)"
@@ -129,7 +129,7 @@ for config in "${CONFIG_FILES[@]}"; do
             echo "  ⚠️  HDMI mode not found"
             ALL_OK=false
         fi
-        
+
         if grep -q "hdmi_drive=2" "${MOUNT_POINT}${config}"; then
             echo "  ✅ HDMI audio enabled"
         else

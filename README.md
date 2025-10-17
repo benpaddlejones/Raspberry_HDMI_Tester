@@ -112,7 +112,7 @@ Raspberry_HDMI_Tester/
    # Install Docker
    curl -fsSL https://get.docker.com -o get-docker.sh
    sh get-docker.sh
-   
+
    # Install VS Code with Dev Containers extension
    code --install-extension ms-vscode-remote.remote-containers
    ```
@@ -247,52 +247,103 @@ sudo eject /dev/sdX
 
 ### Custom Test Pattern
 
-Replace `assets/test-pattern.png` with your own image:
-- Recommended resolution: 1920x1080 or 3840x2160
-- Format: PNG, JPEG
-- Include color bars, resolution info, etc.
+Replace `assets/image.png` with your own image:
+- **Current Resolution**: 1920x1080 (Full HD)
+- **Recommended**: 1920x1080 or 3840x2160 (4K)
+- **Format**: PNG or JPEG
+- Include color bars, resolution info, text labels for testing
 
 ### Custom Audio
 
-Replace `assets/test-audio.wav` with your own audio:
-- Format: WAV, MP3, or FLAC
-- Recommended: 1kHz tone or sweep
-- Duration: 5-30 seconds (loops automatically)
+Replace `assets/audio.mp3` with your own audio:
+- **Current Format**: MP3, 96kbps, 32kHz stereo
+- **Supported Formats**: MP3, WAV, or OGG
+- **Recommended**: 1kHz tone or frequency sweep for testing
+- **Duration**: Any (audio loops infinitely via `mpv --loop=inf`)
+- File will be deployed to `/opt/hdmi-tester/test-audio.mp3`
 
 ### Boot Configuration
 
-Edit `scripts/configure-boot.sh` to modify:
-- Boot splash screen
-- Auto-login settings
-- Display resolution
-- Audio output routing
+Edit boot configuration files to modify:
+- **HDMI Output**: Forced to 1920x1080@60Hz via `hdmi_mode=16`
+- **HDMI Audio**: Enabled via `hdmi_drive=2`
+- **Auto-login**: Configured for user `pi` on tty1
+- **Auto-start X**: `.bashrc` launches X server automatically
+- **Display Service**: `feh` runs fullscreen test pattern
+- **Audio Service**: `mpv --loop=inf` plays audio infinitely
+
+Configuration applied in `build/stage-custom/04-boot-config/` during image build.
+
+## Technical Architecture
+
+### Build System
+- **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
+- **Builder**: pi-gen (official Raspberry Pi image builder)
+- **Environment**: GitHub Codespaces with Ubuntu 24.04
+- **Emulation**: QEMU for ARM on x86_64 systems
+
+### Custom Build Stages
+1. **00-install-packages**: Installs X11, feh, mpv, alsa-utils, pulseaudio
+2. **01-test-image**: Deploys test pattern to `/opt/hdmi-tester/test-pattern.png`
+3. **02-audio-test**: Deploys audio file to `/opt/hdmi-tester/test-audio.mp3`
+4. **03-autostart**: Creates systemd services for auto-start on boot
+5. **04-boot-config**: Configures HDMI output (1920x1080@60Hz, audio enabled)
+
+### Systemd Services
+- **hdmi-display.service**: Displays test pattern using feh in fullscreen
+- **hdmi-audio.service**: Plays audio infinitely using mpv with `--loop=inf`
+- Both services restart automatically on failure
+
+### Boot Flow
+1. Raspberry Pi boots from SD card
+2. User `pi` auto-logs in on tty1
+3. X server starts automatically via `.bashrc`
+4. systemd starts `hdmi-display.service` (test pattern)
+5. systemd starts `hdmi-audio.service` (audio playback)
+6. Display shows test pattern at 1920x1080@60Hz
+7. Audio plays through HDMI continuously
 
 ## Troubleshooting
 
 ### Build Issues
 
-- **Out of disk space**: Ensure at least 4GB free
-- **Permission denied**: Use `sudo` for build commands
-- **Missing dependencies**: Run `sudo apt update && sudo apt install -y <package>`
+- **Out of disk space**: Ensure at least 10GB free in Codespaces (32GB provided)
+- **qemu-arm-static not found**: Rebuild Codespaces container
+- **Permission denied**: Use `sudo` for pi-gen operations (passwordless in Codespaces)
+- **Build takes too long**: Normal first build is 45-60 minutes
 
 ### Runtime Issues
 
-- **No display**: Check HDMI cable, try different resolution in `config.txt`
-- **No audio**: Verify HDMI audio in `config.txt`: `hdmi_drive=2`
-- **Slow boot**: Disable unnecessary services in build configuration
+- **No display**: Check HDMI cable, verify display supports 1920x1080@60Hz
+- **No audio**: Verify HDMI audio is enabled in TV/monitor settings
+- **Red LED only (no green activity)**: SD card not properly flashed, try re-flashing
+- **Slow boot**: Normal boot time is 20-30 seconds
+
+### Windows 11 Flashing Issues
+
+- **SD card not showing**: Check Disk Management, try different USB port
+- **"Format disk" message**: NORMAL - click Cancel, SD card is correctly formatted for Pi
+- **Write protected**: Check physical lock switch on SD card adapter
+
+See `docs/TROUBLESHOOTING.md` for comprehensive troubleshooting guide.
 
 ## Development Roadmap
 
 - [x] Project setup and documentation
-- [ ] Dev container configuration
-- [ ] Create test pattern assets
-- [ ] Configure pi-gen build system
-- [ ] Implement auto-start service
-- [ ] Audio playback integration
-- [ ] Boot optimization
-- [ ] QEMU testing framework
+- [x] Dev container configuration (Ubuntu 24.04 with all tools)
+- [x] Create test pattern assets (1920x1080 PNG)
+- [x] Create test audio asset (MP3, infinite loop)
+- [x] Configure pi-gen build system (5 custom stages)
+- [x] Implement auto-start services (systemd)
+- [x] Audio playback integration (mpv with --loop=inf)
+- [x] HDMI configuration (1920x1080@60Hz forced)
+- [x] Build and testing scripts
+- [x] User documentation (Codespaces + Windows 11 focused)
+- [ ] Boot optimization (reduce to <20 seconds)
+- [ ] QEMU testing validation
+- [ ] Hardware testing on actual Raspberry Pi
 - [ ] CI/CD pipeline for automated builds
-- [ ] Multi-resolution support
+- [ ] Multi-resolution support (720p, 4K options)
 - [ ] Web interface for configuration (optional)
 
 ## Contributing

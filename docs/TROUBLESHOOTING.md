@@ -137,7 +137,7 @@ sudo rm -rf build/pi-gen-work
    ```bash
    # In Codespaces, split the image
    split -b 500M build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img image_part_
-   
+
    # Download each part separately
    # Rejoin on Windows 11: copy /b image_part_* complete_image.img
    ```
@@ -167,11 +167,11 @@ sudo rm -rf build/pi-gen-work
    - Re-download image from Codespaces
    - Use Raspberry Pi Imager (recommended)
    - Select the correct drive letter
-   
+
 2. **Try a different SD card**:
    - Use name-brand card (SanDisk, Samsung, Kingston)
    - Minimum Class 10 speed rating
-   
+
 3. **Verify image file**:
    - Check file size (~1.5-2GB uncompressed)
    - Re-extract from .zip if downloaded compressed
@@ -532,15 +532,15 @@ sudo systemctl restart hdmi-audio.service
    - Press `Win + X` → "Disk Management"
    - Look for your SD card (check size matches)
    - Should show as "Removable" disk
-   
+
 2. **Try a different USB port**:
    - Use USB 2.0 port if USB 3.0 causes issues
    - Avoid USB hubs - connect directly to PC
-   
+
 3. **Update card reader drivers**:
    - Device Manager → Disk Drives
    - Right-click card reader → Update driver
-   
+
 4. **Try a different SD card reader**
 
 ### "This Disk is Write Protected" Error
@@ -551,14 +551,14 @@ sudo systemctl restart hdmi-audio.service
 1. **Check physical lock switch**:
    - On the SD card adapter
    - Slide to **unlocked** position (away from "LOCK" label)
-   
+
 2. **Check Windows Registry** (advanced):
    ```
    Win + R → regedit
    Navigate to: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\StorageDevicePolicies
    Delete WriteProtect key (or set to 0)
    ```
-   
+
 3. **Try different SD card** - some have built-in protection
 
 ### Windows Shows "You Need to Format the Disk"
@@ -581,7 +581,7 @@ Windows cannot read Linux ext4 filesystems.
 1. **Add exception in Windows Security**:
    - Windows Security → Virus & threat protection → Manage settings
    - Add exclusion for the flashing tool folder
-   
+
 2. **Download from official sources only**:
    - Raspberry Pi Imager: https://www.raspberrypi.com/software/
    - Balena Etcher: https://www.balena.io/etcher/
@@ -594,15 +594,15 @@ Windows cannot read Linux ext4 filesystems.
 1. **Verify downloaded file**:
    - Check file size matches expected (~1.5-2GB)
    - Re-download from Codespaces if needed
-   
+
 2. **Re-extract from ZIP**:
    - Use Windows built-in ZIP extraction
    - Or 7-Zip: https://www.7-zip.org/
-   
+
 3. **Check SD card health**:
    - Try a different, known-good SD card
    - Use H2testw to test for fake/faulty cards
-   
+
 4. **Try different flashing method**:
    - If Imager fails, try Balena Etcher
    - Or vice versa
