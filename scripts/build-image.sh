@@ -16,6 +16,20 @@ PI_GEN_DIR="${PI_GEN_DIR:-/opt/pi-gen}"
 WORK_DIR="${PROJECT_ROOT}/build/pi-gen-work"
 CONFIG_FILE="${PROJECT_ROOT}/build/config"
 
+# Validate that required assets exist
+echo "🔍 Validating assets..."
+if [ ! -f "${PROJECT_ROOT}/assets/image.png" ]; then
+    echo "❌ Error: Test image not found at ${PROJECT_ROOT}/assets/image.png"
+    exit 1
+fi
+
+if [ ! -f "${PROJECT_ROOT}/assets/audio.mp3" ]; then
+    echo "❌ Error: Test audio not found at ${PROJECT_ROOT}/assets/audio.mp3"
+    exit 1
+fi
+echo "✅ Assets validated"
+echo ""
+
 # Check prerequisites
 echo "🔍 Checking prerequisites..."
 if ! command -v qemu-arm-static &> /dev/null; then
@@ -74,15 +88,28 @@ echo ""
 # Run build
 echo "🚀 Starting pi-gen build..."
 echo "   This will take 30-60 minutes..."
+echo "   Build log: ${WORK_DIR}/build.log"
 echo ""
 
 cd "${WORK_DIR}"
-sudo ./build.sh
 
-echo ""
-echo "=================================================="
-echo "✅ Build Complete!"
-echo "=================================================="
+# Run build with output to both console and log file
+if sudo ./build.sh 2>&1 | tee build.log; then
+    echo ""
+    echo "=================================================="
+    echo "✅ Build Complete!"
+    echo "=================================================="
+else
+    echo ""
+    echo "=================================================="
+    echo "❌ Build Failed!"
+    echo "=================================================="
+    echo ""
+    echo "Last 50 lines of build log:"
+    tail -n 50 build.log
+    exit 1
+fi
+
 echo ""
 echo "Output images are in:"
 echo "  ${WORK_DIR}/deploy/"

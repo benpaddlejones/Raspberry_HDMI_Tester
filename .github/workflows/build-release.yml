@@ -87,8 +87,18 @@ jobs:
         run: |
           echo "🔨 Starting image build..."
           echo "⏱️  This will take approximately 45-60 minutes"
+
+          # Make script executable
+          chmod +x ./scripts/build-image.sh
+
+          # Run build
           sudo ./scripts/build-image.sh
+
           echo "✅ Image build complete"
+
+          # List what was created
+          echo "📁 Build outputs:"
+          sudo ls -lh build/pi-gen-work/deploy/ || echo "No deploy directory found"
 
       - name: Prepare release assets
         id: assets
@@ -98,10 +108,15 @@ jobs:
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
 
+          # Fix permissions on deploy directory (built with sudo)
+          sudo chown -R runner:runner build/pi-gen-work/deploy/
+
           # Find the built image
           IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img | head -n 1)
           if [ -z "$IMAGE_FILE" ]; then
             echo "❌ Error: No image file found!"
+            echo "Contents of deploy directory:"
+            ls -la ${DEPLOY_DIR}/
             exit 1
           fi
 

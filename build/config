@@ -35,7 +35,9 @@ ENABLE_SSH=0
 #   - 03-autostart: systemd services for auto-boot
 #   - 04-boot-config: HDMI 1920x1080@60Hz configuration
 # We skip stage3 (desktop), stage4 (recommended apps), stage5 (extras)
-STAGE_LIST="stage0 stage1 stage2 /workspaces/Raspberry_HDMI_Tester/build/stage-custom"
+# NOTE: stage-custom is copied into the pi-gen work directory by build-image.sh
+# Use relative path from pi-gen root, not absolute path
+STAGE_LIST="stage0 stage1 stage2 stage-custom"
 
 # Target architecture
 DEPLOY_COMPRESSION="zip"
