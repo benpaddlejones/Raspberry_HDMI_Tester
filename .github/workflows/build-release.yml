@@ -1,0 +1,292 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (from release-config.json or override)'
+        required: false
+        default: ''
+      force_rebuild:
+        description: 'Force rebuild (ignore cache)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read release configuration
+        id: config
+        run: |
+          # Read config file
+          CONFIG_VERSION=$(jq -r '.version' .github/release-config.json)
+          CONFIG_NAME=$(jq -r '.name' .github/release-config.json)
+          CONFIG_PRERELEASE=$(jq -r '.prerelease' .github/release-config.json)
+
+          # Use input version if provided, otherwise use config
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="$CONFIG_VERSION"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "name=$CONFIG_NAME" >> $GITHUB_OUTPUT
+          echo "prerelease=$CONFIG_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+          echo "📦 Building release: v$VERSION ($CONFIG_NAME)"
+
+      - name: Install build dependencies
+        run: |
+          echo "📥 Installing build tools..."
+          sudo apt-get update
+          sudo apt-get install -y \
+            qemu-user-static \
+            debootstrap \
+            kpartx \
+            parted \
+            git \
+            zip \
+            coreutils
+
+          echo "✅ Dependencies installed"
+
+      - name: Install pi-gen
+        run: |
+          echo "📥 Installing pi-gen..."
+          sudo git clone https://github.com/RPi-Distro/pi-gen /opt/pi-gen
+          echo "✅ pi-gen installed at /opt/pi-gen"
+
+      - name: Cache pi-gen downloads
+        if: ${{ !inputs.force_rebuild }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/pi-gen/work
+            /opt/pi-gen/deploy
+          key: pi-gen-cache-${{ hashFiles('build/config') }}
+          restore-keys: |
+            pi-gen-cache-
+
+      - name: Build Raspberry Pi image
+        run: |
+          echo "🔨 Starting image build..."
+          echo "⏱️  This will take approximately 45-60 minutes"
+          sudo ./scripts/build-image.sh
+          echo "✅ Image build complete"
+
+      - name: Prepare release assets
+        id: assets
+        run: |
+          echo "📦 Preparing release assets..."
+
+          VERSION="${{ steps.config.outputs.version }}"
+          DEPLOY_DIR="build/pi-gen-work/deploy"
+
+          # Find the built image
+          IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img | head -n 1)
+          if [ -z "$IMAGE_FILE" ]; then
+            echo "❌ Error: No image file found!"
+            exit 1
+          fi
+
+          echo "Found image: $IMAGE_FILE"
+
+          # Create versioned filename
+          VERSIONED_IMAGE="RaspberryPi_HDMI_Tester_v${VERSION}.img"
+          VERSIONED_ZIP="RaspberryPi_HDMI_Tester_v${VERSION}.img.zip"
+          CHECKSUM_FILE="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
+
+          # Copy and rename image
+          cp "$IMAGE_FILE" "${DEPLOY_DIR}/${VERSIONED_IMAGE}"
+
+          # Compress image
+          echo "🗜️  Compressing image..."
+          cd ${DEPLOY_DIR}
+          zip "${VERSIONED_ZIP}" "${VERSIONED_IMAGE}"
+
+          # Generate SHA256 checksum
+          echo "🔐 Generating checksum..."
+          sha256sum "${VERSIONED_ZIP}" > "${CHECKSUM_FILE}"
+
+          # Get file sizes
+          IMAGE_SIZE=$(ls -lh "${VERSIONED_IMAGE}" | awk '{print $5}')
+          ZIP_SIZE=$(ls -lh "${VERSIONED_ZIP}" | awk '{print $5}')
+
+          echo "image_size=$IMAGE_SIZE" >> $GITHUB_OUTPUT
+          echo "zip_size=$ZIP_SIZE" >> $GITHUB_OUTPUT
+          echo "zip_path=${DEPLOY_DIR}/${VERSIONED_ZIP}" >> $GITHUB_OUTPUT
+          echo "checksum_path=${DEPLOY_DIR}/${CHECKSUM_FILE}" >> $GITHUB_OUTPUT
+
+          echo "✅ Assets prepared"
+          echo "   Image size: $IMAGE_SIZE"
+          echo "   Compressed: $ZIP_SIZE"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ steps.config.outputs.version }}"
+
+          # Read config and generate notes
+          cat > release_notes.md << 'EOF'
+          # Raspberry Pi HDMI Tester v${{ steps.config.outputs.version }}
+
+          ## 📦 Release: ${{ steps.config.outputs.name }}
+
+          **Build Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit:** ${{ github.sha }}
+
+          ---
+
+          ## ✨ Features
+
+          $(jq -r '.release_notes.features[] | "- " + .' .github/release-config.json)
+
+          ## 🔧 Compatibility
+
+          Tested and compatible with:
+          $(jq -r '.release_notes.compatibility[] | "- " + .' .github/release-config.json)
+
+          ## ⚠️ Known Issues
+
+          $(jq -r '.release_notes.known_issues[] | "- " + .' .github/release-config.json)
+
+          ---
+
+          ## 📥 Installation
+
+          ### Quick Start (Windows 11)
+
+          1. **Download** `RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.zip`
+          2. **Extract** the `.img` file from the ZIP archive
+          3. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+          4. **Insert** SD card into Raspberry Pi
+          5. **Connect** HDMI to display
+          6. **Power on** - it will boot automatically!
+
+          ### Verification
+
+          Verify the download integrity:
+          ```bash
+          sha256sum -c RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.sha256
+          ```
+
+          ### Full Documentation
+
+          - 📖 [Building Guide](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/docs/BUILDING.md)
+          - 💾 [Flashing Guide](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/docs/FLASHING.md)
+          - 🎨 [Customization Guide](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/docs/CUSTOMIZATION.md)
+          - 🔧 [Troubleshooting Guide](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/docs/TROUBLESHOOTING.md)
+
+          ---
+
+          ## 📊 Build Information
+
+          - **Base OS:** $(jq -r '.build.base_os' .github/release-config.json)
+          - **Build System:** $(jq -r '.build.build_system' .github/release-config.json)
+          - **Image Size:** ${{ steps.assets.outputs.image_size }}
+          - **Compressed Size:** ${{ steps.assets.outputs.zip_size }}
+
+          ---
+
+          ## 🐛 Issues & Support
+
+          Found a bug? Have a question?
+          - [Report an Issue](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues)
+          - [View Documentation](https://github.com/benpaddlejones/Raspberry_HDMI_Tester#readme)
+          EOF
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.config.outputs.tag }}
+          name: "v${{ steps.config.outputs.version }} - ${{ steps.config.outputs.name }}"
+          body_path: release_notes.md
+          files: |
+            ${{ steps.assets.outputs.zip_path }}
+            ${{ steps.assets.outputs.checksum_path }}
+          draft: false
+          prerelease: ${{ steps.config.outputs.prerelease }}
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update README with release link
+        run: |
+          VERSION="${{ steps.config.outputs.version }}"
+          TAG="${{ steps.config.outputs.tag }}"
+
+          # Create download section content
+          cat > download_section.md << 'DOWNLOADEOF'
+
+          ## 📥 Download
+
+          [![Latest Release](https://img.shields.io/github/v/release/benpaddlejones/Raspberry_HDMI_Tester?label=Latest%20Release&style=for-the-badge)](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/latest)
+          [![Downloads](https://img.shields.io/github/downloads/benpaddlejones/Raspberry_HDMI_Tester/total?style=for-the-badge)](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
+
+          **Latest Version:** [VERSION_TAG](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/VERSION_TAG)
+
+          Download the pre-built image:
+          - 💾 [RaspberryPi_HDMI_Tester_VERSION_NUM.img.zip](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/VERSION_TAG/RaspberryPi_HDMI_Tester_VERSION_NUM.img.zip)
+          - 🔐 [SHA256 Checksum](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/VERSION_TAG/RaspberryPi_HDMI_Tester_VERSION_NUM.sha256)
+
+          See [FLASHING.md](docs/FLASHING.md) for installation instructions.
+
+          DOWNLOADEOF
+
+          # Replace placeholders
+          sed -i "s/VERSION_TAG/$TAG/g" download_section.md
+          sed -i "s/VERSION_NUM/v$VERSION/g" download_section.md
+
+          # Insert or update Download section
+          if ! grep -q "## 📥 Download" README.md; then
+            # Add Download section after Project Overview
+            sed -i '/## Project Overview/r download_section.md' README.md
+            echo "✅ Download section added to README"
+          else
+            echo "ℹ️  Download section already exists - skipping update"
+          fi
+
+          rm -f download_section.md
+
+      - name: Commit README changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add README.md
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: Update README with release v${{ steps.config.outputs.version }} links [skip ci]"
+            git push
+            echo "✅ README changes committed and pushed"
+          fi
+
+      - name: Build summary
+        run: |
+          echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.config.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Pre-release:** ${{ steps.config.outputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Assets Created:" >> $GITHUB_STEP_SUMMARY
+          echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Release URL:" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/${{ steps.config.outputs.tag }})" >> $GITHUB_STEP_SUMMARY

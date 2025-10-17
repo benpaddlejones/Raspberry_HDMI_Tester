@@ -1,0 +1,48 @@
+{
+  "version": "0.9.0",
+  "name": "Beta Test Candidate",
+  "description": "Initial beta release for testing and validation",
+  "prerelease": true,
+  "draft": false,
+  "assets": {
+    "image": {
+      "filename": "RaspberryPi_HDMI_Tester_v{version}.img.zip",
+      "description": "Bootable Raspberry Pi OS image with HDMI tester"
+    },
+    "checksum": {
+      "filename": "RaspberryPi_HDMI_Tester_v{version}.sha256",
+      "description": "SHA256 checksum for image verification"
+    }
+  },
+  "release_notes": {
+    "features": [
+      "Auto-boot to 1920x1080@60Hz test pattern",
+      "Infinite audio loop through HDMI (mpv --loop=inf)",
+      "No user interaction required",
+      "Systemd services for automatic startup",
+      "Built on Raspberry Pi OS Bookworm (Debian 12)"
+    ],
+    "compatibility": [
+      "Raspberry Pi 4 Model B",
+      "Raspberry Pi 3 Model B/B+",
+      "Raspberry Pi 5",
+      "Raspberry Pi Zero 2 W"
+    ],
+    "known_issues": [
+      "Pending hardware validation on actual Raspberry Pi",
+      "Boot time optimization not yet implemented"
+    ],
+    "installation": "See [docs/FLASHING.md](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/docs/FLASHING.md) for detailed installation instructions."
+  },
+  "build": {
+    "base_os": "Raspberry Pi OS Lite (Bookworm)",
+    "build_system": "pi-gen",
+    "build_time_estimate": "45-60 minutes",
+    "image_size_estimate": "~1.5-2GB"
+  },
+  "metadata": {
+    "repository": "benpaddlejones/Raspberry_HDMI_Tester",
+    "documentation": "https://github.com/benpaddlejones/Raspberry_HDMI_Tester#readme",
+    "issues": "https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues"
+  }
+}
