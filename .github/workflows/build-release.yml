@@ -91,14 +91,22 @@ jobs:
           # Make script executable
           chmod +x ./scripts/build-image.sh
 
-          # Run build
-          sudo ./scripts/build-image.sh
+          # Run build - capture exit code
+          set -e  # Exit on error
+          sudo -E ./scripts/build-image.sh
+          
+          # Verify deploy directory was created
+          if [ ! -d "build/pi-gen-work/deploy" ]; then
+            echo "❌ Error: Build completed but deploy directory not found!"
+            echo "Build may have failed silently."
+            exit 1
+          fi
 
           echo "✅ Image build complete"
 
           # List what was created
           echo "📁 Build outputs:"
-          sudo ls -lh build/pi-gen-work/deploy/ || echo "No deploy directory found"
+          sudo ls -lh build/pi-gen-work/deploy/
 
       - name: Prepare release assets
         id: assets
@@ -108,19 +116,24 @@ jobs:
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
 
-          # Fix permissions on deploy directory (built with sudo)
-          sudo chown -R runner:runner build/pi-gen-work/deploy/
-
-          # Find the built image
-          IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img | head -n 1)
-          if [ -z "$IMAGE_FILE" ]; then
-            echo "❌ Error: No image file found!"
-            echo "Contents of deploy directory:"
-            ls -la ${DEPLOY_DIR}/
+          # Verify deploy directory exists (should be caught in build step, but double-check)
+          if [ ! -d "${DEPLOY_DIR}" ]; then
+            echo "❌ Error: Deploy directory does not exist at ${DEPLOY_DIR}"
+            echo "The build may have failed. Check previous step logs."
             exit 1
           fi
 
-          echo "Found image: $IMAGE_FILE"
+          # Fix permissions on deploy directory (built with sudo)
+          sudo chown -R runner:runner "${DEPLOY_DIR}"
+
+          # Find the built image
+          IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img 2>/dev/null | head -n 1)
+          if [ -z "$IMAGE_FILE" ]; then
+            echo "❌ Error: No image file found!"
+            echo "Contents of deploy directory:"
+            ls -la ${DEPLOY_DIR}/ || echo "Directory is empty or inaccessible"
+            exit 1
+          fi          echo "Found image: $IMAGE_FILE"
 
           # Create versioned filename
           VERSIONED_IMAGE="RaspberryPi_HDMI_Tester_v${VERSION}.img"

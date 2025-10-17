@@ -1,0 +1,348 @@
+<details class="Details-element CheckStep rounded-2 details-reset js-checks-log-details px-2" id="check-step-7" data-step-number="7" data-conclusion="failure" data-external-id="92e4b3f0-7147-47f3-a917-b5f1c2c5db09" style="" data-log-url="/benpaddlejones/Raspberry_HDMI_Tester/commit/a8181ead8207fe5055a89b9ee2e4296abc8f158c/checks/53007434416/logs/7" data-expand="true" open="open">
+        <summary class="CheckStep-header p-2 mb-1 rounded-2 js-check-step-summary uxr_CheckStep-header mx-2" style="top: 87px;" data-retain-focus="" data-target="check-step.header" data-step-pending="false">
+          <div class="d-flex flex-items-center">
+            <svg class="octicon octicon-chevron-right js-check-step-chevron mr-2 flex-shrink-0 CheckStep-chevron" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="false" style="">
+                  <path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"></path>
+                </svg>
+
+            <svg fill="none" height="16" viewBox="0 0 16 16" width="16" class="anim-rotate js-check-step-loader mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" hidden="hidden">
+              <g stroke-width="2">
+                <circle cx="8" cy="8" r="7" stroke="#959da5"></circle>
+                <path d="m12.9497 3.05025c1.3128 1.31276 2.0503 3.09323 2.0503 4.94975 0 1.85651-.7375 3.637-2.0503 4.9497" stroke="#fafbfc"></path>
+              </g>
+            </svg>
+
+            <svg class="octicon octicon-x-circle-fill color-fg-danger mr-3 flex-shrink-0 ml-1" title="This step failed" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M2.343 13.657A8 8 0 1 1 13.658 2.343 8 8 0 0 1 2.343 13.657ZM6.03 4.97a.751.751 0 0 0-1.042.018.751.751 0 0 0-.018 1.042L6.94 8 4.97 9.97a.749.749 0 0 0 .326 1.275.749.749 0 0 0 .734-.215L8 9.06l1.97 1.97a.749.749 0 0 0 1.275-.326.749.749 0 0 0-.215-.734L9.06 8l1.97-1.97a.749.749 0 0 0-.326-1.275.749.749 0 0 0-.734.215L8 6.94Z"></path></svg>
+
+            <span class="flex-1 ml-n1 mr-1 css-truncate css-truncate-overflow user-select-none"> Build Raspberry Pi image </span>
+
+            <div class="text-mono text-normal text-small float-right">25m 3s</div>
+          </div>
+        </summary>
+
+        <div class="js-checks-log-display">
+          <div class="text-mono text-small pl-2 py-1 my-2 overflow-auto js-checks-log-display-error color-fg-muted color-bg-danger ml-2" hidden="">
+            <span class="text-bold color-fg-danger">Error: </span>
+            <span class="js-checks-log-display-error-text" data-error-text="We are currently unable to download the log. Please try again later." data-not-found-text="The log was not found. It may have been deleted based on retention settings." data-removed-text="The logs for this run have expired and are no longer available. Logs may have been removed based on retention settings on the repo at the time the run was started."></span>
+          </div>
+          <div class="text-mono text-small py-1 my-2 js-checks-log-display-container mx-2"><div style="height: auto;"><div><!---->
+    <!----><div data-index="0"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-group">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:1"><!---->1<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><details class="js-checks-log-group"><summary><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->Run echo "🔨 Starting image build..."
+<!----><!----><!----></span><!----></summary></details><!----></span>
+  </div>
+<!----></div><!----><!----><div hidden="" data-index="1"></div><!----><!----><div hidden="" data-index="2"></div><!----><!----><div hidden="" data-index="3"></div><!----><!----><div hidden="" data-index="4"></div><!----><!----><div hidden="" data-index="5"></div><!----><!----><div hidden="" data-index="6"></div><!----><!----><div data-index="7"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:8"><!---->7<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->🔨 Starting image build...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="8"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:9"><!---->8<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->⏱️  This will take approximately 45-60 minutes
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="9"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:10"><!---->9<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->==================================================
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="10"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:11"><!---->10<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->Raspberry Pi HDMI Tester - Image Builder
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="11"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:12"><!---->11<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->==================================================
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="12"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:13"><!---->12<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="13"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:14"><!---->13<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->🔍 Checking prerequisites...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="14"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:15"><!---->14<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->✅ Prerequisites OK
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="15"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:16"><!---->15<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="16"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:17"><!---->16<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->📁 Preparing build directory...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="17"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:18"><!---->17<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->✅ Build directory ready
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="18"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:19"><!---->18<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="19"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:20"><!---->19<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->📦 Installing custom stage...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="20"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:21"><!---->20<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->✅ Custom stage installed
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="21"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:22"><!---->21<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="22"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:23"><!---->22<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->⚙️  Copying build configuration...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="23"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:24"><!---->23<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->✅ Configuration installed
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="24"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:25"><!---->24<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="25"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:26"><!---->25<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->🎨 Copying test assets...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="26"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:27"><!---->26<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->✅ Assets copied
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="27"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:28"><!---->27<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="28"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:29"><!---->28<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->🚀 Starting pi-gen build...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="29"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:30"><!---->29<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->   This will take 30-60 minutes...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="30"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-undefined">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:31"><!---->30<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="31"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:32"><!---->31<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->Checking native armhf executable support...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="32"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:33"><!---->32<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->armhf: not supported on this machine/kernel
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="33"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:34"><!---->33<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->WARNING: Only a native build environment is supported. Checking emulated support...
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="34"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:35"><!---->34<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->armhf: ok
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="35"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:36"><!---->35<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->[11:39:47] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="36"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:37"><!---->36<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->[11:39:47] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage0
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="37"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:38"><!---->37<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->[11:39:47] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage0/prerun.sh
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="38"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:39"><!---->38<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->WARNING: RELEASE does not match the intended option for this branch.
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="39"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:40"><!---->39<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->         Please check the relevant README.md section.
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="40"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:41"><!---->40<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Target architecture can be executed
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="41"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:42"><!---->41<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:47 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Retrieving InRelease
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="42"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:43"><!---->42<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:48 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Checking Release signature
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="43"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:44"><!---->43<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:48 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Valid Release signature (key id A0DA38D0D76E8B5D638872819165938D90FDDD2E)
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="44"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:45"><!---->44<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:49 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Retrieving Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="45"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:46"><!---->45<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:50 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Validating Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="46"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:47"><!---->46<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:51 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Retrieving Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="47"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:48"><!---->47<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:51 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Validating Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="48"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:49"><!---->48<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:51 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Retrieving Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!----><!----><div data-index="49"><!---->
+  <div class="js-check-step-line CheckStep-line d-flex log-line-plain">
+    <a class="CheckStep-line-number color-fg-muted d-inline-block text-mono text-normal flex-shrink-0" href="https://github.com/benpaddlejones/Raspberry_HDMI_Tester/actions/runs/18591546329/job/53007434416#step:7:50"><!---->49<!----></a>
+    <span class="CheckStep-line-timestamp color-fg-muted text-mono text-normal ml-3 flex-shrink-0"><!---->Fri, 17 Oct 2025 11:39:51 GMT<!----></span>
+    <span class="CheckStep-line-content d-inline-block flex-auto ml-3 js-check-line-content"><!----><!----><span class="" style=""><!----><!----><!----><!----><!---->I: Validating Packages
+<!----><!----><!----></span><!----></span>
+  </div>
+<!----></div><!---->
+  <!----></div></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1060px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1040px;"></div><div style="height: 1080px;"></div><div style="height: 1040px;"></div><div style="height: 1120px;"></div><div style="height: 1200px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1020px;"></div><div style="height: 1000px;"></div><div style="height: 1120px;"></div><div style="height: 1120px;"></div><div style="height: 1020px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1060px;"></div><div style="height: 1020px;"></div><div style="height: 1320px;"></div><div style="height: 1120px;"></div><div style="height: 1140px;"></div><div style="height: 1100px;"></div><div style="height: 1000px;"></div><div style="height: 1000px;"></div><div style="height: 1060px;"></div><div style="height: 40px;"></div></div>
+          <div class="d-flex flex-items-center pl-2 py-1 my-2 text-small text-mono color-text-white js-checks-log-display-truncated" hidden="">
+            <div class="ml-1 color-fg-attention">
+              This step has been truncated due to its large size. Download the full logs from the <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-gear">
+    <path d="M8 0a8.2 8.2 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224.231.114.454.243.668.386.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63.27.385.506.792.704 1.218.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294.016.257.016.515 0 .772-.01.147.038.246.088.294l.814.806c.475.469.679 1.216.364 1.891a7.977 7.977 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a5.909 5.909 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8.006 8.006 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a5.738 5.738 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8.12 8.12 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6.214 6.214 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a7.92 7.92 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071.214-.143.437-.272.668-.386.133-.066.194-.158.211-.224l.29-1.106C6.009.645 6.556.095 7.299.03 7.53.01 7.764 0 8 0Zm-.571 1.525c-.036.003-.108.036-.137.146l-.289 1.105c-.147.561-.549.967-.998 1.189-.173.086-.34.183-.5.29-.417.278-.97.423-1.529.27l-1.103-.303c-.109-.03-.175.016-.195.045-.22.312-.412.644-.573.99-.014.031-.021.11.059.19l.815.806c.411.406.562.957.53 1.456a4.709 4.709 0 0 0 0 .582c.032.499-.119 1.05-.53 1.456l-.815.806c-.081.08-.073.159-.059.19.162.346.353.677.573.989.02.03.085.076.195.046l1.102-.303c.56-.153 1.113-.008 1.53.27.161.107.328.204.501.29.447.222.85.629.997 1.189l.289 1.105c.029.109.101.143.137.146a6.6 6.6 0 0 0 1.142 0c.036-.003.108-.036.137-.146l.289-1.105c.147-.561.549-.967.998-1.189.173-.086.34-.183.5-.29.417-.278.97-.423 1.529-.27l1.103.303c.109.029.175-.016.195-.045.22-.313.411-.644.573-.99.014-.031.021-.11-.059-.19l-.815-.806c-.411-.406-.562-.957-.53-1.456a4.709 4.709 0 0 0 0-.582c-.032-.499.119-1.05.53-1.456l.815-.806c.081-.08.073-.159.059-.19a6.464 6.464 0 0 0-.573-.989c-.02-.03-.085-.076-.195-.046l-1.102.303c-.56.153-1.113.008-1.53-.27a4.44 4.44 0 0 0-.501-.29c-.447-.222-.85-.629-.997-1.189l-.289-1.105c-.029-.11-.101-.143-.137-.146a6.6 6.6 0 0 0-1.142 0ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM9.5 8a1.5 1.5 0 1 0-3.001.001A1.5 1.5 0 0 0 9.5 8Z"></path>
+</svg> menu
+              once the workflow run has completed.
+            </div>
+          </div>
+        </div>
+      </details>
