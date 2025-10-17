@@ -6,10 +6,11 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
 # Create vscode user with sudo access
-RUN groupadd --gid 1000 vscode \
-    && useradd --uid 1000 --gid 1000 -m -s /bin/bash vscode \
-    && apt-get update \
+# Handle the case where GID/UID 1000 might already exist
+RUN apt-get update \
     && apt-get install -y sudo \
+    && groupadd --gid 1000 vscode 2>/dev/null || groupmod -n vscode $(getent group 1000 | cut -d: -f1) \
+    && useradd --uid 1000 --gid 1000 -m -s /bin/bash vscode 2>/dev/null || usermod -l vscode -d /home/vscode -m $(getent passwd 1000 | cut -d: -f1) \
     && echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
 
