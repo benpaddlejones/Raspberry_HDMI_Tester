@@ -45,9 +45,9 @@
    - ✅ `04-boot-config/` - HDMI 1920x1080@60Hz configuration
 
 3. **Build Scripts** (CRITICAL)
-   - ❌ `scripts/build-image.sh` - Main build orchestrator
-   - ❌ `scripts/configure-boot.sh` - Boot configuration (config.txt, cmdline.txt)
-   - ❌ `scripts/setup-autostart.sh` - systemd service creation helper
+   - ✅ `scripts/build-image.sh` - Main build orchestrator
+   - ✅ `scripts/configure-boot.sh` - Boot configuration (config.txt, cmdline.txt)
+   - ❌ `scripts/setup-autostart.sh` - systemd service creation helper (optional)
 
 4. **Testing Scripts**
    - ❌ `tests/qemu-test.sh` - QEMU emulation testing
@@ -297,9 +297,10 @@ EOF
 
 ### Phase 4: Build Scripts (2 hours)
 
-#### Task 4.1: Main Build Script
+#### Task 4.1: Main Build Script ✅ COMPLETE
 **File**: `scripts/build-image.sh`
 **Purpose**: Orchestrate the entire build process
+**Status**: ✅ Build orchestration script created
 
 ```bash
 #!/bin/bash
@@ -396,9 +397,10 @@ echo "  2. Flash to SD card: See docs/FLASHING.md"
 echo ""
 ```
 
-#### Task 4.2: Boot Configuration Script
+#### Task 4.2: Boot Configuration Script ✅ COMPLETE
 **File**: `scripts/configure-boot.sh`
 **Purpose**: Configure Raspberry Pi boot settings
+**Status**: ✅ Boot configuration helper script created
 
 ```bash
 #!/bin/bash
@@ -640,13 +642,13 @@ fi
 - [x] 8. Implement 02-audio-test stage ✅ DONE
 - [x] 9. Implement 03-autostart stage ✅ DONE
 - [x] 9b. Implement 04-boot-config stage ✅ DONE (HDMI 1920x1080@60Hz)
-- [ ] 10. Create build-image.sh script ⚠️ NEXT
-- [ ] 11. Make all scripts executable
+- [x] 10. Create build-image.sh script ✅ DONE
+- [x] 11. Make all scripts executable ✅ DONE
 
 ### Testing Infrastructure
-- [ ] 12. Create qemu-test.sh
+- [ ] 12. Create qemu-test.sh ⚠️ NEXT
 - [ ] 13. Create validate-image.sh
-- [ ] 14. Create configure-boot.sh
+- [ ] 14. Create configure-boot.sh ✅ DONE (already created in Phase 4)
 
 ### Documentation
 - [ ] 15. Write BUILDING.md
