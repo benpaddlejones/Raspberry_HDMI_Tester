@@ -94,7 +94,7 @@ jobs:
           # Run build - capture exit code
           set -e  # Exit on error
           sudo -E ./scripts/build-image.sh
-          
+
           # Verify deploy directory was created
           if [ ! -d "build/pi-gen-work/deploy" ]; then
             echo "❌ Error: Build completed but deploy directory not found!"
