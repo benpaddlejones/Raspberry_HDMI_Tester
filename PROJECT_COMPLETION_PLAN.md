@@ -24,24 +24,25 @@
    - ✅ All build dependencies installed
 
 3. **Test Assets**
-   - ✅ Test pattern image: `assets/image.png` (1920x1081, PNG, 367KB)
+   - ✅ Test pattern image: `assets/image.png` (1920x1080, PNG, 367KB) - **Resolution fixed!**
    - ✅ Test audio file: `assets/audio.mp3` (MP3, 96kbps, 32kHz, Stereo)
 
 4. **Project Structure**
    - ✅ All directories created (build/, scripts/, tests/, docs/, assets/)
-   - ✅ Custom stage directories: 00-install-packages through 03-autostart
+   - ✅ Custom stage directories: 00-install-packages through 04-boot-config (5 stages)
 
 ### ❌ MISSING (What Needs to be Built)
 
 1. **Build Configuration** (CRITICAL)
-   - ❌ `build/config` - pi-gen configuration file
-   - ❌ Stage skip files to control which stages run
+   - ✅ `build/config` - pi-gen configuration file
+   - ✅ Stage skip files to control which stages run
 
 2. **Custom Build Stages** (CORE FUNCTIONALITY)
-   - ❌ `00-install-packages/` - Package list and installation scripts
-   - ❌ `01-test-image/` - Deploy test pattern to image
-   - ❌ `02-audio-test/` - Deploy audio file to image
-   - ❌ `03-autostart/` - systemd services for auto-start
+   - ✅ `00-install-packages/` - Package list and installation scripts
+   - ✅ `01-test-image/` - Deploy test pattern to image
+   - ✅ `02-audio-test/` - Deploy audio file to image
+   - ✅ `03-autostart/` - systemd services for auto-start
+   - ✅ `04-boot-config/` - HDMI 1920x1080@60Hz configuration
 
 3. **Build Scripts** (CRITICAL)
    - ❌ `scripts/build-image.sh` - Main build orchestrator
@@ -90,8 +91,9 @@
 
 ### Phase 2: Build Configuration (1 hour)
 
-#### Task 2.1: Create pi-gen Configuration File
+#### Task 2.1: Create pi-gen Configuration File ✅ COMPLETE
 - **File**: `build/config`
+- **Status**: ✅ Created and configured
 - **Purpose**: Configure pi-gen build settings
 - **Contents**:
   ```bash
@@ -107,19 +109,21 @@
   STAGE_LIST="stage0 stage1 stage2 /workspaces/Raspberry_HDMI_Tester/build/stage-custom"
   ```
 
-#### Task 2.2: Create Stage Skip Files
+#### Task 2.2: Create Stage Skip Files ✅ COMPLETE
 - **Files**:
-  - `build/stage3/SKIP` - Skip desktop environment
-  - `build/stage4/SKIP` - Skip recommended packages
-  - `build/stage5/SKIP` - Skip extras
-  - `build/stage-custom/SKIP_IMAGES` - Don't create image until our stage completes
+  - `build/stage3/SKIP` - Skip desktop environment ✅
+  - `build/stage4/SKIP` - Skip recommended packages ✅
+  - `build/stage5/SKIP` - Skip extras ✅
+  - `build/stage-custom/SKIP_IMAGES` - Don't create image until our stage completes ✅
+- **Status**: ✅ All skip files created
 
 ---
 
 ### Phase 3: Custom Build Stages (3 hours)
 
-#### Task 3.1: 00-install-packages Stage
+#### Task 3.1: 00-install-packages Stage ✅ COMPLETE
 **Purpose**: Install required packages for display and audio
+**Status**: ✅ Package list and installation script created
 
 **File**: `build/stage-custom/00-install-packages/00-packages`
 ```
@@ -141,13 +145,14 @@ apt-get clean
 rm -rf /var/lib/apt/lists/*
 ```
 
-#### Task 3.2: 01-test-image Stage
+#### Task 3.2: 01-test-image Stage ✅ COMPLETE
 **Purpose**: Deploy test pattern image to the OS image
+**Status**: ✅ Test pattern copied and deployment script created
 
 **Directory**: `build/stage-custom/01-test-image/files/`
-- Copy `assets/image.png` → `opt/hdmi-tester/test-pattern.png`
+- Copy `assets/image.png` → `opt/hdmi-tester/test-pattern.png` ✅
 
-**File**: `build/stage-custom/01-test-image/00-run-chroot.sh`
+**File**: `build/stage-custom/01-test-image/00-run.sh`
 ```bash
 #!/bin/bash -e
 # Deploy test pattern image
@@ -156,13 +161,14 @@ install -m 644 files/test-pattern.png "${ROOTFS_DIR}/opt/hdmi-tester/"
 chown -R 1000:1000 "${ROOTFS_DIR}/opt/hdmi-tester"
 ```
 
-#### Task 3.3: 02-audio-test Stage
+#### Task 3.3: 02-audio-test Stage ✅ COMPLETE
 **Purpose**: Deploy audio test file
+**Status**: ✅ Audio file copied and deployment script created
 
 **Directory**: `build/stage-custom/02-audio-test/files/`
-- Copy `assets/audio.mp3` → `opt/hdmi-tester/test-audio.mp3`
+- Copy `assets/audio.mp3` → `opt/hdmi-tester/test-audio.mp3` ✅
 
-**File**: `build/stage-custom/02-audio-test/00-run-chroot.sh`
+**File**: `build/stage-custom/02-audio-test/00-run.sh`
 ```bash
 #!/bin/bash -e
 # Deploy audio test file
@@ -170,10 +176,11 @@ install -m 644 files/test-audio.mp3 "${ROOTFS_DIR}/opt/hdmi-tester/"
 chown 1000:1000 "${ROOTFS_DIR}/opt/hdmi-tester/test-audio.mp3"
 ```
 
-#### Task 3.4: 03-autostart Stage
+#### Task 3.4: 03-autostart Stage ✅ COMPLETE
 **Purpose**: Create systemd services for auto-start
+**Status**: ✅ Both systemd services and autostart script created
 
-**File**: `build/stage-custom/03-autostart/files/hdmi-display.service`
+**File**: `build/stage-custom/03-autostart/files/hdmi-display.service` ✅
 ```ini
 [Unit]
 Description=HDMI Test Pattern Display
@@ -193,7 +200,7 @@ RestartSec=10
 WantedBy=graphical.target
 ```
 
-**File**: `build/stage-custom/03-autostart/files/hdmi-audio.service`
+**File**: `build/stage-custom/03-autostart/files/hdmi-audio.service` ✅
 ```ini
 [Unit]
 Description=HDMI Audio Test Playback
@@ -212,7 +219,7 @@ RestartSec=10
 WantedBy=multi-user.target
 ```
 
-**File**: `build/stage-custom/03-autostart/00-run-chroot.sh`
+**File**: `build/stage-custom/03-autostart/00-run.sh` ✅
 ```bash
 #!/bin/bash -e
 # Install and enable systemd services
@@ -261,6 +268,29 @@ EOF
 
 chmod +x "${ROOTFS_DIR}/home/pi/.xinitrc"
 chown 1000:1000 "${ROOTFS_DIR}/home/pi/.xinitrc"
+```
+
+#### Task 3.5: 04-boot-config Stage ✅ COMPLETE
+**Purpose**: Configure HDMI output for 1920x1080@60Hz
+**Status**: ✅ Boot configuration script created
+
+**File**: `build/stage-custom/04-boot-config/00-run.sh` ✅
+```bash
+#!/bin/bash -e
+# Configure HDMI boot settings for 1920x1080 output
+
+# Append HDMI configuration to config.txt
+cat >> "${ROOTFS_DIR}/boot/firmware/config.txt" << 'EOF'
+
+# HDMI Tester Configuration - Force 1920x1080 @ 60Hz
+hdmi_force_hotplug=1
+hdmi_drive=2
+hdmi_group=1
+hdmi_mode=16
+gpu_mem=128
+disable_splash=1
+boot_delay=0
+EOF
 ```
 
 ---
@@ -601,15 +631,16 @@ fi
 - [x] 1. Commit Dockerfile changes ✅ DONE
 - [x] 2. Rebuild dev container ✅ DONE (Ubuntu 24.04.3 LTS)
 - [x] 3. Verify all tools work with `check-deps` ✅ DONE
-- [ ] 4. Create `build/config` file ⚠️ NEXT
-- [ ] 5. Create stage skip files
+- [x] 4. Create `build/config` file ✅ DONE
+- [x] 5. Create stage skip files ✅ DONE
 
 ### Core Implementation (Do Next)
-- [ ] 6. Implement 00-install-packages stage
-- [ ] 7. Implement 01-test-image stage
-- [ ] 8. Implement 02-audio-test stage
-- [ ] 9. Implement 03-autostart stage
-- [ ] 10. Create build-image.sh script
+- [x] 6. Implement 00-install-packages stage ✅ DONE
+- [x] 7. Implement 01-test-image stage ✅ DONE
+- [x] 8. Implement 02-audio-test stage ✅ DONE
+- [x] 9. Implement 03-autostart stage ✅ DONE
+- [x] 9b. Implement 04-boot-config stage ✅ DONE (HDMI 1920x1080@60Hz)
+- [ ] 10. Create build-image.sh script ⚠️ NEXT
 - [ ] 11. Make all scripts executable
 
 ### Testing Infrastructure
@@ -634,15 +665,17 @@ fi
 
 ## ⚠️ Known Issues to Address
 
-1. **Test Pattern Resolution**: Current image is 1920x1081 (should be 1920x1080)
-   - **Fix**: Resize image to exactly 1920x1080
+1. **Test Pattern Resolution**: ✅ FIXED
+   - ~~Current image is 1920x1081 (should be 1920x1080)~~
+   - ✅ **Fixed**: Resized to exactly 1920x1080
 
 2. **Audio Format**: Using MP3 instead of WAV
    - **Decision**: MP3 is fine for testing, but WAV is more universal
    - **Consider**: Converting to WAV for better compatibility
 
-3. **Container Build Error**: Fixed but not committed
-   - **Action**: Commit and push changes
+3. **HDMI Configuration**: ✅ FIXED
+   - ~~Need to configure HDMI output resolution~~
+   - ✅ **Fixed**: Added 04-boot-config stage with 1920x1080@60Hz settings
 
 ---
 

@@ -1,0 +1,16 @@
+[Unit]
+Description=HDMI Test Pattern Display
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=pi
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/feh --fullscreen --hide-pointer --auto-zoom /opt/hdmi-tester/test-pattern.png
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target

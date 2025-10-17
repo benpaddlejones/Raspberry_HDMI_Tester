@@ -1,0 +1,15 @@
+[Unit]
+Description=HDMI Audio Test Playback
+After=sound.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=pi
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa /opt/hdmi-tester/test-audio.mp3
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

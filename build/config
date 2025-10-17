@@ -1,0 +1,44 @@
+# Raspberry Pi HDMI Tester - pi-gen Build Configuration
+# This file configures the pi-gen build system to create our custom image
+
+# Image name (will be used in the output filename)
+IMG_NAME="RaspberryPi_HDMI_Tester"
+
+# Debian release (bookworm = Debian 12, latest stable for Raspberry Pi OS)
+RELEASE="bookworm"
+
+# Target hostname
+TARGET_HOSTNAME="hdmi-tester"
+
+# Keyboard configuration
+KEYBOARD_KEYMAP="us"
+KEYBOARD_LAYOUT="English (US)"
+
+# Timezone
+TIMEZONE_DEFAULT="UTC"
+
+# Default user credentials
+FIRST_USER_NAME="pi"
+FIRST_USER_PASS="raspberry"
+
+# Disable SSH (security - not needed for HDMI tester)
+ENABLE_SSH=0
+
+# Stage list - which stages to build
+# stage0: Bootstrap minimal Debian
+# stage1: Core Raspberry Pi OS components
+# stage2: Networking and basic utilities (minimal OS)
+# stage-custom: Our custom HDMI tester functionality
+#   - 00-install-packages: X11, feh, mpv, audio tools
+#   - 01-test-image: Deploy test pattern (1920x1080)
+#   - 02-audio-test: Deploy audio file
+#   - 03-autostart: systemd services for auto-boot
+#   - 04-boot-config: HDMI 1920x1080@60Hz configuration
+# We skip stage3 (desktop), stage4 (recommended apps), stage5 (extras)
+STAGE_LIST="stage0 stage1 stage2 /workspaces/Raspberry_HDMI_Tester/build/stage-custom"
+
+# Target architecture
+DEPLOY_COMPRESSION="zip"
+
+# Reduce image size
+ENABLE_REDUCE_DISK_USAGE=1

@@ -1,0 +1,1 @@
+# Don't create intermediate images - only create final image after our custom stage completes
