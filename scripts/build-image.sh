@@ -11,6 +11,20 @@ PI_GEN_DIR="${PI_GEN_DIR:-/opt/pi-gen}"
 WORK_DIR="${PROJECT_ROOT}/build/pi-gen-work"
 CONFIG_FILE="${PROJECT_ROOT}/build/config"
 
+# Clean any previous build BEFORE setting up logging
+# (logging file lives in WORK_DIR, so we must clean before creating it)
+if [ -d "${WORK_DIR}" ]; then
+    echo "🧹 Cleaning previous build directory..."
+    sudo rm -rf "${WORK_DIR}"
+fi
+
+# Setup logging
+BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
+BUILD_LOG_DIR="${PROJECT_ROOT}/logs"
+BUILD_LOG_FILE="${WORK_DIR}/build-detailed.log".."
+    sudo rm -rf "${WORK_DIR}"
+fi
+
 # Setup logging
 BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
 BUILD_LOG_DIR="${PROJECT_ROOT}/logs"
@@ -78,29 +92,8 @@ if [ ! -d "${PI_GEN_DIR}" ]; then
     finalize_log "failure" "pi-gen directory not found"
     exit 1
 fi
-log_info "✓ pi-gen found at ${PI_GEN_DIR}"
-
-log_info "Checking for build config..."
-if [ ! -f "${CONFIG_FILE}" ]; then
-    log_event "❌" "Build config not found at ${CONFIG_FILE}"
-    end_stage_timer "Prerequisites Check" 1
-    finalize_log "failure" "Build config file not found"
-    exit 1
-fi
-log_info "✓ Build config found"
-
-end_stage_timer "Prerequisites Check" 0
-monitor_disk_space "After Prerequisites Check"
-
 # Prepare working directory
 start_stage_timer "Build Directory Setup"
-
-log_subsection "Cleaning Previous Build"
-if [ -d "${WORK_DIR}" ]; then
-    log_info "Removing existing work directory..."
-    sudo rm -rf "${WORK_DIR}"
-    log_info "✓ Previous build directory removed"
-fi
 
 log_subsection "Copying pi-gen"
 log_info "Copying pi-gen from ${PI_GEN_DIR} to ${WORK_DIR}..."
