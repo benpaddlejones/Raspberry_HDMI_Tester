@@ -1,0 +1,468 @@
+==================================================================
+  RASPBERRY PI HDMI TESTER - BUILD LOG
+==================================================================
+
+Build Started: 2025-10-18 02:44:04 UTC
+Build ID: 18609590442
+Build Number: 9
+Commit: 95d827c320768545c4415c55331c0250017cf0b2
+Branch: main
+
+
+==================================================================
+  Build Environment
+==================================================================
+Timestamp: 2025-10-18 02:44:04 UTC
+
+=== System Information ===
+Hostname: runnervmzdgdc
+OS: Ubuntu 24.04.3 LTS
+Kernel: 6.14.0-1012-azure
+Architecture: x86_64
+
+=== CPU Information ===
+Processor: AMD EPYC 7763 64-Core Processor
+CPU Cores: 4
+CPU Architecture: x86_64
+
+=== Memory Information ===
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       920Mi        12Gi        44Mi       2.3Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+=== Disk Space ===
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+=== Available Disk Space in Working Directory ===
+/dev/root        72G   51G   22G  71% /
+
+=== Tool Versions ===
+Git: git version 2.51.0
+QEMU ARM: qemu-arm version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.10)
+Debootstrap: debootstrap 1.0.134ubuntu1
+Kpartx: multipath-tools v0.9.4 (12/19, 2022)
+Parted: parted (GNU parted) 3.6
+Zip: This is Zip 3.0 (July 5th 2008), by Info-ZIP.
+JQ: jq-1.7
+Bash: 5.2.21(1)-release
+
+=== Environment Variables ===
+USER: root
+HOME: /home/runner
+SHELL: /bin/bash
+PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+PWD: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester
+GITHUB_WORKSPACE: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester
+GITHUB_ACTOR: benpaddlejones
+GITHUB_WORKFLOW: Build and Release
+
+✅ Environment captured
+
+==================================================================
+  STAGE: Asset Validation
+==================================================================
+Started: 2025-10-18 02:44:04 UTC
+
+🚀 Starting: Asset Validation
+
+=== Asset Validation: Test Pattern Image ===
+Path: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/assets/image.png
+Status: ✅ Found
+Size: 347K
+Modified: 2025-10-18 02:43:29.360449916 +0000
+Type: PNG image data, 1920 x 1080, 8-bit/color RGBA, non-interlaced
+SHA256: 0fac440daea5614de600b8058a54ffd0709fc653a722fb239b341c887e51c9af
+
+
+=== Asset Validation: Test Audio File ===
+Path: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/assets/audio.mp3
+Status: ✅ Found
+Size: 203K
+Modified: 2025-10-18 02:43:29.358449913 +0000
+Type: Audio file with ID3 version 2.4.0, contains: MPEG ADTS, layer III, v1, 96 kbps, 32 kHz, Stereo
+SHA256: 1b34a837c6d42cebe793dcf5f7aee3513261de875898eb23d7eb4be50553574c
+
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:01 (1s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Asset Validation (00:00:01)
+
+=== Disk Usage at: After Asset Validation ===
+Timestamp: 2025-10-18 02:44:05 UTC
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+2.9M	.
+
+
+==================================================================
+  STAGE: Prerequisites Check
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Prerequisites Check
+
+--- Checking Required Tools ---
+
+[INFO] Checking for qemu-arm-static...
+[INFO] ✓ qemu-arm-static found
+[INFO] Checking for pi-gen directory...
+
+==================================================================
+  STAGE: Build Directory Setup
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Build Directory Setup
+
+--- Copying pi-gen ---
+
+[INFO] Copying pi-gen from /opt/pi-gen to /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work...
+[INFO] ✓ pi-gen copied
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Build Directory Setup (00:00:00)
+
+=== Disk Usage at: After Build Directory Setup ===
+Timestamp: 2025-10-18 02:44:05 UTC
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+5.9M	.
+
+
+==================================================================
+  STAGE: Custom Stage Installation
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Custom Stage Installation
+
+--- Installing Custom Stages ---
+
+[INFO] Copying stage-custom...
+[INFO] ✓ stage-custom copied
+[INFO] Skipping stages 3, 4, 5...
+[INFO] ✓ Stage skip files installed
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Custom Stage Installation (00:00:00)
+
+==================================================================
+  STAGE: Configuration Setup
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Configuration Setup
+
+==================================================================
+  Build Configuration
+==================================================================
+Timestamp: 2025-10-18 02:44:05 UTC
+
+Configuration file: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/config
+
+=== Configuration Contents ===
+# Raspberry Pi HDMI Tester - pi-gen Build Configuration
+# This file configures the pi-gen build system to create our custom image
+
+# Image name (will be used in the output filename)
+IMG_NAME="RaspberryPi_HDMI_Tester"
+
+# Debian release (bookworm = Debian 12, latest stable for Raspberry Pi OS)
+RELEASE="bookworm"
+
+# Target hostname
+TARGET_HOSTNAME="hdmi-tester"
+
+# Keyboard configuration
+KEYBOARD_KEYMAP="us"
+KEYBOARD_LAYOUT="English (US)"
+
+# Timezone
+TIMEZONE_DEFAULT="UTC"
+
+# Default user credentials
+FIRST_USER_NAME="pi"
+FIRST_USER_PASS="raspberry"
+
+# Disable SSH (security - not needed for HDMI tester)
+ENABLE_SSH=0
+
+# Stage list - which stages to build
+# stage0: Bootstrap minimal Debian
+# stage1: Core Raspberry Pi OS components
+# stage2: Networking and basic utilities (minimal OS)
+# stage-custom: Our custom HDMI tester functionality
+#   - 00-install-packages: X11, feh, mpv, audio tools
+#   - 01-test-image: Deploy test pattern (1920x1080)
+#   - 02-audio-test: Deploy audio file
+#   - 03-autostart: systemd services for auto-boot
+#   - 04-boot-config: HDMI 1920x1080@60Hz configuration
+# We skip stage3 (desktop), stage4 (recommended apps), stage5 (extras)
+# NOTE: stage-custom is copied into the pi-gen work directory by build-image.sh
+# Use relative path from pi-gen root, not absolute path
+STAGE_LIST="stage0 stage1 stage2 stage-custom"
+
+# Target architecture
+DEPLOY_COMPRESSION="zip"
+
+# Reduce image size
+ENABLE_REDUCE_DISK_USAGE=1
+
+✅ Configuration logged
+[INFO] Copying config to work directory...
+[INFO] ✓ Configuration copied
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Configuration Setup (00:00:00)
+
+==================================================================
+  STAGE: Asset Deployment
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Asset Deployment
+
+--- Creating Asset Directories ---
+
+[INFO] ✓ Asset directories created
+
+--- Copying Test Pattern Image ---
+
+Test Pattern Image (Deployed):
+  File: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage-custom/01-test-image/files/test-pattern.png
+  Size: 347K
+  SHA256: 0fac440daea5614de600b8058a54ffd0709fc653a722fb239b341c887e51c9af
+[INFO] Checksum logged for /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage-custom/01-test-image/files/test-pattern.png
+[INFO] ✓ Test pattern copied
+
+--- Copying Test Audio ---
+
+Test Audio File (Deployed):
+  File: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage-custom/02-audio-test/files/test-audio.mp3
+  Size: 203K
+  SHA256: 1b34a837c6d42cebe793dcf5f7aee3513261de875898eb23d7eb4be50553574c
+[INFO] Checksum logged for /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage-custom/02-audio-test/files/test-audio.mp3
+[INFO] ✓ Test audio copied
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Asset Deployment (00:00:00)
+
+=== Disk Usage at: After Asset Deployment ===
+Timestamp: 2025-10-18 02:44:05 UTC
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+6.5M	.
+
+
+=== Memory Usage at: Before pi-gen Build ===
+Timestamp: 2025-10-18 02:44:05 UTC
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       917Mi        12Gi        45Mi       2.3Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+
+==================================================================
+  STAGE: pi-gen Build
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: pi-gen Build
+🚀 Starting pi-gen build (this will take 30-60 minutes)...
+[INFO] Build will download packages, bootstrap Debian, and create custom image
+[INFO] Working directory: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work
+
+--- Executing pi-gen build.sh ---
+
+[INFO] Command: sudo ./build.sh
+sudo: ./build.sh: command not found
+[INFO] ✓ pi-gen build.sh completed successfully
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: pi-gen Build (00:00:00)
+
+=== Disk Usage at: After pi-gen Build ===
+Timestamp: 2025-10-18 02:44:05 UTC
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+3.7M	.
+
+
+=== Memory Usage at: After pi-gen Build ===
+Timestamp: 2025-10-18 02:44:05 UTC
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       916Mi        12Gi        45Mi       2.3Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+
+==================================================================
+  STAGE: Deployment Validation
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Deployment Validation
+
+--- Checking Deploy Directory ---
+
+❌ Deploy directory not found!
+
+==================================================================
+  ERROR CONTEXT
+==================================================================
+Error: Deploy directory missing
+Timestamp: 2025-10-18 02:44:05 UTC
+
+=== Log Context (30 lines before, 10 after) ===
+
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+3.7M	.
+
+
+=== Memory Usage at: After pi-gen Build ===
+Timestamp: 2025-10-18 02:44:05 UTC
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       916Mi        12Gi        45Mi       2.3Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+
+==================================================================
+  STAGE: Deployment Validation
+==================================================================
+Started: 2025-10-18 02:44:05 UTC
+
+🚀 Starting: Deployment Validation
+
+--- Checking Deploy Directory ---
+
+❌ Deploy directory not found!
+
+==================================================================
+  ERROR CONTEXT
+==================================================================
+Error: Deploy directory missing
+Timestamp: 2025-10-18 02:44:05 UTC
+
+=== Log Context (30 lines before, 10 after) ===
+
+
+==================================================================
+
+
+Completed: 2025-10-18 02:44:05 UTC
+Duration: 00:00:00 (0s)
+Status: ❌ FAILED (exit code: 1)
+==================================================================
+
+❌ Failed: Deployment Validation after 00:00:00
+
+==================================================================
+  BUILD SUMMARY
+==================================================================
+Build Completed: 2025-10-18 02:44:05 UTC
+Total Duration: 00:00:01 (1s)
+Status: ❌ FAILED
+Error: Deploy directory not created
+
+=== Final System State ===
+
+Disk Space:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        72G   51G   22G  71% /
+tmpfs           7.9G   84K  7.9G   1% /dev/shm
+tmpfs           3.2G  1.1M  3.2G   1% /run
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/sda16      881M   63M  757M   8% /boot
+/dev/sda15      105M  6.2M   99M   6% /boot/efi
+/dev/sdb1        74G  4.1G   66G   6% /mnt
+tmpfs           1.6G   12K  1.6G   1% /run/user/1001
+tmpfs           7.9G     0  7.9G   0% /run/qemu
+
+Memory:
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       916Mi        12Gi        45Mi       2.3Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+==================================================================
+  END OF BUILD LOG
+==================================================================
