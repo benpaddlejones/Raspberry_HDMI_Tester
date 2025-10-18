@@ -105,6 +105,7 @@ cp -r "${PROJECT_ROOT}/build/stage-custom" "${WORK_DIR}/"
 log_info "✓ stage-custom copied"
 
 log_info "Skipping stages 3, 4, 5..."
+mkdir -p "${WORK_DIR}/stage3" "${WORK_DIR}/stage4" "${WORK_DIR}/stage5"
 cp "${PROJECT_ROOT}/build/stage3/SKIP" "${WORK_DIR}/stage3/"
 cp "${PROJECT_ROOT}/build/stage4/SKIP" "${WORK_DIR}/stage4/"
 cp "${PROJECT_ROOT}/build/stage5/SKIP" "${WORK_DIR}/stage5/"

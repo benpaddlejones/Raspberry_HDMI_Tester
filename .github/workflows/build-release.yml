@@ -119,7 +119,7 @@ jobs:
           if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
             echo ""
             echo "❌ Build failed with exit code ${BUILD_EXIT_CODE}"
-            
+
             # Check if log file exists before promising upload
             if [ -f "build/pi-gen-work/build-detailed.log" ]; then
               echo "📝 Detailed log will be uploaded as artifact and committed to repository"
@@ -127,7 +127,7 @@ jobs:
               echo "⚠️  Detailed log file not created - build failed early"
               echo "📝 Minimal error report will be created and committed to repository"
             fi
-            
+
             exit ${BUILD_EXIT_CODE}
           fi
 
@@ -242,7 +242,7 @@ jobs:
                 echo "⚠️ Rebase failed, trying merge..."
                 git pull origin main
               }
-              
+
               git push || {
                 echo "❌ Failed to push logs"
                 exit 1
@@ -428,12 +428,12 @@ jobs:
           if grep -q "## 📥 Download" README.md; then
             # Section exists - replace it
             echo "Updating existing Download section..."
-            
+
             # Find start and end of Download section
             START_LINE=$(grep -n "## 📥 Download" README.md | head -n1 | cut -d: -f1)
             # Find next ## heading or end of file
             NEXT_SECTION=$(tail -n +$((START_LINE + 1)) README.md | grep -n "^## " | head -n1 | cut -d: -f1)
-            
+
             if [ -n "$NEXT_SECTION" ]; then
               END_LINE=$((START_LINE + NEXT_SECTION - 1))
               # Delete old section
@@ -442,7 +442,7 @@ jobs:
               # Download section is at end of file
               sed -i "${START_LINE},\$d" README.md
             fi
-            
+
             # Insert new section at the same position
             sed -i "${START_LINE}r download_section.md" README.md
             echo "✅ Download section updated"
@@ -472,14 +472,21 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "docs: Update README with release v${{ steps.config.outputs.version }} links [skip ci]"
-            
+
             # Pull latest changes before pushing (in case logs were committed)
             git pull --rebase origin main || {
               echo "⚠️ Rebase failed, trying merge..."
               git pull origin main
             }
-            
+
             git push || {
+              echo "❌ Failed to push README updates"
+              exit 1
+            }
+
+            echo "✅ README updates pushed successfully"
+          fi
+
       - name: Push failed build logs
         if: failure()
         run: |
@@ -492,28 +499,22 @@ jobs:
           # Check if there are commits to push
           if git log origin/main..HEAD --oneline | grep -q .; then
             echo "Found commits to push..."
-            
+
             git pull --rebase origin main || {
               echo "⚠️ Rebase failed, trying merge..."
               git pull origin main
             }
-            
+
             git push || {
               echo "❌ CRITICAL: Failed to push failed build logs"
               echo "Manual intervention required to push logs"
               exit 1
             }
-            
+
             echo "✅ Failed build logs pushed successfully"
           else
             echo "No commits to push (logs may already be pushed)"
-          fithub-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-          git pull --rebase || true
-          git push || echo "⚠️  Failed to push logs (may already be pushed)"
-
-          echo "✅ Failed build logs pushed"
+          fi
 
       - name: Build summary
         if: always()
