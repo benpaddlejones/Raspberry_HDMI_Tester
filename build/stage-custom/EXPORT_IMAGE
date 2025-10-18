@@ -1,2 +1,7 @@
 # Export image after custom stage
-# This marker tells pi-gen to create a deployable image after this stage
+# This file is sourced by pi-gen to configure the image export
+
+IMG_SUFFIX="-hdmi-tester"
+if [ "${USE_QEMU}" = "1" ]; then
+    export IMG_SUFFIX="${IMG_SUFFIX}-qemu"
+fi
