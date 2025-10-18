@@ -721,46 +721,29 @@ When user provides a request:
 3. **Perform the work** - Make changes, run commands
 4. **Output summary to chat** - Explain what was done
 
-**CRITICAL: DO NOT create summary documents (e.g., `SUMMARY.md`, `IMPLEMENTATION.md`) unless explicitly requested.**
+**CRITICAL: DO NOT EVER CREATE DOCUMENTATION FILES AFTER COMPLETING WORK.**
 
 #### Output Format for Completed Work
 
-After completing work, provide a **chat summary** in this format:
+After completing work, provide a **brief chat summary** ONLY:
 
-```markdown
-## ✅ [Task Name] Complete!
-
-### What Was Done
-- Item 1
-- Item 2
-- Item 3
-
-### Files Created/Modified
-- `path/to/file1` - Description
-- `path/to/file2` - Description
-
-### Key Changes
-Brief description of important changes
-
-### Next Steps (if applicable)
-1. Step 1
-2. Step 2
-
-### Testing/Verification
-How to test or verify the changes
+```
+Fixed [issue]. Changed [files]. Done.
 ```
 
-**DO NOT:**
-- ❌ Create `SUMMARY.md` files after work
-- ❌ Create `IMPLEMENTATION.md` files after work
-- ❌ Create any documentation files unless updating existing docs
-- ❌ Leave loose documentation files in the root directory
+**ABSOLUTELY FORBIDDEN - NEVER DO THESE:**
+- ❌ **NEVER** create `SUMMARY.md`, `IMPLEMENTATION.md`, `CHANGES.md`, `NOTES.md`, or ANY similar documentation files
+- ❌ **NEVER** create documentation files "to document the changes"
+- ❌ **NEVER** create documentation files "for future reference"
+- ❌ **NEVER** update existing documentation files UNLESS the user explicitly asks
+- ❌ **NEVER** add sections to README.md or docs/*.md unless explicitly requested
+- ❌ **NEVER** write verbose explanations or summaries in chat unless asked
 
-**DO:**
-- ✅ Update existing documentation files (README.md, docs/*.md)
-- ✅ Provide comprehensive chat summaries
-- ✅ Explain your work clearly in the chat
-- ✅ Create docs only when explicitly requested
+**ONLY ALLOWED:**
+- ✅ Make the fix/change requested
+- ✅ Commit with clear commit message
+- ✅ One line in chat: what was fixed
+- ✅ Update docs ONLY if user explicitly says "update the docs" or "document this"
 
 ### Specific Command Patterns
 
@@ -848,20 +831,14 @@ When adding features or modifying scripts:
 
 ### Documentation Update Rules
 
-**When to update existing documentation:**
-- New features added → Update README.md, relevant docs/*.md
-- Build process changes → Update BUILDING.md
-- New troubleshooting info → Update TROUBLESHOOTING.md
-- Configuration changes → Update CUSTOMIZATION.md
-- API/script changes → Update relevant documentation
+**DEFAULT BEHAVIOR: DO NOT UPDATE DOCUMENTATION**
 
-**What NOT to do:**
-- Do NOT create `CHANGES.md` or `UPDATES.md`
-- Do NOT create `IMPLEMENTATION_SUMMARY.md`
-- Do NOT create `FEATURE_NOTES.md`
-- Do NOT create any ad-hoc documentation files
+Only update documentation if user explicitly says:
+- "Update the docs"
+- "Document this in [specific file]"
+- "Add this to README"
 
-**Principle:** Keep documentation in **established, organized locations**. Avoid documentation sprawl.
+**NEVER automatically update documentation after making changes.**
 
 ---
 
