@@ -151,11 +151,53 @@ jobs:
             echo "📝 Committing failed build log..."
           fi
 
-          # Copy log to repository
+          # Copy log to repository or create error report
           if [ -f "build/pi-gen-work/build-detailed.log" ]; then
             cp build/pi-gen-work/build-detailed.log "${LOG_FILE}"
+            echo "✅ Log file copied"
+          elif [ "${BUILD_EXIT_CODE}" != "0" ]; then
+            # Build failed before log was created - create minimal error log
+            echo "⚠️  Build log file not found - creating minimal error report"
+            {
+              echo "================================================================"
+              echo "  RASPBERRY PI HDMI TESTER - BUILD LOG (INCOMPLETE)"
+              echo "================================================================"
+              echo ""
+              echo "Build Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+              echo "Build ID: ${GITHUB_RUN_ID}"
+              echo "Build Number: ${GITHUB_RUN_NUMBER}"
+              echo "Commit: ${GITHUB_SHA}"
+              echo "Branch: ${GITHUB_REF_NAME}"
+              echo ""
+              echo "STATUS: FAILED EARLY (before detailed log could be created)"
+              echo ""
+              echo "The build failed before the detailed logging system could initialize."
+              echo "This typically indicates:"
+              echo "- Missing directory creation (build/pi-gen-work not created)"
+              echo "- Permission issues with log file path"
+              echo "- Script error before logging initialization"
+              echo ""
+              echo "Check the GitHub Actions workflow output for the actual error message."
+              echo ""
+              echo "To debug:"
+              echo "1. View the workflow run logs in GitHub Actions"
+              echo "2. Look for errors in the 'Build Raspberry Pi image' step"
+              echo "3. Check if directories exist and are writable"
+              echo ""
+              echo "================================================================"
+              echo "  END OF ERROR REPORT"
+              echo "================================================================"
+            } > "${LOG_FILE}"
+            echo "✅ Minimal error log created"
+          else
+            echo "⚠️  Build log file not found at build/pi-gen-work/build-detailed.log"
+            echo "Build succeeded but no log - this should not happen"
+            # Don't commit anything if log is missing on successful build
+            exit 0
+          fi
 
-            # Compress if larger than 50MB to stay within GitHub limits
+          # Compress if larger than 50MB to stay within GitHub limits
+          if [ -f "${LOG_FILE}" ]; then
             LOG_SIZE=$(stat -f%z "${LOG_FILE}" 2>/dev/null || stat -c%s "${LOG_FILE}")
             if [ ${LOG_SIZE} -gt 52428800 ]; then
               echo "⚠️  Log file is large ($(( LOG_SIZE / 1048576 ))MB), compressing..."
@@ -185,8 +227,6 @@ jobs:
             else
               echo "✅ Build log committed (will push at workflow end)"
             fi
-          else
-            echo "⚠️  Build log file not found at build/pi-gen-work/build-detailed.log"
           fi
 
       - name: Prepare release assets

@@ -19,8 +19,9 @@ BUILD_LOG_FILE="${WORK_DIR}/build-detailed.log"
 # Source logging utilities
 source "${SCRIPT_DIR}/logging-utils.sh"
 
-# Initialize logging system
+# Initialize logging system - create directories first
 mkdir -p "${BUILD_LOG_DIR}"
+mkdir -p "${WORK_DIR}"
 init_logging "${BUILD_LOG_FILE}"
 
 # Terminal banner (simplified for clean output)
