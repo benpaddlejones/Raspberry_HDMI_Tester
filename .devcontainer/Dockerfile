@@ -186,7 +186,7 @@ RUN echo 'alias ll="ls -lah"' >> ~/.bashrc \
 RUN echo 'cat << "EOF"' >> ~/.bashrc \
     && echo '' >> ~/.bashrc \
     && echo '╔═══════════════════════════════════════════════════════════╗' >> ~/.bashrc \
-    && echo '║  Raspberry Pi HDMI Tester - Development Environment       ║' >> ~/.bashrc \
+    && echo '║  Raspberry Pi HDMI Tester - Development Environment        ║' >> ~/.bashrc \
     && echo '╚═══════════════════════════════════════════════════════════╝' >> ~/.bashrc \
     && echo '' >> ~/.bashrc \
     && echo 'Quick commands:' >> ~/.bashrc \
