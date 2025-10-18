@@ -839,13 +839,61 @@ ls build/pi-gen-work/stage-custom/
 
 ### Viewing Logs on Raspberry Pi
 
+**Method 1: Via SSH (Easiest)**
+
+SSH is now enabled by default for debugging. From your computer:
+
 ```bash
-# On the Pi (connect keyboard and monitor)
-journalctl -xe                        # System log
-systemctl status hdmi-display.service # Display service
-systemctl status hdmi-audio.service   # Audio service
-dmesg                                 # Kernel messages
+# Find the Pi's IP address (check your router, or try)
+ping hdmi-tester.local
+
+# Connect via SSH (default password: raspberry)
+ssh pi@hdmi-tester.local
+# OR
+ssh pi@<ip-address>
+
+# View display service logs
+journalctl -u hdmi-display.service
+
+# View audio service logs  
+journalctl -u hdmi-audio.service
+
+# View all system logs
+journalctl -xe
+
+# View boot messages
+dmesg
 ```
+
+**Method 2: Via Physical Keyboard**
+
+If SSH doesn't work, connect a USB keyboard to the Pi:
+
+1. Press `Ctrl + Alt + F2` to switch to console
+2. Login with username `pi` password `raspberry`
+3. Run the commands above
+4. Press `Ctrl + Alt + F1` to return to display
+
+**Saving Logs to File**
+
+To save logs for attaching to GitHub issues:
+
+```bash
+# Save all logs to USB drive
+# 1. Insert USB drive into Pi
+# 2. Wait 5 seconds for it to mount
+# 3. Run:
+sudo journalctl -u hdmi-display.service > /media/pi/*/display.log
+sudo journalctl -u hdmi-audio.service > /media/pi/*/audio.log
+sudo journalctl -xe > /media/pi/*/system.log
+sudo dmesg > /media/pi/*/boot.log
+
+# 4. Safely eject USB
+sudo umount /media/pi/*
+# 5. Remove USB drive
+```
+
+Now the log files are on your USB drive and can be attached to a GitHub issue.
 
 ### Serial Console Access (Advanced)
 
@@ -865,13 +913,116 @@ For advanced debugging:
 
 ### Reporting Issues
 
-When reporting issues, include:
-1. Raspberry Pi model
-2. SD card brand/size
-3. Display model
-4. Error messages
-5. Build log (if build issue)
-6. Boot log (if boot issue)
+When reporting issues on GitHub, please include relevant logs to help diagnose the problem.
+
+**What to Include:**
+
+1. **Your Setup:**
+   - Raspberry Pi model (e.g., "Raspberry Pi 4 Model B 4GB")
+   - SD card brand and size (e.g., "SanDisk Ultra 32GB")
+   - Display/TV model
+   - HDMI cable type (standard, high-speed, etc.)
+
+2. **The Problem:**
+   - What you expected to happen
+   - What actually happened
+   - When it happens (always, sometimes, after X minutes)
+
+3. **Logs** (see below for how to collect)
+
+**How to Collect and Attach Logs:**
+
+**Option A: SSH Method (Recommended)**
+
+1. Connect to Pi via SSH:
+   ```bash
+   ssh pi@hdmi-tester.local
+   # Password: raspberry
+   ```
+
+2. Save logs to a file:
+   ```bash
+   # Create a combined log file
+   echo "=== Display Service ===" > debug.log
+   journalctl -u hdmi-display.service --no-pager >> debug.log
+   echo "" >> debug.log
+   echo "=== Audio Service ===" >> debug.log
+   journalctl -u hdmi-audio.service --no-pager >> debug.log
+   echo "" >> debug.log
+   echo "=== System Log (Last 100 lines) ===" >> debug.log
+   journalctl -n 100 --no-pager >> debug.log
+   echo "" >> debug.log
+   echo "=== Boot Messages ===" >> debug.log
+   dmesg >> debug.log
+   ```
+
+3. Download the log file to your computer:
+   ```bash
+   # On your computer (not on the Pi)
+   scp pi@hdmi-tester.local:debug.log ~/Downloads/
+   ```
+
+4. The file is now in your Downloads folder - attach it to your GitHub issue
+
+**Option B: USB Drive Method (No Network Needed)**
+
+1. Insert a USB drive into your Raspberry Pi
+
+2. Connect keyboard to Pi and press `Ctrl + Alt + F2`
+
+3. Login (username: `pi`, password: `raspberry`)
+
+4. Run these commands:
+   ```bash
+   # Find USB drive
+   lsblk
+   # Look for something like "sda1" with 8G or similar size
+   
+   # Mount it (replace sda1 with your drive)
+   sudo mount /dev/sda1 /mnt
+   
+   # Save logs
+   echo "=== Display Service ===" > /mnt/debug.log
+   sudo journalctl -u hdmi-display.service --no-pager >> /mnt/debug.log
+   echo "" >> /mnt/debug.log
+   echo "=== Audio Service ===" >> /mnt/debug.log
+   sudo journalctl -u hdmi-audio.service --no-pager >> /mnt/debug.log
+   echo "" >> /mnt/debug.log
+   echo "=== System Log (Last 100 lines) ===" >> /mnt/debug.log
+   sudo journalctl -n 100 --no-pager >> /mnt/debug.log
+   echo "" >> /mnt/debug.log
+   echo "=== Boot Messages ===" >> /mnt/debug.log
+   sudo dmesg >> /mnt/debug.log
+   
+   # Unmount safely
+   sudo umount /mnt
+   ```
+
+5. Remove USB drive and plug into your computer
+
+6. The file `debug.log` is now on your USB drive - attach it to your GitHub issue
+
+**Option C: Quick Status (No File)**
+
+If you can't get log files, at least include this info:
+
+```bash
+# On the Pi, run:
+systemctl status hdmi-display.service
+systemctl status hdmi-audio.service
+```
+
+Take a photo of the screen with your phone and attach to the issue.
+
+**Creating the GitHub Issue:**
+
+1. Go to: https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues
+2. Click "New Issue"
+3. Fill in:
+   - **Title**: Short description (e.g., "No audio output on Samsung TV")
+   - **Description**: Your setup, problem description, steps to reproduce
+4. **Attach logs**: Drag and drop `debug.log` onto the issue text box
+5. Click "Submit new issue"
 
 ---
 
