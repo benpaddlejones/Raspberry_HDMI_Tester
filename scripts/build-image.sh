@@ -21,13 +21,6 @@ fi
 # Setup logging
 BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
 BUILD_LOG_DIR="${PROJECT_ROOT}/logs"
-BUILD_LOG_FILE="${WORK_DIR}/build-detailed.log".."
-    sudo rm -rf "${WORK_DIR}"
-fi
-
-# Setup logging
-BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
-BUILD_LOG_DIR="${PROJECT_ROOT}/logs"
 BUILD_LOG_FILE="${WORK_DIR}/build-detailed.log"
 
 # Source logging utilities
