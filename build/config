@@ -21,8 +21,8 @@ TIMEZONE_DEFAULT="UTC"
 FIRST_USER_NAME="pi"
 FIRST_USER_PASS="raspberry"
 
-# Disable SSH (security - not needed for HDMI tester)
-ENABLE_SSH=0
+# Enable SSH for debugging
+ENABLE_SSH=1
 
 # Stage list - which stages to build
 # stage0: Bootstrap minimal Debian
