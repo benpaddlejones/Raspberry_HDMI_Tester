@@ -1,331 +1,162 @@
 # Raspberry Pi HDMI Tester
 
-A lightweight Raspberry Pi OS image that automatically boots and displays a test pattern with audio output. This tool is designed to quickly test HDMI displays and audio connectivity by loading from an SD card without any user interaction.
+A plug-and-play Raspberry Pi SD card image that automatically displays a test pattern and plays audio through HDMI. Perfect for quickly testing displays, troubleshooting HDMI connections, and verifying A/V equipment.
 
-## Project Overview
+## What Is This?
 
-This project creates a custom Raspberry Pi image that:
-- Automatically boots into a graphical test pattern
-- Plays continuous audio output through HDMI
-- Requires no keyboard, mouse, or user interaction
-- Boots quickly to facilitate rapid testing
-- Can be flashed to an SD card for portable HDMI testing
+This is a ready-to-use Raspberry Pi image that:
+- ✅ **Boots automatically** - No keyboard, mouse, or interaction needed
+- ✅ **Displays a test pattern** - Full HD 1920x1080 test image
+- ✅ **Plays continuous audio** - Audio loops infinitely through HDMI
+- ✅ **Boots in ~30 seconds** - Fast startup for quick testing
+- ✅ **Works on any Pi** - Compatible with Pi 3, 4, 5, Zero 2 W
+
+Simply flash it to an SD card, insert it into a Raspberry Pi, connect HDMI, and power on!
 
 ## Use Cases
 
-- Testing HDMI displays and monitors
-- Verifying HDMI audio output
-- Quick connectivity checks for A/V equipment
-- Trade show booth display testing
-- Digital signage troubleshooting
+- 🖥️ **Testing HDMI displays and monitors**
+- 🔊 **Verifying HDMI audio output**
+- 🔌 **Quick connectivity checks for A/V equipment**
+- 🏢 **Trade show booth display testing**
+- 📺 **Digital signage troubleshooting**
+- 🛠️ **Field service HDMI diagnostics**
 
-## Requirements
+## Quick Start
 
-### Hardware
-- **Raspberry Pi** (recommended: Pi 4, Pi 3B+, or newer)
-  - Minimum 1GB RAM
-  - HDMI output port
-- **MicroSD Card** (minimum 4GB, recommended 8GB+)
-- **Power Supply** (appropriate for your Pi model)
-- **HDMI Cable**
-- **Display with HDMI input**
+### What You Need
 
-### Software Dependencies
+**Hardware**:
+- Raspberry Pi (any model with HDMI output)
+- MicroSD card (4GB minimum, 8GB recommended)
+- Power supply for your Pi
+- HDMI cable
+- Display with HDMI input
 
-#### Development Environment
-- **GitHub Codespaces** or local development machine
-- **Docker** (for containerized development)
-- **Git** (for version control)
+**Software**:
+- The HDMI Tester image (download from [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases))
+- Flashing tool (Raspberry Pi Imager recommended)
 
-#### Build Tools
-- **pi-gen** - Official Raspberry Pi OS image builder
-- **qemu-user-static** - For ARM emulation on x86 systems
-- **debootstrap** - Debian/Ubuntu bootstrapping tool
-- **kpartx** - Partition management tool
-- **build-essential** - Compilation tools
-- **zip/unzip** - Archive utilities
+### Step 1: Download the Image
 
-#### Runtime Components (to be included in image)
-- **Raspberry Pi OS Lite** (minimal base)
-- **X11** or **Wayland** - Display server
-- **feh** or **fbi** - Image viewer for test patterns
-- **omxplayer** or **mpv** - Audio/video player
-- **Plymouth** - Boot splash (optional)
-- **systemd** - Service management for auto-start
+1. Go to [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
+2. Download `RaspberryPi_HDMI_Tester.img.zip`
+3. Extract the `.img` file from the ZIP
 
-## Project Structure
+### Step 2: Flash to SD Card
 
-```
-Raspberry_HDMI_Tester/
-├── .devcontainer/
-│   ├── devcontainer.json       # Codespaces configuration
-│   └── Dockerfile              # Development container setup
-├── build/
-│   ├── config                  # pi-gen configuration
-│   └── stage-custom/           # Custom build stage
-│       ├── 00-install-packages/
-│       ├── 01-test-image/
-│       ├── 02-audio-test/
-│       └── 03-autostart/
-├── assets/
-│   ├── test-pattern.png        # HDMI test pattern image
-│   └── test-audio.wav          # Audio test file
-├── scripts/
-│   ├── build-image.sh          # Main build script
-│   ├── configure-boot.sh       # Boot configuration
-│   └── setup-autostart.sh      # Auto-launch setup
-├── docs/
-│   ├── BUILDING.md             # Build instructions
-│   ├── FLASHING.md             # SD card flashing guide
-│   └── CUSTOMIZATION.md        # Customization options
-├── tests/
-│   └── qemu-test.sh            # QEMU testing script
-├── README.md                   # This file
-└── LICENSE                     # Project license
+Choose your operating system for detailed instructions:
 
-```
+- **[Windows 10/11](docs/FLASHING-Windows.md)** - Detailed guide for Windows users
+- **[macOS](docs/FLASHING-macOS.md)** - Complete macOS instructions
+- **[Linux](docs/FLASHING-Linux.md)** - Linux flashing guide
 
-## Development Setup
-
-### Option 1: GitHub Codespaces (Recommended)
-
-1. **Create Codespace**
-   - Click "Code" → "Codespaces" → "Create codespace on main"
-   - Codespace will automatically configure using `.devcontainer/devcontainer.json`
-
-2. **Wait for Container Setup**
-   - Dependencies will be installed automatically
-   - This may take 5-10 minutes on first launch
-
-3. **Verify Setup**
-   ```bash
-   # Check required tools
-   which qemu-arm-static
-   dpkg --version
-   docker --version
-   ```
-
-### Option 2: Local Development with Docker
-
-1. **Prerequisites**
-   ```bash
-   # Install Docker
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sh get-docker.sh
-
-   # Install VS Code with Dev Containers extension
-   code --install-extension ms-vscode-remote.remote-containers
-   ```
-
-2. **Clone and Open**
-   ```bash
-   git clone https://github.com/benpaddlejones/Raspberry_HDMI_Tester.git
-   cd Raspberry_HDMI_Tester
-   code .
-   # Use "Reopen in Container" when prompted
-   ```
-
-### Option 3: Native Linux Development
-
-1. **Install Dependencies**
-   ```bash
-   # Ubuntu/Debian
-   sudo apt update
-   sudo apt install -y \
-     git \
-     qemu-user-static \
-     qemu-utils \
-     debootstrap \
-     kpartx \
-     build-essential \
-     libarchive-tools \
-     coreutils \
-     quilt \
-     parted \
-     dosfstools \
-     zip \
-     unzip \
-     curl \
-     wget
-   ```
-
-2. **Clone Repository**
-   ```bash
-   git clone https://github.com/benpaddlejones/Raspberry_HDMI_Tester.git
-   cd Raspberry_HDMI_Tester
-   ```
-
-## Building the Image
-
-### Step-by-Step Build Process
-
-1. **Configure Build Settings**
-   ```bash
-   # Edit build/config to customize
-   nano build/config
-   ```
-
-2. **Run Build Script**
-   ```bash
-   # Build the image (requires ~4GB free space)
-   sudo ./scripts/build-image.sh
-   ```
-
-3. **Monitor Build Progress**
-   - Build typically takes 30-60 minutes
-   - Output will be in `build/output/`
-
-4. **Locate Final Image**
-   ```bash
-   ls -lh build/output/*.img
-   ```
-
-### Quick Build Commands
-
-```bash
-# Full clean build
-sudo ./scripts/build-image.sh --clean
-
-# Build with custom config
-sudo ./scripts/build-image.sh --config custom-config
-
-# Build specific stage only
-sudo ./scripts/build-image.sh --stage 2
-```
-
-## Flashing to SD Card
-
-### Using Raspberry Pi Imager (Easiest)
-
+**Quick method** (all platforms):
 1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
-2. Select "Use custom" image
-3. Choose your built `.img` file
-4. Select SD card
-5. Write
+2. Click "Choose OS" → "Use custom" → Select the `.img` file
+3. Click "Choose Storage" → Select your SD card
+4. Click "Write"
 
-### Using `dd` (Linux/Mac)
+### Step 3: Boot and Test
 
-```bash
-# Find SD card device
-lsblk
+1. **Insert SD card** into Raspberry Pi
+2. **Connect HDMI cable** to your display
+3. **Connect power supply**
+4. **Wait ~30 seconds** for boot
 
-# Flash image (replace /dev/sdX with your SD card)
-sudo dd if=build/output/hdmi-tester.img of=/dev/sdX bs=4M status=progress conv=fsync
+**You should see**:
+- ✅ Green LED blinks on the Pi
+- ✅ Test pattern appears on screen (1920x1080)
+- ✅ Audio plays continuously through HDMI
 
-# Safely eject
-sudo sync
-sudo eject /dev/sdX
-```
+**That's it!** Your HDMI tester is working.
 
-### Using Balena Etcher
+## What You'll See
 
-1. Download [Balena Etcher](https://www.balena.io/etcher/)
-2. Select image file
-3. Select target SD card
-4. Flash!
+### Test Pattern
+The default test pattern displays:
+- Full HD resolution (1920x1080)
+- Color information
+- Resolution details
+- Visual reference for display testing
 
-## Testing
-
-### QEMU Testing (Before Hardware)
-
-```bash
-# Test image in emulator
-./tests/qemu-test.sh build/output/hdmi-tester.img
-```
-
-### Hardware Testing
-
-1. Insert SD card into Raspberry Pi
-2. Connect HDMI cable to display
-3. Connect power supply
-4. Verify:
-   - Test pattern appears on screen
-   - Audio plays through HDMI
-   - Boot time is acceptable
+### Audio Output
+- Continuous audio playback through HDMI
+- Loops infinitely (no user interaction needed)
+- Tests both HDMI video and audio simultaneously
 
 ## Customization
 
-### Custom Test Pattern
-
-Replace `assets/image.png` with your own image:
-- **Current Resolution**: 1920x1080 (Full HD)
-- **Recommended**: 1920x1080 or 3840x2160 (4K)
-- **Format**: PNG or JPEG
-- Include color bars, resolution info, text labels for testing
-
-### Custom Audio
-
-Replace `assets/audio.mp3` with your own audio:
-- **Current Format**: MP3, 96kbps, 32kHz stereo
-- **Supported Formats**: MP3, WAV, or OGG
-- **Recommended**: 1kHz tone or frequency sweep for testing
-- **Duration**: Any (audio loops infinitely via `mpv --loop=inf`)
-- File will be deployed to `/opt/hdmi-tester/test-audio.mp3`
-
-### Boot Configuration
-
-Edit boot configuration files to modify:
-- **HDMI Output**: Forced to 1920x1080@60Hz via `hdmi_mode=16`
-- **HDMI Audio**: Enabled via `hdmi_drive=2`
-- **Auto-login**: Configured for user `pi` on tty1
-- **Auto-start X**: `.bashrc` launches X server automatically
-- **Display Service**: `feh` runs fullscreen test pattern
-- **Audio Service**: `mpv --loop=inf` plays audio infinitely
-
-Configuration applied in `build/stage-custom/04-boot-config/` during image build.
-
-## Technical Architecture
-
-### Build System
-- **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
-- **Builder**: pi-gen (official Raspberry Pi image builder)
-- **Environment**: GitHub Codespaces with Ubuntu 24.04
-- **Emulation**: QEMU for ARM on x86_64 systems
-
-### Custom Build Stages
-1. **00-install-packages**: Installs X11, feh, mpv, alsa-utils, pulseaudio
-2. **01-test-image**: Deploys test pattern to `/opt/hdmi-tester/test-pattern.png`
-3. **02-audio-test**: Deploys audio file to `/opt/hdmi-tester/test-audio.mp3`
-4. **03-autostart**: Creates systemd services for auto-start on boot
-5. **04-boot-config**: Configures HDMI output (1920x1080@60Hz, audio enabled)
-
-### Systemd Services
-- **hdmi-display.service**: Displays test pattern using feh in fullscreen
-- **hdmi-audio.service**: Plays audio infinitely using mpv with `--loop=inf`
-- Both services restart automatically on failure
-
-### Boot Flow
-1. Raspberry Pi boots from SD card
-2. User `pi` auto-logs in on tty1
-3. X server starts automatically via `.bashrc`
-4. systemd starts `hdmi-display.service` (test pattern)
-5. systemd starts `hdmi-audio.service` (audio playback)
-6. Display shows test pattern at 1920x1080@60Hz
-7. Audio plays through HDMI continuously
+Want to use your own test pattern or audio? See the [Customization Guide](docs/CUSTOMIZATION.md) for:
+- Replacing the test pattern image
+- Using custom audio files
+- Changing HDMI resolution settings
+- Modifying boot behavior
 
 ## Troubleshooting
 
-### Build Issues
+### No Display?
 
-- **Out of disk space**: Ensure at least 10GB free in Codespaces (32GB provided)
-- **qemu-arm-static not found**: Rebuild Codespaces container
-- **Permission denied**: Use `sudo` for pi-gen operations (passwordless in Codespaces)
-- **Build takes too long**: Normal first build is 45-60 minutes
+**Check these first**:
+- ✅ HDMI cable is firmly connected
+- ✅ Display is powered on and set to correct input
+- ✅ Display supports 1920x1080 resolution
+- ✅ Try a different HDMI cable
 
-### Runtime Issues
+### No Audio?
 
-- **No display**: Check HDMI cable, verify display supports 1920x1080@60Hz
-- **No audio**: Verify HDMI audio is enabled in TV/monitor settings
-- **Red LED only (no green activity)**: SD card not properly flashed, try re-flashing
-- **Slow boot**: Normal boot time is 20-30 seconds
+**Common fixes**:
+- ✅ Enable HDMI audio in your TV/monitor settings
+- ✅ Increase volume on the display
+- ✅ Some displays default to internal speakers - switch to HDMI audio
+- ✅ Try a different HDMI port
 
-### Windows 11 Flashing Issues
+### Pi Won't Boot?
 
-- **SD card not showing**: Check Disk Management, try different USB port
-- **"Format disk" message**: NORMAL - click Cancel, SD card is correctly formatted for Pi
-- **Write protected**: Check physical lock switch on SD card adapter
+**Symptoms**: Only red LED, no green activity
 
-See `docs/TROUBLESHOOTING.md` for comprehensive troubleshooting guide.
+**Try these solutions**:
+1. **Re-flash the SD card** - Image may be corrupted
+2. **Try a different SD card** - Some cards are incompatible
+3. **Use a quality SD card** (SanDisk, Samsung, Kingston)
+4. **Verify your power supply** - Insufficient power can cause issues
+
+### Other Issues?
+
+See the complete [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for:
+- Platform-specific flashing issues
+- Boot problems
+- Display configuration
+- Audio troubleshooting
+- SD card recommendations
+
+## Supported Hardware
+
+### Raspberry Pi Models
+- ✅ Raspberry Pi 5
+- ✅ Raspberry Pi 4 (all variants)
+- ✅ Raspberry Pi 3 B+
+- ✅ Raspberry Pi 3 B
+- ✅ Raspberry Pi Zero 2 W
+- ⚠️ Pi Zero W (limited support, no HDMI connector)
+
+### SD Card Requirements
+- **Minimum**: 4GB (tight fit)
+- **Recommended**: 8GB or larger
+- **Speed**: Class 10 or higher (U1, U3, or A1 recommended)
+- **Brands**: SanDisk, Samsung, Kingston recommended
+
+## Technical Details
+
+- **Base OS**: Raspberry Pi OS Lite (Debian 12 Bookworm)
+- **Resolution**: 1920x1080 @ 60Hz (configurable)
+- **Audio**: Continuous playback via mpv with infinite loop
+- **Boot Time**: ~20-30 seconds
+- **Image Size**: ~1.5-2GB (compressed)
+- **No Network**: WiFi and Ethernet disabled for security
+- **No SSH**: SSH disabled by default
+
+For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md).
 
 ## Development Roadmap
 
@@ -346,29 +177,78 @@ See `docs/TROUBLESHOOTING.md` for comprehensive troubleshooting guide.
 - [ ] Multi-resolution support (720p, 4K options)
 - [ ] Web interface for configuration (optional)
 
+## Documentation
+
+### For End Users
+- **[Flashing Guide - Windows](docs/FLASHING-Windows.md)** - Flash SD card on Windows 10/11
+- **[Flashing Guide - macOS](docs/FLASHING-macOS.md)** - Flash SD card on macOS
+- **[Flashing Guide - Linux](docs/FLASHING-Linux.md)** - Flash SD card on Linux
+- **[Customization Guide](docs/CUSTOMIZATION.md)** - Customize test pattern and audio
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Fix common issues
+
+### For Developers
+- **[Development Guide](docs/DEVELOPMENT.md)** - Build from source, contribute
+- **[Building Guide](docs/BUILDING.md)** - Detailed build instructions
+
 ## Contributing
 
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+We welcome contributions! You can help by:
+
+### Reporting Issues
+
+Found a bug or have a feature request?
+
+1. **Check existing issues** first: [GitHub Issues](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues)
+2. **Create a new issue** if it doesn't exist:
+   - Use a clear, descriptive title
+   - Describe the problem or feature request in detail
+   - Include your Raspberry Pi model and OS version
+   - Attach relevant logs or screenshots
+   - Mention steps to reproduce (if reporting a bug)
+
+### Contributing Code
+
+Want to add features or fix bugs?
+
+1. **Fork this repository** on GitHub
+2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
+3. **Make your changes** and test thoroughly
+4. **Commit with clear messages**: `git commit -m "feat: add 4K resolution support"`
+5. **Push to your fork**: `git push origin feature/your-feature-name`
+6. **Open a Pull Request** with a detailed description
+
+See the [Development Guide](docs/DEVELOPMENT.md) for:
+- Setting up your development environment
+- Understanding the project structure
+- Build system details
+- Testing procedures
+- Code contribution guidelines
+
+## Support
+
+- **Questions?** Open a [Discussion](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/discussions)
+- **Bug reports?** Create an [Issue](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues)
+- **Documentation**: See the `docs/` directory
 
 ## License
 
 [Choose appropriate license - MIT, GPL, etc.]
 
+## Acknowledgments
+
+- Built with [pi-gen](https://github.com/RPi-Distro/pi-gen) - Official Raspberry Pi OS image builder
+- Powered by [Raspberry Pi OS](https://www.raspberrypi.com/software/)
+- Uses [feh](https://feh.finalrewind.org/) for image display
+- Uses [mpv](https://mpv.io/) for audio playback
+
 ## Resources
 
 - [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/)
-- [pi-gen GitHub](https://github.com/RPi-Distro/pi-gen)
-- [Raspberry Pi OS Customization](https://www.raspberrypi.com/documentation/computers/os.html#customising-raspberry-pi-os)
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/discussions)
+- [Raspberry Pi Forums](https://forums.raspberrypi.com/)
+- [HDMI Troubleshooting](https://www.raspberrypi.com/documentation/computers/configuration.html#hdmi-configuration)
 
 ---
 
-**Note**: This project is designed for testing purposes. For production digital signage, consider more robust solutions with remote management capabilities.
+**Note**: This project is designed for testing purposes. For production digital signage or commercial applications, consider more robust solutions with remote management capabilities.
+
+**Made with ❤️ for the Raspberry Pi community**
