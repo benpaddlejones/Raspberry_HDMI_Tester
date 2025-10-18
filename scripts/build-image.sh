@@ -90,7 +90,10 @@ start_stage_timer "Build Directory Setup"
 
 log_subsection "Copying pi-gen"
 log_info "Copying pi-gen from ${PI_GEN_DIR} to ${WORK_DIR}..."
-cp -r "${PI_GEN_DIR}" "${WORK_DIR}"
+# Copy contents of pi-gen directory, not the directory itself
+cp -r "${PI_GEN_DIR}"/* "${WORK_DIR}/"
+# Also copy hidden files (.git, .gitignore, etc.)
+cp -r "${PI_GEN_DIR}"/.[!.]* "${WORK_DIR}/" 2>/dev/null || true
 log_info "✓ pi-gen copied"
 
 end_stage_timer "Build Directory Setup" 0
