@@ -103,6 +103,12 @@ monitor_disk_space "After Build Directory Setup"
 start_stage_timer "Custom Stage Installation"
 
 log_subsection "Installing Custom Stages"
+
+# Override stage2 to fix Trixie-only package issues for Bookworm builds
+log_info "Copying stage2 override (Bookworm compatibility fix)..."
+cp -r "${PROJECT_ROOT}/build/stage2/01-sys-tweaks" "${WORK_DIR}/stage2/"
+log_info "✓ stage2/01-sys-tweaks override installed (removes rpi-swap, rpi-loop-utils, rpi-usb-gadget)"
+
 log_info "Copying stage-custom..."
 cp -r "${PROJECT_ROOT}/build/stage-custom" "${WORK_DIR}/"
 log_info "✓ stage-custom copied"
@@ -161,14 +167,32 @@ cd "${WORK_DIR}"
 log_subsection "Executing pi-gen build.sh"
 log_info "Command: sudo ./build.sh"
 
+# Capture build output to temporary file for analysis
+PIGEN_OUTPUT_FILE="${WORK_DIR}/pigen-output.log"
 BUILD_EXIT_CODE=0
-if sudo ./build.sh 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
-    log_info "✓ pi-gen build.sh completed successfully"
+
+if sudo ./build.sh 2>&1 | tee -a "${BUILD_LOG_FILE}" | tee "${PIGEN_OUTPUT_FILE}" > /dev/null; then
+    SHELL_EXIT_CODE=0
 else
-    BUILD_EXIT_CODE=$?
-    log_info "✗ pi-gen build.sh failed with exit code ${BUILD_EXIT_CODE}"
-    capture_error_context "pi-gen build.sh failed" 50 50
+    SHELL_EXIT_CODE=$?
 fi
+
+# Check for failure indicators in pi-gen output
+# pi-gen sometimes returns exit code 0 even when build fails internally
+if grep -q "^\[[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\] Build failed" "${PIGEN_OUTPUT_FILE}"; then
+    log_event "⚠️" "pi-gen reported build failure in output (despite exit code ${SHELL_EXIT_CODE})"
+    BUILD_EXIT_CODE=1
+    capture_error_context "pi-gen build failed (detected from output)" 50 50
+elif [ ${SHELL_EXIT_CODE} -ne 0 ]; then
+    log_event "⚠️" "pi-gen build.sh failed with exit code ${SHELL_EXIT_CODE}"
+    BUILD_EXIT_CODE=${SHELL_EXIT_CODE}
+    capture_error_context "pi-gen build.sh failed" 50 50
+else
+    log_info "✓ pi-gen build.sh completed successfully"
+fi
+
+# Clean up temporary output file
+rm -f "${PIGEN_OUTPUT_FILE}"
 
 end_stage_timer "pi-gen Build" ${BUILD_EXIT_CODE}
 monitor_disk_space "After pi-gen Build"
@@ -176,7 +200,7 @@ monitor_memory "After pi-gen Build"
 
 if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
     log_event "❌" "Build failed - see detailed log for error context"
-    finalize_log "failure" "pi-gen build.sh failed with exit code ${BUILD_EXIT_CODE}"
+    finalize_log "failure" "pi-gen build failed"
 
     # Show last 50 lines of log to terminal for quick debugging
     echo ""
