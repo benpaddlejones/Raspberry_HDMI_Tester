@@ -109,13 +109,12 @@ log_info "Copying stage2 override (Bookworm compatibility fix)..."
 cp -r "${PROJECT_ROOT}/build/stage2/01-sys-tweaks" "${WORK_DIR}/stage2/"
 log_info "✓ stage2/01-sys-tweaks override installed (removes rpi-swap, rpi-loop-utils, rpi-usb-gadget)"
 
-log_info "Copying stage-custom..."
-cp -r "${PROJECT_ROOT}/build/stage-custom" "${WORK_DIR}/"
-log_info "✓ stage-custom copied"
+log_info "Copying stage3 (custom HDMI tester stage)..."
+cp -r "${PROJECT_ROOT}/build/stage3" "${WORK_DIR}/"
+log_info "✓ stage3 copied"
 
-log_info "Skipping stages 3, 4, 5..."
-mkdir -p "${WORK_DIR}/stage3" "${WORK_DIR}/stage4" "${WORK_DIR}/stage5"
-cp "${PROJECT_ROOT}/build/stage3/SKIP" "${WORK_DIR}/stage3/"
+log_info "Skipping stages 4, 5..."
+mkdir -p "${WORK_DIR}/stage4" "${WORK_DIR}/stage5"
 cp "${PROJECT_ROOT}/build/stage4/SKIP" "${WORK_DIR}/stage4/"
 cp "${PROJECT_ROOT}/build/stage5/SKIP" "${WORK_DIR}/stage5/"
 log_info "✓ Stage skip files installed"
@@ -136,18 +135,18 @@ end_stage_timer "Configuration Setup" 0
 start_stage_timer "Asset Deployment"
 
 log_subsection "Creating Asset Directories"
-mkdir -p "${WORK_DIR}/stage-custom/01-test-image/files"
-mkdir -p "${WORK_DIR}/stage-custom/02-audio-test/files"
+mkdir -p "${WORK_DIR}/stage3/01-test-image/files"
+mkdir -p "${WORK_DIR}/stage3/02-audio-test/files"
 log_info "✓ Asset directories created"
 
 log_subsection "Copying Test Pattern Image"
-cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage-custom/01-test-image/files/test-pattern.png"
-log_checksum "${WORK_DIR}/stage-custom/01-test-image/files/test-pattern.png" "Test Pattern Image (Deployed)"
+cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/test-pattern.png"
+log_checksum "${WORK_DIR}/stage3/01-test-image/files/test-pattern.png" "Test Pattern Image (Deployed)"
 log_info "✓ Test pattern copied"
 
 log_subsection "Copying Test Audio"
-cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage-custom/02-audio-test/files/test-audio.mp3"
-log_checksum "${WORK_DIR}/stage-custom/02-audio-test/files/test-audio.mp3" "Test Audio File (Deployed)"
+cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/test-audio.mp3"
+log_checksum "${WORK_DIR}/stage3/02-audio-test/files/test-audio.mp3" "Test Audio File (Deployed)"
 log_info "✓ Test audio copied"
 
 end_stage_timer "Asset Deployment" 0

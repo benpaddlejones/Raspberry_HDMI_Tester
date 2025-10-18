@@ -28,16 +28,15 @@ ENABLE_SSH=1
 # stage0: Bootstrap minimal Debian
 # stage1: Core Raspberry Pi OS components
 # stage2: Networking and basic utilities (minimal OS)
-# stage-custom: Our custom HDMI tester functionality
+# stage3: Our custom HDMI tester functionality (replaces standard desktop stage)
 #   - 00-install-packages: X11, feh, mpv, audio tools
 #   - 01-test-image: Deploy test pattern (1920x1080)
 #   - 02-audio-test: Deploy audio file
 #   - 03-autostart: systemd services for auto-boot
 #   - 04-boot-config: HDMI 1920x1080@60Hz configuration
-# We skip stage3 (desktop), stage4 (recommended apps), stage5 (extras)
-# NOTE: stage-custom is copied into the pi-gen work directory by build-image.sh
-# Use relative path from pi-gen root, not absolute path
-STAGE_LIST="stage0 stage1 stage2 stage-custom"
+# We skip stage4 (recommended apps), stage5 (extras)
+# NOTE: Our custom stage3 replaces pi-gen's standard desktop stage
+STAGE_LIST="stage0 stage1 stage2 stage3"
 
 # Target architecture
 DEPLOY_COMPRESSION="zip"
