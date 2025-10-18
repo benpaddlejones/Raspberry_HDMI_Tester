@@ -27,9 +27,7 @@ fi
 
 
 on_chroot <<- EOF
-	# NOTE: rpi-resize.service does not exist in modern Raspberry Pi OS
-	# Filesystem resizing is now handled by raspi-config or manual tools
-	# systemctl enable rpi-resize
+	# Insert SD card resizing here if wanted
 
 	for GRP in input spi i2c gpio; do
 		groupadd -f -r "\$GRP"
