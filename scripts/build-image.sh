@@ -241,22 +241,22 @@ IMAGE_FILE=$(find "${WORK_DIR}/deploy/" -name "*.img" -type f 2>/dev/null | head
 if [ -z "${IMAGE_FILE}" ]; then
     log_info "No .img file found, checking for .zip files..."
     ZIP_FILE=$(find "${WORK_DIR}/deploy/" -name "*.zip" -type f 2>/dev/null | grep -v "lite" | head -n 1)
-    
+
     if [ -z "${ZIP_FILE}" ]; then
         log_event "❌" "No .img or .zip file found in deploy directory!"
         end_stage_timer "Deployment Validation" 1
         finalize_log "failure" "No image file created"
         exit 1
     fi
-    
+
     log_info "✓ Found ZIP file: ${ZIP_FILE}"
     log_event "📦" "Extracting image from ZIP archive..."
-    
+
     # Extract the .img file from the zip
     if unzip -o "${ZIP_FILE}" -d "${WORK_DIR}/deploy/" >> "${BUILD_LOG_FILE}" 2>&1; then
         log_info "✓ ZIP extraction successful"
         IMAGE_FILE=$(find "${WORK_DIR}/deploy/" -name "*.img" -type f 2>/dev/null | head -n 1)
-        
+
         if [ -z "${IMAGE_FILE}" ]; then
             log_event "❌" "No .img file found after extraction!"
             end_stage_timer "Deployment Validation" 1
