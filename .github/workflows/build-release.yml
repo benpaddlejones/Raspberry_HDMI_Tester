@@ -265,6 +265,9 @@ jobs:
           if [ ! -d "${DEPLOY_DIR}" ]; then
             echo "❌ Error: Deploy directory does not exist at ${DEPLOY_DIR}"
             echo "The build may have failed. Check previous step logs."
+            exit 1
+          fi
+
           # Fix permissions on deploy directory (built with sudo)
           sudo chown -R runner:runner "${DEPLOY_DIR}" || {
             echo "❌ Failed to change ownership of deploy directory"
@@ -274,14 +277,14 @@ jobs:
           # Find the built image using proper quoting and find command
           IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
 
-          # Find the built image
-          IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img 2>/dev/null | head -n 1)
           if [ -z "$IMAGE_FILE" ]; then
             echo "❌ Error: No image file found!"
             echo "Contents of deploy directory:"
             ls -la ${DEPLOY_DIR}/ || echo "Directory is empty or inaccessible"
             exit 1
-          fi          echo "Found image: $IMAGE_FILE"
+          fi
+
+          echo "Found image: $IMAGE_FILE"
 
           # Create versioned filename
           VERSIONED_IMAGE="RaspberryPi_HDMI_Tester_v${VERSION}.img"
@@ -419,7 +422,9 @@ jobs:
 
           **Latest Version:** [VERSION_TAG](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/VERSION_TAG)
 
-          Download the pre-built image:
+          Download the pre-built image and flash to your SD card.
+          DOWNLOADEOF
+
           # Replace placeholders
           sed -i "s/VERSION_TAG/$TAG/g" download_section.md
           sed -i "s/VERSION_NUM/v$VERSION/g" download_section.md
@@ -450,13 +455,6 @@ jobs:
             # Section doesn't exist - add after Project Overview
             sed -i '/## Project Overview/r download_section.md' README.md
             echo "✅ Download section added to README"
-          fi
-
-          rm -f download_section.mdafter Project Overview
-            sed -i '/## Project Overview/r download_section.md' README.md
-            echo "✅ Download section added to README"
-          else
-            echo "ℹ️  Download section already exists - skipping update"
           fi
 
           rm -f download_section.md
@@ -526,11 +524,6 @@ jobs:
             echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
-            # Use Linux-compatible stat command (Ubuntu uses GNU stat)
-            LOG_SIZE=$(stat -c%s "build/pi-gen-work/build-detailed.log" 2>/dev/null || echo 0)
-            LOG_SIZE_MB=$(( LOG_SIZE / 1048576 ))
-            echo "- **Log Size:** ${LOG_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
             echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
             echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
