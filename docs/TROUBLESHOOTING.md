@@ -855,7 +855,7 @@ ssh pi@<ip-address>
 # View display service logs
 journalctl -u hdmi-display.service
 
-# View audio service logs  
+# View audio service logs
 journalctl -u hdmi-audio.service
 
 # View all system logs
@@ -977,10 +977,10 @@ When reporting issues on GitHub, please include relevant logs to help diagnose t
    # Find USB drive
    lsblk
    # Look for something like "sda1" with 8G or similar size
-   
+
    # Mount it (replace sda1 with your drive)
    sudo mount /dev/sda1 /mnt
-   
+
    # Save logs
    echo "=== Display Service ===" > /mnt/debug.log
    sudo journalctl -u hdmi-display.service --no-pager >> /mnt/debug.log
@@ -993,7 +993,7 @@ When reporting issues on GitHub, please include relevant logs to help diagnose t
    echo "" >> /mnt/debug.log
    echo "=== Boot Messages ===" >> /mnt/debug.log
    sudo dmesg >> /mnt/debug.log
-   
+
    # Unmount safely
    sudo umount /mnt
    ```
