@@ -77,13 +77,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            /opt/pi-gen/work
-            /opt/pi-gen/deploy
-          key: pi-gen-cache-${{ hashFiles('build/config') }}
+            build/pi-gen-work/work
+            build/pi-gen-work/deploy
+          key: pi-gen-cache-${{ hashFiles('build/**', 'assets/**') }}
           restore-keys: |
             pi-gen-cache-
 
       - name: Build Raspberry Pi image
+        timeout-minutes: 90
         run: |
           echo "🔨 Starting image build..."
           echo "⏱️  This will take approximately 45-60 minutes"
@@ -98,21 +99,35 @@ jobs:
           chmod +x ./scripts/logging-utils.sh
 
           # Run build (logging handled by build-image.sh)
+          # Note: -E preserves environment variables for the build script
+          # Required vars: PATH, HOME, USER, GITHUB_* variables
           BUILD_EXIT_CODE=0
           sudo -E ./scripts/build-image.sh || BUILD_EXIT_CODE=$?
 
-          # Store exit code for later steps
+          # Store exit code for later steps (with default fallback)
+          BUILD_EXIT_CODE="${BUILD_EXIT_CODE:-1}"
           echo "BUILD_EXIT_CODE=${BUILD_EXIT_CODE}" >> $GITHUB_ENV
 
-          # Ensure we can access the log file
-          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
-            sudo chown -R runner:runner build/pi-gen-work/build-detailed.log
+          # Fix permissions on entire build directory (built with sudo)
+          if [ -d "build/pi-gen-work" ]; then
+            sudo chown -R runner:runner build/pi-gen-work/ || {
+              echo "❌ Failed to change ownership of build directory"
+              exit 1
+            }
           fi
 
           if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
             echo ""
             echo "❌ Build failed with exit code ${BUILD_EXIT_CODE}"
-            echo "📝 Detailed log will be uploaded as artifact and committed to repository"
+            
+            # Check if log file exists before promising upload
+            if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+              echo "📝 Detailed log will be uploaded as artifact and committed to repository"
+            else
+              echo "⚠️  Detailed log file not created - build failed early"
+              echo "📝 Minimal error report will be created and committed to repository"
+            fi
+            
             exit ${BUILD_EXIT_CODE}
           fi
 
@@ -198,7 +213,8 @@ jobs:
 
           # Compress if larger than 50MB to stay within GitHub limits
           if [ -f "${LOG_FILE}" ]; then
-            LOG_SIZE=$(stat -f%z "${LOG_FILE}" 2>/dev/null || stat -c%s "${LOG_FILE}")
+            # Use Linux-compatible stat command (Ubuntu uses GNU stat)
+            LOG_SIZE=$(stat -c%s "${LOG_FILE}" 2>/dev/null || echo 0)
             if [ ${LOG_SIZE} -gt 52428800 ]; then
               echo "⚠️  Log file is large ($(( LOG_SIZE / 1048576 ))MB), compressing..."
               gzip "${LOG_FILE}"
@@ -221,8 +237,16 @@ jobs:
 
             # Push (only if build succeeded - for failed builds we'll push at the end)
             if [ "${BUILD_EXIT_CODE}" = "0" ]; then
-              git pull --rebase
-              git push || echo "⚠️  Failed to push logs"
+              # Pull latest changes to avoid conflicts
+              git pull --rebase origin main || {
+                echo "⚠️ Rebase failed, trying merge..."
+                git pull origin main
+              }
+              
+              git push || {
+                echo "❌ Failed to push logs"
+                exit 1
+              }
               echo "✅ Build log committed and pushed"
             else
               echo "✅ Build log committed (will push at workflow end)"
@@ -241,11 +265,14 @@ jobs:
           if [ ! -d "${DEPLOY_DIR}" ]; then
             echo "❌ Error: Deploy directory does not exist at ${DEPLOY_DIR}"
             echo "The build may have failed. Check previous step logs."
-            exit 1
-          fi
-
           # Fix permissions on deploy directory (built with sudo)
-          sudo chown -R runner:runner "${DEPLOY_DIR}"
+          sudo chown -R runner:runner "${DEPLOY_DIR}" || {
+            echo "❌ Failed to change ownership of deploy directory"
+            exit 1
+          }
+
+          # Find the built image using proper quoting and find command
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
 
           # Find the built image
           IMAGE_FILE=$(ls ${DEPLOY_DIR}/*.img 2>/dev/null | head -n 1)
@@ -393,20 +420,39 @@ jobs:
           **Latest Version:** [VERSION_TAG](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/VERSION_TAG)
 
           Download the pre-built image:
-          - 💾 [RaspberryPi_HDMI_Tester_VERSION_NUM.img.zip](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/VERSION_TAG/RaspberryPi_HDMI_Tester_VERSION_NUM.img.zip)
-          - 🔐 [SHA256 Checksum](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/VERSION_TAG/RaspberryPi_HDMI_Tester_VERSION_NUM.sha256)
-
-          See [FLASHING.md](docs/FLASHING.md) for installation instructions.
-
-          DOWNLOADEOF
-
           # Replace placeholders
           sed -i "s/VERSION_TAG/$TAG/g" download_section.md
           sed -i "s/VERSION_NUM/v$VERSION/g" download_section.md
 
-          # Insert or update Download section
-          if ! grep -q "## 📥 Download" README.md; then
-            # Add Download section after Project Overview
+          # Replace Download section (remove old, add new)
+          if grep -q "## 📥 Download" README.md; then
+            # Section exists - replace it
+            echo "Updating existing Download section..."
+            
+            # Find start and end of Download section
+            START_LINE=$(grep -n "## 📥 Download" README.md | head -n1 | cut -d: -f1)
+            # Find next ## heading or end of file
+            NEXT_SECTION=$(tail -n +$((START_LINE + 1)) README.md | grep -n "^## " | head -n1 | cut -d: -f1)
+            
+            if [ -n "$NEXT_SECTION" ]; then
+              END_LINE=$((START_LINE + NEXT_SECTION - 1))
+              # Delete old section
+              sed -i "${START_LINE},${END_LINE}d" README.md
+            else
+              # Download section is at end of file
+              sed -i "${START_LINE},\$d" README.md
+            fi
+            
+            # Insert new section at the same position
+            sed -i "${START_LINE}r download_section.md" README.md
+            echo "✅ Download section updated"
+          else
+            # Section doesn't exist - add after Project Overview
+            sed -i '/## Project Overview/r download_section.md' README.md
+            echo "✅ Download section added to README"
+          fi
+
+          rm -f download_section.mdafter Project Overview
             sed -i '/## Project Overview/r download_section.md' README.md
             echo "✅ Download section added to README"
           else
@@ -426,10 +472,14 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "docs: Update README with release v${{ steps.config.outputs.version }} links [skip ci]"
-            git push
-            echo "✅ README changes committed and pushed"
-          fi
-
+            
+            # Pull latest changes before pushing (in case logs were committed)
+            git pull --rebase origin main || {
+              echo "⚠️ Rebase failed, trying merge..."
+              git pull origin main
+            }
+            
+            git push || {
       - name: Push failed build logs
         if: failure()
         run: |
@@ -437,6 +487,27 @@ jobs:
           echo "📝 Pushing failed build logs to repository..."
 
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Check if there are commits to push
+          if git log origin/main..HEAD --oneline | grep -q .; then
+            echo "Found commits to push..."
+            
+            git pull --rebase origin main || {
+              echo "⚠️ Rebase failed, trying merge..."
+              git pull origin main
+            }
+            
+            git push || {
+              echo "❌ CRITICAL: Failed to push failed build logs"
+              echo "Manual intervention required to push logs"
+              exit 1
+            }
+            
+            echo "✅ Failed build logs pushed successfully"
+          else
+            echo "No commits to push (logs may already be pushed)"
+          fithub-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
           git pull --rebase || true
@@ -454,10 +525,11 @@ jobs:
             echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-            echo "**Tag:** ${{ steps.config.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-            echo "**Pre-release:** ${{ steps.config.outputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📦 Assets Created:" >> $GITHUB_STEP_SUMMARY
+          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+            # Use Linux-compatible stat command (Ubuntu uses GNU stat)
+            LOG_SIZE=$(stat -c%s "build/pi-gen-work/build-detailed.log" 2>/dev/null || echo 0)
+            LOG_SIZE_MB=$(( LOG_SIZE / 1048576 ))
+            echo "- **Log Size:** ${LOG_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
             echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
             echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
