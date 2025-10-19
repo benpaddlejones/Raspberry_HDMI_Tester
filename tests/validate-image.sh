@@ -113,12 +113,15 @@ FILES_TO_CHECK=(
 )
 
 ALL_OK=true
+MISSING_FILES=()
+
 for file in "${FILES_TO_CHECK[@]}"; do
     if [ -f "${MOUNT_POINT}${file}" ]; then
         SIZE=$(du -h "${MOUNT_POINT}${file}" | cut -f1)
         echo "  ✅ ${file} (${SIZE})"
     else
         echo "  ❌ MISSING: ${file}"
+        MISSING_FILES+=("${file}")
         ALL_OK=false
     fi
 done
@@ -202,6 +205,18 @@ else
     echo "❌ VALIDATION FAILED!"
     echo ""
     echo "Some required files or configurations are missing."
+    echo ""
+
+    # List missing files explicitly for debugging
+    if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+        echo "Missing files:"
+        for file in "${MISSING_FILES[@]}"; do
+            echo "  - ${file}"
+        done
+        echo ""
+    fi
+
     echo "Please review the build process and try again."
+    echo "Check the build logs for errors during stage execution."
     exit 1
 fi

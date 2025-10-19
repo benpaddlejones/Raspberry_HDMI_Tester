@@ -410,12 +410,36 @@ jobs:
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
 
-          # Find the built image
+          # Find the built image (check for .img first, then .zip)
           IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
 
           if [ -z "$IMAGE_FILE" ]; then
-            echo "❌ Error: No image file found for validation!"
-            exit 1
+            echo "⚠️  No .img file found, checking for .zip files..."
+            ZIP_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.zip" -type f | head -n 1)
+
+            if [ -z "$ZIP_FILE" ]; then
+              echo "❌ Error: No .img or .zip file found for validation!"
+              echo "Contents of deploy directory:"
+              ls -la "${DEPLOY_DIR}/"
+              exit 1
+            fi
+
+            echo "Found ZIP file: ${ZIP_FILE}"
+            echo "📦 Extracting image from ZIP..."
+
+            # Extract the .img file from the zip
+            if unzip -o "${ZIP_FILE}" -d "${DEPLOY_DIR}/" "*.img"; then
+              echo "✅ ZIP extraction successful"
+              IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+
+              if [ -z "$IMAGE_FILE" ]; then
+                echo "❌ No .img file found after extraction!"
+                exit 1
+              fi
+            else
+              echo "❌ Failed to extract ZIP file!"
+              exit 1
+            fi
           fi
 
           echo "Found image: $IMAGE_FILE"
