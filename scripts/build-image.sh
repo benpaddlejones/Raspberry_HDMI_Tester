@@ -1,8 +1,39 @@
 #!/bin/bash
 # Main build script for Raspberry Pi HDMI Tester image
 
-set -e
-set -u
+set -e  # Exit on error
+set -u  # Exit on undefined variable
+set -o pipefail  # Catch errors in pipes
+
+# Error handler function
+error_handler() {
+    local exit_code=$?
+    local line_number=$1
+
+    echo ""
+    echo "❌ ERROR: Script failed at line ${line_number} with exit code ${exit_code}"
+    echo "Last command: ${BASH_COMMAND}"
+    echo ""
+
+    # If logging is initialized, capture error context
+    if [ -n "${BUILD_LOG_FILE:-}" ] && [ -f "${BUILD_LOG_FILE}" ]; then
+        {
+            echo ""
+            echo "=================================================================="
+            echo "  ERROR CAPTURED"
+            echo "=================================================================="
+            echo "Exit Code: ${exit_code}"
+            echo "Line Number: ${line_number}"
+            echo "Command: ${BASH_COMMAND}"
+            echo "=================================================================="
+        } >> "${BUILD_LOG_FILE}"
+    fi
+
+    exit ${exit_code}
+}
+
+# Trap errors and call error handler
+trap 'error_handler ${LINENO}' ERR
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -68,10 +99,42 @@ monitor_disk_space "After Asset Validation"
 # Check prerequisites
 start_stage_timer "Prerequisites Check"
 
+log_subsection "Checking System Resources"
+
+# Check available disk space (need at least 10GB for build)
+AVAILABLE_SPACE_KB=$(df "${PROJECT_ROOT}" | tail -1 | awk '{print $4}')
+AVAILABLE_SPACE_GB=$((AVAILABLE_SPACE_KB / 1024 / 1024))
+REQUIRED_SPACE_GB=10
+
+log_info "Available disk space: ${AVAILABLE_SPACE_GB}GB"
+log_info "Required disk space: ${REQUIRED_SPACE_GB}GB"
+
+if [ ${AVAILABLE_SPACE_GB} -lt ${REQUIRED_SPACE_GB} ]; then
+    log_event "❌" "Insufficient disk space: ${AVAILABLE_SPACE_GB}GB available, ${REQUIRED_SPACE_GB}GB required"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Insufficient disk space"
+    exit 1
+fi
+log_info "✓ Sufficient disk space available"
+
+# Check available memory (warn if less than 2GB)
+AVAILABLE_MEMORY_KB=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+AVAILABLE_MEMORY_GB=$((AVAILABLE_MEMORY_KB / 1024 / 1024))
+
+log_info "Available memory: ${AVAILABLE_MEMORY_GB}GB"
+
+if [ ${AVAILABLE_MEMORY_GB} -lt 2 ]; then
+    log_event "⚠️" "Low memory: ${AVAILABLE_MEMORY_GB}GB available (2GB+ recommended)"
+    log_info "Build may be slower or fail due to memory constraints"
+else
+    log_info "✓ Sufficient memory available"
+fi
+
 log_subsection "Checking Required Tools"
 log_info "Checking for qemu-arm-static..."
 if ! command -v qemu-arm-static &> /dev/null; then
     log_event "❌" "qemu-arm-static not found"
+    log_info "Install with: sudo apt-get install qemu-user-static"
     end_stage_timer "Prerequisites Check" 1
     finalize_log "failure" "Missing qemu-arm-static"
     exit 1
@@ -81,10 +144,18 @@ log_info "✓ qemu-arm-static found"
 log_info "Checking for pi-gen directory..."
 if [ ! -d "${PI_GEN_DIR}" ]; then
     log_event "❌" "pi-gen not found at ${PI_GEN_DIR}"
+    log_info "Expected location: ${PI_GEN_DIR}"
+    log_info "Clone with: sudo git clone https://github.com/RPi-Distro/pi-gen ${PI_GEN_DIR}"
     end_stage_timer "Prerequisites Check" 1
     finalize_log "failure" "pi-gen directory not found"
     exit 1
 fi
+log_info "✓ pi-gen directory found"
+
+end_stage_timer "Prerequisites Check" 0
+monitor_disk_space "After Prerequisites Check"
+monitor_memory "After Prerequisites Check"
+
 # Prepare working directory
 start_stage_timer "Build Directory Setup"
 

@@ -75,8 +75,32 @@ jobs:
       - name: Clean build directory
         run: |
           echo "🧹 Cleaning build directory..."
-          rm -rf build/pi-gen-work/*
-          echo "✅ Build directory cleaned"
+
+          # Ensure directories exist before cleaning
+          mkdir -p build/pi-gen-work
+          mkdir -p logs/successful-builds
+          mkdir -p logs/failed-builds
+
+          # Clean previous build artifacts
+          if [ -d "build/pi-gen-work" ]; then
+            rm -rf build/pi-gen-work/*
+            echo "✅ Build directory cleaned"
+          else
+            echo "⚠️  Build directory did not exist, created it"
+          fi
+
+          # Verify critical directories exist
+          if [ ! -d "build" ] || [ ! -d "scripts" ] || [ ! -d "assets" ]; then
+            echo "❌ Error: Critical project directories missing!"
+            echo "Expected structure:"
+            echo "  - build/"
+            echo "  - scripts/"
+            echo "  - assets/"
+            ls -la || true
+            exit 1
+          fi
+
+          echo "✅ Directory structure validated"
 
       - name: Cache pi-gen downloads
         if: ${{ !inputs.force_rebuild }}
@@ -92,43 +116,133 @@ jobs:
       - name: Build Raspberry Pi image
         timeout-minutes: 90
         run: |
+          set -e  # Exit on error for better failure detection
+
           echo "🔨 Starting image build..."
           echo "⏱️  This will take approximately 45-60 minutes"
           echo ""
 
-          # Setup timestamped log filename
+          # Setup timestamped log filename (early for error logging)
           BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
           echo "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" >> $GITHUB_ENV
 
-          # Make scripts executable
-          chmod +x ./scripts/build-image.sh
-          chmod +x ./scripts/logging-utils.sh
+          # Create early error log in case of catastrophic failure
+          mkdir -p build/pi-gen-work
+          EARLY_LOG="build/pi-gen-work/build-detailed.log"
+          {
+            echo "=================================================================="
+            echo "  RASPBERRY PI HDMI TESTER - BUILD LOG"
+            echo "=================================================================="
+            echo ""
+            echo "Build Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Build ID: ${GITHUB_RUN_ID}"
+            echo "Build Number: ${GITHUB_RUN_NUMBER}"
+            echo "Commit: ${GITHUB_SHA}"
+            echo "Branch: ${GITHUB_REF_NAME}"
+            echo ""
+          } > "${EARLY_LOG}"
+
+          echo "✅ Early logging initialized at ${EARLY_LOG}"
+
+          # Validate prerequisites before starting build
+          echo "🔍 Validating prerequisites..."
+
+          if [ ! -x "./scripts/build-image.sh" ]; then
+            echo "Making build script executable..."
+            chmod +x ./scripts/build-image.sh
+          fi
+
+          if [ ! -x "./scripts/logging-utils.sh" ]; then
+            echo "Making logging utilities executable..."
+            chmod +x ./scripts/logging-utils.sh
+          fi
+
+          # Check for required assets
+          if [ ! -f "assets/image.png" ]; then
+            echo "❌ Error: Test pattern image not found at assets/image.png"
+            echo "Build cannot proceed without test assets"
+            {
+              echo ""
+              echo "ERROR: Missing test pattern image (assets/image.png)"
+              echo "Build terminated before starting"
+            } >> "${EARLY_LOG}"
+            exit 1
+          fi
+
+          if [ ! -f "assets/audio.mp3" ]; then
+            echo "❌ Error: Test audio not found at assets/audio.mp3"
+            echo "Build cannot proceed without test assets"
+            {
+              echo ""
+              echo "ERROR: Missing test audio file (assets/audio.mp3)"
+              echo "Build terminated before starting"
+            } >> "${EARLY_LOG}"
+            exit 1
+          fi
+
+          echo "✅ All prerequisites validated"
 
           # Run build (logging handled by build-image.sh)
           # Note: -E preserves environment variables for the build script
           # Required vars: PATH, HOME, USER, GITHUB_* variables
           BUILD_EXIT_CODE=0
-          sudo -E ./scripts/build-image.sh || BUILD_EXIT_CODE=$?
+
+          echo "🚀 Launching build script..."
+          if sudo -E ./scripts/build-image.sh; then
+            BUILD_EXIT_CODE=0
+          else
+            BUILD_EXIT_CODE=$?
+            echo "⚠️  Build script exited with code ${BUILD_EXIT_CODE}"
+          fi
 
           # Store exit code for later steps (with default fallback)
           BUILD_EXIT_CODE="${BUILD_EXIT_CODE:-1}"
           echo "BUILD_EXIT_CODE=${BUILD_EXIT_CODE}" >> $GITHUB_ENV
 
           # Fix permissions on entire build directory (built with sudo)
+          echo "🔧 Fixing file permissions..."
           if [ -d "build/pi-gen-work" ]; then
-            sudo chown -R runner:runner build/pi-gen-work/ || {
+            if sudo chown -R runner:runner build/pi-gen-work/; then
+              echo "✅ Permissions fixed"
+            else
               echo "❌ Failed to change ownership of build directory"
-              exit 1
-            }
+              # Don't fail here - we still want to preserve logs
+            fi
+          else
+            echo "⚠️  Build directory doesn't exist - build may have failed catastrophically"
           fi
 
+          # Report build status
           if [ ${BUILD_EXIT_CODE} -ne 0 ]; then
             echo ""
             echo "❌ Build failed with exit code ${BUILD_EXIT_CODE}"
+            echo ""
+
+            # Provide troubleshooting hints based on common failure modes
+            echo "💡 Troubleshooting Hints:"
+            if [ ! -d "build/pi-gen-work" ]; then
+              echo "  - Build directory was not created - check directory permissions"
+              echo "  - Verify sudo privileges are available"
+            elif [ ! -f "build/pi-gen-work/build-detailed.log" ]; then
+              echo "  - Log file was not created - build failed during initialization"
+              echo "  - Check that logging-utils.sh is properly sourced"
+              echo "  - Verify write permissions to build/pi-gen-work/"
+            else
+              echo "  - Check build-detailed.log for specific error messages"
+              echo "  - Common issues: disk space, memory constraints, network failures"
+            fi
+            echo ""
 
             # Check if log file exists before promising upload
             if [ -f "build/pi-gen-work/build-detailed.log" ]; then
               echo "📝 Detailed log will be uploaded as artifact and committed to repository"
+
+              # Show last 30 lines of log for quick debugging
+              echo ""
+              echo "📄 Last 30 lines of build log:"
+              echo "----------------------------------------"
+              tail -n 30 "build/pi-gen-work/build-detailed.log" || echo "Could not read log file"
+              echo "----------------------------------------"
             else
               echo "⚠️  Detailed log file not created - build failed early"
               echo "📝 Minimal error report will be created and committed to repository"
@@ -139,7 +253,7 @@ jobs:
 
           echo ""
           echo "✅ Image build complete"
-          echo "� Detailed log available at: build/pi-gen-work/build-detailed.log"
+          echo "📝 Detailed log available at: build/pi-gen-work/build-detailed.log"
 
       - name: Upload build logs as artifacts
         if: always()
