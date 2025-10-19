@@ -934,19 +934,21 @@ jobs:
           # Copy and rename image
           cp "$IMAGE_FILE" "${DEPLOY_DIR}/${VERSIONED_IMAGE}"
 
-          # Compress image
+          # Compress image (do this in deploy dir to avoid full paths in zip)
           echo "🗜️  Compressing image..."
-          cd ${DEPLOY_DIR}
-          zip "${VERSIONED_ZIP}" "${VERSIONED_IMAGE}"
+          (cd "${DEPLOY_DIR}" && zip "${VERSIONED_ZIP}" "${VERSIONED_IMAGE}")
 
           # Generate SHA256 checksums and verification instructions
           echo "🔐 Generating checksums and verification instructions..."
-          chmod +x ${GITHUB_WORKSPACE}/scripts/generate-checksums.sh
-          ${GITHUB_WORKSPACE}/scripts/generate-checksums.sh "${VERSION}" "${DEPLOY_DIR}"
+          chmod +x "${GITHUB_WORKSPACE}/scripts/generate-checksums.sh"
 
-          # Get file sizes
-          IMAGE_SIZE=$(ls -lh "${VERSIONED_IMAGE}" | awk '{print $5}')
-          ZIP_SIZE=$(ls -lh "${VERSIONED_ZIP}" | awk '{print $5}')
+          # Pass absolute path to ensure script can find directory
+          DEPLOY_DIR_ABS="$(cd "${DEPLOY_DIR}" && pwd)"
+          "${GITHUB_WORKSPACE}/scripts/generate-checksums.sh" "${VERSION}" "${DEPLOY_DIR_ABS}"
+
+          # Get file sizes (from deploy directory)
+          IMAGE_SIZE=$(ls -lh "${DEPLOY_DIR}/${VERSIONED_IMAGE}" | awk '{print $5}')
+          ZIP_SIZE=$(ls -lh "${DEPLOY_DIR}/${VERSIONED_ZIP}" | awk '{print $5}')
 
           TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
           VERIFY_FILE="VERIFY_DOWNLOAD_v${VERSION}.txt"
@@ -961,10 +963,10 @@ jobs:
           echo "✅ Assets prepared"
           echo "   Image size: $IMAGE_SIZE"
           echo "   Compressed: $ZIP_SIZE"
-          if [ -f "${TESTING_REPORT}" ]; then
+          if [ -f "${DEPLOY_DIR}/${TESTING_REPORT}" ]; then
             echo "   Testing report: ${TESTING_REPORT}"
           fi
-          if [ -f "${VERIFY_FILE}" ]; then
+          if [ -f "${DEPLOY_DIR}/${VERIFY_FILE}" ]; then
             echo "   Verification instructions: ${VERIFY_FILE}"
           fi
 
