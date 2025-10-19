@@ -9,6 +9,17 @@ set -u
 VERSION="$1"
 DEPLOY_DIR="$2"
 
+# Convert to absolute path if relative
+if [[ ! "${DEPLOY_DIR}" = /* ]]; then
+    DEPLOY_DIR="$(pwd)/${DEPLOY_DIR}"
+fi
+
+# Verify directory exists before cd
+if [ ! -d "${DEPLOY_DIR}" ]; then
+    echo "❌ Error: Deploy directory does not exist: ${DEPLOY_DIR}"
+    exit 1
+fi
+
 cd "${DEPLOY_DIR}"
 
 VERSIONED_ZIP="RaspberryPi_HDMI_Tester_v${VERSION}.img.zip"
