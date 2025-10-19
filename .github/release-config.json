@@ -1,8 +1,8 @@
 {
-  "version": "0.9.0",
-  "name": "Beta Test Candidate",
-  "description": "Initial beta release for testing and validation",
-  "prerelease": true,
+  "version": "1.0.0",
+  "name": "Stable Release",
+  "description": "First stable release of Raspberry Pi HDMI Tester",
+  "prerelease": false,
   "draft": false,
   "assets": {
     "image": {
