@@ -1,6 +1,9 @@
 # Raspberry Pi HDMI Tester
 
-A plug-and-play Raspberry Pi SD card image that automatically displays a test pattern and plays audio through HDMI. Perfect for quickly testing displays, troubleshooting HDMI connections, and verifying A/V equipment.
+> **A plug-and-play SD card image for instantly testing HDMI displays and audio.**
+> Perfect for end-users who need a quick, reliable HDMI testing tool.
+
+A ready-to-use Raspberry Pi image that automatically displays a test pattern and plays audio through HDMI. Perfect for quickly testing displays, troubleshooting HDMI connections, and verifying A/V equipment.
 
 ## What Is This?
 
@@ -153,42 +156,67 @@ See the complete [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for:
 - **Audio**: Continuous playback via mpv with infinite loop
 - **Boot Time**: ~20-30 seconds
 - **Image Size**: ~1.5-2GB (compressed)
-- **No Network**: WiFi and Ethernet disabled for security
-- **No SSH**: SSH disabled by default
+- **SSH**: Enabled by default for troubleshooting (default password: `raspberry`)
+  - ⚠️ **Change password if exposing to network!**
+- **Network**: WiFi not configured by default (optional)
 
 For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md).
 
-## Development Roadmap
+## Development Status
 
-- [x] Project setup and documentation
-- [x] Dev container configuration (Ubuntu 24.04 with all tools)
-- [x] Create test pattern assets (1920x1080 PNG)
-- [x] Create test audio asset (MP3, infinite loop)
-- [x] Configure pi-gen build system (5 custom stages)
-- [x] Implement auto-start services (systemd)
-- [x] Audio playback integration (mpv with --loop=inf)
-- [x] HDMI configuration (1920x1080@60Hz forced)
-- [x] Build and testing scripts
-- [x] User documentation (Codespaces + Windows 11 focused)
-- [ ] Boot optimization (reduce to <20 seconds)
-- [ ] QEMU testing validation
-- [ ] Hardware testing on actual Raspberry Pi
-- [ ] CI/CD pipeline for automated builds
-- [ ] Multi-resolution support (720p, 4K options)
-- [ ] Web interface for configuration (optional)
+**Current Version**: v1.0.0 (Released October 2025)
 
-## Documentation
+### ✅ Completed
+- Project setup and documentation
+- GitHub Codespaces development environment
+- Test pattern assets (1920x1080 PNG)
+- Test audio asset (MP3, infinite loop)
+- pi-gen build system (5 custom stages)
+- Auto-start services (systemd)
+- Audio playback integration (mpv with --loop=inf)
+- HDMI configuration (1920x1080@60Hz forced)
+- Build and testing scripts
+- QEMU testing validation
+- Comprehensive logging system
+- User documentation (end-user focused)
 
-### For End Users
-- **[Flashing Guide - Windows](docs/FLASHING-Windows.md)** - Flash SD card on Windows 10/11
-- **[Flashing Guide - macOS](docs/FLASHING-macOS.md)** - Flash SD card on macOS
-- **[Flashing Guide - Linux](docs/FLASHING-Linux.md)** - Flash SD card on Linux
-- **[Customization Guide](docs/CUSTOMIZATION.md)** - Customize test pattern and audio
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Fix common issues
+### 🚧 Future Enhancements
+- Boot optimization (reduce to <20 seconds)
+- Hardware testing on additional Raspberry Pi models
+- CI/CD pipeline for automated builds
+- Multi-resolution support (720p, 4K options)
+- Web interface for configuration (optional)
 
-### For Developers
-- **[Development Guide](docs/DEVELOPMENT.md)** - Build from source, contribute
-- **[Building Guide](docs/BUILDING.md)** - Detailed build instructions
+## Documentation Guide
+
+### 📚 New Users (Using the Image)
+Follow this order for the best experience:
+
+1. **Start Here**: [README.md](README.md) *(you are here)* - Overview and quick start
+2. **Flash the Image**: [FLASHING.md](docs/FLASHING.md) - Choose your operating system
+3. **Having Issues?** [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Fix common problems
+4. **Want to Customize?** [CUSTOMIZATION.md](docs/CUSTOMIZATION.md) - Change test pattern or audio
+
+### 🔧 Developers (Building from Source)
+Follow this order to build and contribute:
+
+1. **Start Here**: [DEVELOPMENT.md](docs/DEVELOPMENT.md) - Development environment setup
+2. **Build Process**: [BUILDING.md](docs/BUILDING.md) - Step-by-step build instructions
+3. **Customize**: [CUSTOMIZATION.md](docs/CUSTOMIZATION.md) - Modify the build
+4. **Debug**: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Fix build issues
+
+### 📄 Complete Documentation List
+
+**For End Users**:
+- [Flashing Guide - Windows](docs/FLASHING-Windows.md) - Flash SD card on Windows 10/11
+- [Flashing Guide - macOS](docs/FLASHING-macOS.md) - Flash SD card on macOS
+- [Flashing Guide - Linux](docs/FLASHING-Linux.md) - Flash SD card on Linux
+- [Customization Guide](docs/CUSTOMIZATION.md) - Customize test pattern and audio
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Fix common issues
+
+**For Developers**:
+- [Development Guide](docs/DEVELOPMENT.md) - Build from source, contribute
+- [Building Guide](docs/BUILDING.md) - Detailed build instructions
 
 ## Contributing
 
@@ -232,7 +260,22 @@ See the [Development Guide](docs/DEVELOPMENT.md) for:
 
 ## License
 
-[Choose appropriate license - MIT, GPL, etc.]
+This project is licensed under the MIT License with additional GPL components:
+
+- **Project Code**: MIT License - Free to use, modify, and distribute
+- **Pi-gen Components**: GPL (from Raspberry Pi Foundation)
+- **System Packages**: Various open-source licenses (X11, mpv, feh, etc.)
+
+See the [LICENSE](LICENSE) file for full details.
+
+### MIT License Summary
+```
+Copyright (c) 2025 Ben Paddle Jones
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies, subject to the conditions in the LICENSE file.
+```
 
 ## Acknowledgments
 

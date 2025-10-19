@@ -4,16 +4,9 @@ This guide is for developers who want to build the Raspberry Pi HDMI Tester imag
 
 ## Development Environment
 
-### Prerequisites
-
-- **GitHub Account** with Codespaces access
-- **Git** knowledge (basic commands)
-- **Linux/Bash** familiarity
-- **Docker** understanding (optional, for local development)
-
 ### Recommended Setup: GitHub Codespaces
 
-The project is optimized for GitHub Codespaces with a pre-configured development container.
+**GitHub Codespaces is the primary supported development environment** for this project. It provides a pre-configured, consistent build environment accessible from any computer.
 
 #### Why Codespaces?
 
@@ -48,9 +41,11 @@ The project is optimized for GitHub Codespaces with a pre-configured development
    ls -la /opt/pi-gen
    ```
 
-### Alternative: Local Development
+### Alternative Development Options
 
-#### Option 1: Dev Container (VS Code)
+⚠️ **Important**: These methods are **not officially supported**. GitHub Codespaces is the recommended environment.
+
+#### Option 1: VS Code Dev Containers (Experimental)
 
 1. **Prerequisites**:
    ```bash
@@ -70,7 +65,7 @@ The project is optimized for GitHub Codespaces with a pre-configured development
    # Click "Reopen in Container" when prompted
    ```
 
-#### Option 2: Native Linux
+#### Option 2: Native Linux (Advanced Users Only)
 
 1. **Install dependencies** (Ubuntu/Debian):
    ```bash
@@ -505,6 +500,7 @@ Replace `assets/image.png` with your own:
 # - Resolution: 1920x1080 or 3840x2160
 # - Format: PNG or JPEG
 # - Size: < 5MB recommended
+# - Location: assets/image.png
 
 cp /path/to/your/image.png assets/image.png
 ```
@@ -518,6 +514,7 @@ Replace `assets/audio.mp3`:
 # - Format: MP3, WAV, or OGG
 # - Duration: Any (will loop infinitely)
 # - Size: < 10MB recommended
+# - Location: assets/audio.mp3
 
 cp /path/to/your/audio.mp3 assets/audio.mp3
 ```
@@ -662,8 +659,11 @@ We welcome contributions! Here's how to get involved:
 
 ## License
 
-[Choose appropriate license - MIT, GPL, etc.]
+This project is licensed under the MIT License with GPL components from pi-gen.
+
+See the [LICENSE](../LICENSE) file for full details.
 
 ---
 
-**Happy Building!** 🚀
+**Last Updated**: October 19, 2025
+**Version**: 1.0.0

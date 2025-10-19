@@ -18,8 +18,9 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 - **Format**: PNG or JPEG
 - **Size**: < 10MB recommended
 - **Color**: Any (RGB, RGBA)
+- **Location**: `assets/image.png`
 
-### Steps in Codespaces
+### Steps in GitHub Codespaces
 
 1. **Upload your image to Codespaces**:
    - Drag and drop your image into the file explorer
@@ -27,6 +28,7 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 
 2. **Prepare your image** (optional - resize if needed):
    ```bash
+   # Install ImageMagick if needed (pre-installed in Codespaces)
    # Resize to 1920x1080 if needed
    convert your-image.png -resize 1920x1080! assets/image.png
    ```
@@ -53,8 +55,9 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 - **Duration**: Any (will loop infinitely)
 - **Recommended**: Short loops (5-30 seconds) for smaller file size
 - **Size**: < 10MB recommended
+- **Location**: `assets/audio.mp3`
 
-### Steps in Codespaces
+### Steps in GitHub Codespaces
 
 1. **Upload your audio file to Codespaces**:
    - Drag and drop into the file explorer
@@ -62,7 +65,8 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 
 2. **Prepare your audio** (optional - convert if needed):
    ```bash
-   # Convert to MP3 if needed (ffmpeg is available in Codespaces)
+   # ffmpeg is pre-installed in Codespaces
+   # Convert to MP3 if needed
    ffmpeg -i your-audio.wav -b:a 96k assets/audio.mp3
    ```
 
@@ -71,12 +75,12 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
    cp your-audio.mp3 assets/audio.mp3
    ```
 
-4. **Rebuild the image in Codespaces**:
+4. **Rebuild the image in GitHub Codespaces**:
    ```bash
    ./scripts/build-image.sh
    ```
 
-5. **Download and flash** the new image
+5. **Download the new image** from `build/pi-gen-work/deploy/` and flash to SD card
 
 ### Audio Recommendations
 

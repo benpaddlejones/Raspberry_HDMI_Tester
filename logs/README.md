@@ -155,4 +155,5 @@ When modifying the build system:
 
 ---
 
-**Last Updated**: October 17, 2025
+**Last Updated**: October 19, 2025
+**Version**: 1.0.0

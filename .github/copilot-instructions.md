@@ -55,29 +55,34 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 
 ## Project Implementation Status
 
-**Current State**: 78% Complete (18/23 tasks done)
+**Current State**: v1.0.0 Released (October 2025) - 100% Core Features Complete
 
 ### Completed Components
 - ✅ Dev container configuration (Ubuntu 24.04)
 - ✅ Build configuration (`build/config`)
 - ✅ 5 custom pi-gen stages (00 through 04)
-- ✅ Test assets (1920x1080 PNG, MP3 with infinite loop)
+- ✅ Test assets (1920x1080 PNG in `assets/image.png`, MP3 audio in `assets/audio.mp3`)
 - ✅ Build scripts (`build-image.sh`, `configure-boot.sh`)
 - ✅ Testing scripts (`qemu-test.sh`, `validate-image.sh`)
-- ✅ User documentation (BUILDING.md, FLASHING.md, CUSTOMIZATION.md, TROUBLESHOOTING.md)
+- ✅ User documentation (end-user focused)
+- ✅ First successful build (v1.0.0)
+- ✅ QEMU validation completed
+- ✅ SSH enabled by default for troubleshooting
 
-### Pending Components
-- ⏳ First actual build test (execute `./scripts/build-image.sh`)
-- ⏳ QEMU validation
-- ⏳ Hardware testing (optional - if Raspberry Pi available)
+### Future Enhancements
+- ⏳ Hardware testing on additional Pi models
+- ⏳ Boot time optimization (currently ~30 seconds)
+- ⏳ CI/CD pipeline
+- ⏳ Multi-resolution support
 
 ### Key Technical Details
-- **Test Pattern**: `assets/image.png` - 1920x1080 PNG, 367KB
+- **Test Pattern**: `assets/image.png` - 1920x1080 PNG
 - **Test Audio**: `assets/audio.mp3` - MP3, 96kbps, 32kHz stereo
 - **Audio Looping**: `mpv --loop=inf` ensures infinite playback
 - **HDMI Resolution**: Forced to 1920x1080@60Hz via `hdmi_mode=16`
+- **SSH**: Enabled by default (username: `pi`, password: `raspberry`)
 - **Auto-start**: X server launches on login, systemd services start display + audio
-- **Architecture**: x86_64 host building ARM images
+- **Architecture**: x86_64 host building ARM images in GitHub Codespaces
 
 ---
 
@@ -203,13 +208,19 @@ echo "✅ Example script completed"
      hdmi_group=1             # CEA (consumer electronics)
      hdmi_mode=16             # 1920x1080 @ 60Hz
      gpu_mem=128              # GPU memory allocation
+     enable_uart=1            # Enable serial console
      ```
 
 2. **`/boot/cmdline.txt`** (Kernel boot parameters)
    - Single line, space-separated parameters
    - For silent boot: `quiet splash loglevel=0`
 
-3. **systemd Services** (Auto-start mechanism)
+3. **SSH Configuration**
+   - SSH is **enabled by default** for troubleshooting
+   - Default credentials: username `pi`, password `raspberry`
+   - ⚠️ Users should change password if exposing to network
+
+4. **systemd Services** (Auto-start mechanism)
    - Create service in `/etc/systemd/system/`
    - Enable with `systemctl enable service-name.service`
    - Must handle restarts and failures gracefully
@@ -552,18 +563,21 @@ Types:
 
 ## Project Roadmap & Status
 
-Current implementation status (check README for updates):
+Current implementation status:
 
 - [x] Project documentation created
 - [x] Dev container configured
-- [ ] Test pattern assets created
-- [ ] Audio test file created
-- [ ] pi-gen configuration complete
-- [ ] Custom build stages implemented
-- [ ] systemd auto-start services
-- [ ] Boot optimization
-- [ ] QEMU testing framework
-- [ ] Hardware testing validated
+- [x] Test pattern assets created (`assets/image.png`)
+- [x] Audio test file created (`assets/audio.mp3`)
+- [x] pi-gen configuration complete
+- [x] Custom build stages implemented
+- [x] systemd auto-start services
+- [x] Boot optimization
+- [x] QEMU testing framework
+- [x] v1.0.0 Released (October 2025)
+- [ ] Hardware testing on additional Pi models (ongoing)
+- [ ] Boot time optimization to <20 seconds
+- [ ] CI/CD pipeline
 
 ---
 
@@ -876,6 +890,7 @@ Remember: The end goal is a **reliable, minimal, auto-booting HDMI tester** that
 
 ---
 
-**Last Updated**: October 17, 2025
+**Last Updated**: October 19, 2025
+**Version**: 1.0.0
 **Maintained By**: Project team
 **For Questions**: See GitHub Issues or Discussions

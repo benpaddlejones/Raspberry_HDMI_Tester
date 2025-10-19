@@ -704,23 +704,33 @@ sudo systemctl restart hdmi-audio.service
 
 ## Network/SSH Issues
 
-### Cannot SSH to Pi
+### Connecting via SSH
 
-**Note**: SSH is **disabled by default** for security
+**Note**: SSH is **enabled by default** for troubleshooting purposes.
 
-**To Enable SSH**:
-1. **Before building**:
-   - Edit `build/config`: `ENABLE_SSH=1`
-   - **Important**: Also change default password!
+**Default Credentials**:
+- Username: `pi`
+- Password: `raspberry`
+- Hostname: `hdmi-tester.local`
 
-2. **On existing image**:
-   - Mount boot partition
-   - Create empty file named `ssh`
-   - Unmount and boot
+**To Connect**:
+```bash
+ssh pi@hdmi-tester.local
+# OR if .local doesn't work
+ssh pi@<ip-address>
+```
+
+⚠️ **Security Warning**: Change the default password if the Pi will be exposed to untrusted networks!
+
+**To Change Password**:
+```bash
+# On the Pi
+passwd
+```
 
 ### Cannot Connect to WiFi
 
-**Note**: WiFi is **not configured by default**. The HDMI tester doesn't require network access.
+**Note**: WiFi is **not configured by default**. The HDMI tester doesn't require network access for its primary function.
 
 **If you need WiFi for troubleshooting**:
 1. **Before building** (in Codespaces):
@@ -839,15 +849,15 @@ ls build/pi-gen-work/stage-custom/
 
 ### Viewing Logs on Raspberry Pi
 
-**Method 1: Via SSH (Easiest)**
+**Method 1: Via SSH (Recommended)**
 
-SSH is now enabled by default for debugging. From your computer:
+SSH is enabled by default for troubleshooting. From your computer:
 
 ```bash
 # Find the Pi's IP address (check your router, or try)
 ping hdmi-tester.local
 
-# Connect via SSH (default password: raspberry)
+# Connect via SSH (default credentials: pi / raspberry)
 ssh pi@hdmi-tester.local
 # OR
 ssh pi@<ip-address>

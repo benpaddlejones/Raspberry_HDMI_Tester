@@ -1,6 +1,6 @@
 # Building the Raspberry Pi HDMI Tester Image
 
-This guide walks you through building the Raspberry Pi HDMI Tester image using GitHub Codespaces.
+This guide walks you through building the Raspberry Pi HDMI Tester image using **GitHub Codespaces**.
 
 ## Prerequisites
 
@@ -8,28 +8,15 @@ This guide walks you through building the Raspberry Pi HDMI Tester image using G
 - Active GitHub account with Codespaces access
 - Repository: https://github.com/benpaddlejones/Raspberry_HDMI_Tester
 
-### System Resources (Provided by Codespaces)
-- **OS**: Ubuntu 24.04 LTS (pre-configured)
-- **RAM**: 4GB minimum, 8GB in Codespaces
-- **Disk Space**: 32GB available in Codespaces
-- **Architecture**: x86_64 with QEMU for ARM emulation
+### No Installation Needed!
+All required tools are **pre-installed** in the GitHub Codespaces environment. Everything is ready to use - no manual setup required!
 
-### Required Tools
-All required tools are **pre-installed** in the GitHub Codespaces environment:
-
-- `qemu-arm-static` - ARM emulation
-- `debootstrap` - Debian bootstrapping
-- `kpartx` - Partition management
-- `parted` - Disk partitioning
-- `git` - Version control
-- `python3` - Build scripts
-- `pi-gen` - Raspberry Pi OS image builder
-
-Everything is ready to use - no manual installation needed!
+For detailed information about the development environment, see the [Development Guide](DEVELOPMENT.md).
 
 ## Quick Start
 
 ### Using GitHub Codespaces
+
 1. **Open the repository** in GitHub Codespaces:
    - Navigate to https://github.com/benpaddlejones/Raspberry_HDMI_Tester
    - Click the green **Code** button
@@ -37,8 +24,8 @@ Everything is ready to use - no manual installation needed!
    - Click **Create codespace on main**
 
 2. **Wait for initialization** (first time only, ~2-3 minutes):
-   - Codespaces will automatically build the development container
-   - All tools and dependencies will be configured
+   - Codespaces automatically builds the development environment
+   - All tools and dependencies are configured
    - You'll see the VS Code interface when ready
 
 3. **Run the build**:
@@ -108,10 +95,10 @@ See `logs/README.md` for detailed documentation on the logging system.
 The build process uses these custom stages:
 
 1. **00-install-packages** - Installs X11, feh, mpv, audio utilities
-2. **01-test-image** - Deploys test pattern (1920x1080 PNG)
-3. **02-audio-test** - Deploys audio file (MP3)
+2. **01-test-image** - Deploys test pattern from `assets/image.png`
+3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
 4. **03-autostart** - Configures systemd services for auto-boot
-5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz
+5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables SSH
 
 ### Build Time
 - **First build**: 45-60 minutes (downloads packages)
@@ -155,9 +142,9 @@ tail -n 50 build/pi-gen-work/build-detailed.log
 ### Build Fails with "qemu-arm-static not found"
 **Cause**: This should never happen in Codespaces - the tool is pre-installed.
 
-**Solution**: If you see this error, the container may not have initialized properly:
+**Solution**: If you see this error, the environment may not have initialized properly:
 ```bash
-# Rebuild the Codespaces container:
+# Rebuild the Codespaces environment:
 # Command Palette (Ctrl+Shift+P) → "Codespaces: Rebuild Container"
 ```
 
