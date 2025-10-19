@@ -468,105 +468,393 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+      - name: Upload QEMU test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-test-logs-${{ env.BUILD_TIMESTAMP }}
+          path: |
+            build/qemu-testing/*.log
+            build/qemu-testing/boot-*.log
+            build/qemu-testing/kernel.img
+          retention-days: 90
+          if-no-files-found: ignore
+
       - name: QEMU boot test (optional)
         id: qemu_test
         continue-on-error: true
         timeout-minutes: 5
         run: |
-          echo "🔧 QEMU Boot Test"
+          set -x  # Enable extremely verbose bash debugging
+          
+          echo "=================================================================="
+          echo "  QEMU BOOT TEST - VERBOSE MODE"
+          echo "=================================================================="
           echo "Note: This test has limitations and may not fully work"
+          echo "RPi images don't boot perfectly in QEMU, but we can validate basic functionality"
           echo ""
+          
+          # Create verbose log file
+          QEMU_LOG_FILE="build/qemu-testing/qemu-test-verbose.log"
+          mkdir -p "build/qemu-testing"
+          
+          {
+            echo "=================================================================="
+            echo "  QEMU BOOT TEST - DETAILED LOG"
+            echo "=================================================================="
+            echo "Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Build ID: ${{ github.run_id }}"
+            echo "Version: ${{ steps.config.outputs.version }}"
+            echo ""
+          } > "${QEMU_LOG_FILE}"
+          
+          log_verbose() {
+            echo "$@" | tee -a "${QEMU_LOG_FILE}"
+          }
+          
+          log_section() {
+            {
+              echo ""
+              echo "-------------------------------------------------------------------"
+              echo "  $1"
+              echo "-------------------------------------------------------------------"
+            } | tee -a "${QEMU_LOG_FILE}"
+          }
 
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
+          
+          log_section "STEP 1: Locating Image File"
+          log_verbose "Deploy directory: ${DEPLOY_DIR}"
+          log_verbose "Searching for .img files..."
+          
           IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
 
           if [ -z "$IMAGE_FILE" ]; then
-            echo "⚠️ No image file found for QEMU testing"
+            log_verbose "❌ No image file found for QEMU testing"
+            log_verbose "Deploy directory contents:"
+            ls -lah "${DEPLOY_DIR}/" | tee -a "${QEMU_LOG_FILE}"
+            echo "qemu_test_result=no_image" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # Install QEMU ARM system emulator
-          echo "📥 Installing QEMU system emulator..."
-          sudo apt-get update -qq
-          sudo apt-get install -y qemu-system-arm 2>&1 | grep -v "^Reading\|^Building"
-
-          # Create test directory
-          TEST_DIR="build/qemu-test"
+          log_verbose "✅ Found image: ${IMAGE_FILE}"
+          log_verbose "Image size: $(ls -lh "${IMAGE_FILE}" | awk '{print $5}')"
+          log_verbose "Image details:"
+          file "${IMAGE_FILE}" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 2: Installing QEMU"
+          log_verbose "Checking QEMU version..."
+          
+          if command -v qemu-system-arm &> /dev/null; then
+            log_verbose "QEMU already installed:"
+            qemu-system-arm --version | head -n 1 | tee -a "${QEMU_LOG_FILE}"
+          else
+            log_verbose "Installing QEMU ARM system emulator..."
+            sudo apt-get update -qq 2>&1 | tee -a "${QEMU_LOG_FILE}"
+            sudo apt-get install -y qemu-system-arm 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          fi
+          
+          log_verbose "✅ QEMU version:"
+          qemu-system-arm --version | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 3: Creating Test Environment"
+          TEST_DIR="build/qemu-testing"
           mkdir -p "${TEST_DIR}"
           cd "${TEST_DIR}"
-
-          # Extract kernel from image for QEMU
-          echo "🔧 Extracting kernel from image..."
-
+          log_verbose "✅ Test directory: $(pwd)"
+          
+          log_section "STEP 4: Analyzing Image Partitions"
+          log_verbose "Checking image partition table..."
+          sudo fdisk -l "${IMAGE_FILE}" 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "Checking image partition details with parted..."
+          sudo parted "${IMAGE_FILE}" print 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 5: Setting Up Loop Device"
           LOOP_DEVICE=$(sudo losetup -f)
-          sudo losetup -P "${LOOP_DEVICE}" "${IMAGE_FILE}"
+          log_verbose "Available loop device: ${LOOP_DEVICE}"
+          
+          log_verbose "Attaching image to loop device..."
+          if sudo losetup -P "${LOOP_DEVICE}" "${IMAGE_FILE}"; then
+            log_verbose "✅ Loop device attached"
+          else
+            log_verbose "❌ Failed to attach loop device"
+            echo "qemu_test_result=loop_failed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          log_verbose "Loop device status:"
+          sudo losetup -l | grep "${LOOP_DEVICE}" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "Available partitions:"
+          ls -lah "${LOOP_DEVICE}"* 2>&1 | tee -a "${QEMU_LOG_FILE}"
 
           BOOT_MOUNT="boot_mount"
           mkdir -p "${BOOT_MOUNT}"
-
-          if sudo mount "${LOOP_DEVICE}p1" "${BOOT_MOUNT}" 2>/dev/null; then
-            echo "✅ Boot partition mounted"
-
-            # Copy kernel
-            if [ -f "${BOOT_MOUNT}/kernel8.img" ]; then
-              sudo cp "${BOOT_MOUNT}/kernel8.img" "kernel.img"
-              echo "✅ Extracted kernel8.img"
-            elif [ -f "${BOOT_MOUNT}/kernel7.img" ]; then
-              sudo cp "${BOOT_MOUNT}/kernel7.img" "kernel.img"
-              echo "✅ Extracted kernel7.img"
-            else
-              echo "⚠️ No kernel found, skipping QEMU test"
-              sudo umount "${BOOT_MOUNT}" 2>/dev/null || true
-              sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
-              exit 0
-            fi
-
-            # Copy DTB if available
-            if [ -f "${BOOT_MOUNT}/bcm2710-rpi-3-b.dtb" ]; then
-              sudo cp "${BOOT_MOUNT}/bcm2710-rpi-3-b.dtb" "device-tree.dtb"
-              echo "✅ Extracted device tree"
-            fi
-
-            # Cleanup mounts
+          
+          log_section "STEP 6: Mounting Boot Partition"
+          
+          # Try different partition naming schemes
+          BOOT_PARTITION=""
+          if [ -e "${LOOP_DEVICE}p1" ]; then
+            BOOT_PARTITION="${LOOP_DEVICE}p1"
+          elif [ -e "/dev/mapper/$(basename ${LOOP_DEVICE})p1" ]; then
+            BOOT_PARTITION="/dev/mapper/$(basename ${LOOP_DEVICE})p1"
+          fi
+          
+          if [ -z "$BOOT_PARTITION" ]; then
+            log_verbose "❌ Could not find boot partition"
+            sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
+            echo "qemu_test_result=no_boot_partition" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          log_verbose "Boot partition: ${BOOT_PARTITION}"
+          log_verbose "Attempting to mount..."
+          
+          if sudo mount "${BOOT_PARTITION}" "${BOOT_MOUNT}" 2>&1 | tee -a "${QEMU_LOG_FILE}"; then
+            log_verbose "✅ Boot partition mounted successfully"
+          else
+            log_verbose "❌ Failed to mount boot partition"
+            sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
+            echo "qemu_test_result=mount_failed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          log_section "STEP 7: Examining Boot Partition Contents"
+          log_verbose "Boot partition files:"
+          ls -lah "${BOOT_MOUNT}/" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "Kernel files available:"
+          ls -lh "${BOOT_MOUNT}"/kernel*.img 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "Device tree files:"
+          ls -lh "${BOOT_MOUNT}"/*.dtb 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "Config.txt contents (first 30 lines):"
+          head -n 30 "${BOOT_MOUNT}/config.txt" 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 8: Extracting Kernel"
+          KERNEL_FOUND=false
+          
+          if [ -f "${BOOT_MOUNT}/kernel8.img" ]; then
+            log_verbose "Found kernel8.img (64-bit)"
+            sudo cp "${BOOT_MOUNT}/kernel8.img" "kernel.img"
+            KERNEL_TYPE="kernel8"
+            KERNEL_FOUND=true
+          elif [ -f "${BOOT_MOUNT}/kernel7l.img" ]; then
+            log_verbose "Found kernel7l.img (32-bit LPAE)"
+            sudo cp "${BOOT_MOUNT}/kernel7l.img" "kernel.img"
+            KERNEL_TYPE="kernel7l"
+            KERNEL_FOUND=true
+          elif [ -f "${BOOT_MOUNT}/kernel7.img" ]; then
+            log_verbose "Found kernel7.img (32-bit)"
+            sudo cp "${BOOT_MOUNT}/kernel7.img" "kernel.img"
+            KERNEL_TYPE="kernel7"
+            KERNEL_FOUND=true
+          elif [ -f "${BOOT_MOUNT}/kernel.img" ]; then
+            log_verbose "Found kernel.img (original Pi)"
+            sudo cp "${BOOT_MOUNT}/kernel.img" "kernel.img"
+            KERNEL_TYPE="kernel"
+            KERNEL_FOUND=true
+          fi
+          
+          if [ "$KERNEL_FOUND" = false ]; then
+            log_verbose "❌ No kernel found in boot partition"
             sudo umount "${BOOT_MOUNT}" 2>/dev/null || true
             sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
-            sudo chmod 644 kernel.img 2>/dev/null || true
-
-            # Attempt basic boot test
-            echo ""
-            echo "🚀 Attempting QEMU boot test (30 second timeout)..."
-            echo "Note: This is expected to fail or hang - RPi images don't boot well in QEMU"
-            echo ""
-
-            timeout 30 qemu-system-arm \
-              -M versatilepb \
-              -cpu arm1176 \
-              -m 256 \
-              -kernel kernel.img \
-              -drive "file=${IMAGE_FILE},format=raw" \
-              -append "root=/dev/sda2 rootfstype=ext4 rw console=ttyAMA0" \
-              -nographic \
-              -serial stdio \
-              -no-reboot 2>&1 | head -n 100 > boot-attempt.log || true
-
-            echo ""
-            echo "📄 Boot attempt log (first 50 lines):"
-            head -n 50 boot-attempt.log || true
-
-            # Check for any positive indicators
-            if grep -qi "booting\|kernel\|linux" boot-attempt.log; then
-              echo "✅ QEMU showed some boot activity"
-              echo "qemu_test_result=partial" >> $GITHUB_OUTPUT
-            else
-              echo "⚠️ QEMU boot test inconclusive"
-              echo "qemu_test_result=inconclusive" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "⚠️ Could not mount boot partition, skipping QEMU test"
-            sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
-            echo "qemu_test_result=skipped" >> $GITHUB_OUTPUT
+            echo "qemu_test_result=no_kernel" >> $GITHUB_OUTPUT
+            exit 0
           fi
+          
+          log_verbose "✅ Extracted ${KERNEL_TYPE}.img"
+          log_verbose "Kernel file size: $(ls -lh kernel.img | awk '{print $5}')"
+          log_verbose "Kernel file type:"
+          file kernel.img | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 9: Extracting Device Tree (if available)"
+          DTB_FOUND=false
+          
+          for dtb_file in "bcm2711-rpi-4-b.dtb" "bcm2710-rpi-3-b-plus.dtb" "bcm2710-rpi-3-b.dtb" "bcm2709-rpi-2-b.dtb"; do
+            if [ -f "${BOOT_MOUNT}/${dtb_file}" ]; then
+              log_verbose "Found device tree: ${dtb_file}"
+              sudo cp "${BOOT_MOUNT}/${dtb_file}" "device-tree.dtb"
+              DTB_FOUND=true
+              log_verbose "✅ Extracted device tree"
+              break
+            fi
+          done
+          
+          if [ "$DTB_FOUND" = false ]; then
+            log_verbose "⚠️  No device tree found (may not be critical)"
+          fi
+          
+          log_section "STEP 10: Cleaning Up Mounts"
+          log_verbose "Unmounting boot partition..."
+          sudo umount "${BOOT_MOUNT}" 2>&1 | tee -a "${QEMU_LOG_FILE}" || true
+          
+          log_verbose "Detaching loop device..."
+          sudo losetup -d "${LOOP_DEVICE}" 2>&1 | tee -a "${QEMU_LOG_FILE}" || true
+          
+          log_verbose "Fixing kernel permissions..."
+          sudo chmod 644 kernel.img 2>&1 | tee -a "${QEMU_LOG_FILE}" || true
+          
+          log_verbose "✅ Cleanup complete"
+          
+          log_section "STEP 11: Preparing QEMU Configuration"
+          log_verbose "QEMU machine type: versatilepb"
+          log_verbose "QEMU CPU: arm1176"
+          log_verbose "QEMU memory: 256MB"
+          log_verbose "Kernel: kernel.img"
+          log_verbose "Drive: ${IMAGE_FILE}"
+          log_verbose "Boot timeout: 30 seconds"
+          
+          log_verbose ""
+          log_verbose "Full QEMU command:"
+          log_verbose "qemu-system-arm \\"
+          log_verbose "  -M versatilepb \\"
+          log_verbose "  -cpu arm1176 \\"
+          log_verbose "  -m 256 \\"
+          log_verbose "  -kernel kernel.img \\"
+          log_verbose "  -drive file=${IMAGE_FILE},format=raw \\"
+          log_verbose "  -append 'root=/dev/sda2 rootfstype=ext4 rw console=ttyAMA0' \\"
+          log_verbose "  -nographic \\"
+          log_verbose "  -serial stdio \\"
+          log_verbose "  -no-reboot"
+          
+          log_section "STEP 12: Running QEMU Boot Test"
+          log_verbose "Starting QEMU (30 second timeout)..."
+          log_verbose "NOTE: Raspberry Pi images don't boot perfectly in QEMU"
+          log_verbose "We're looking for any signs of kernel activity"
+          log_verbose ""
+
+          BOOT_LOG="boot-full.log"
+          BOOT_ERRORS="boot-errors.log"
+          
+          # Capture full output and errors separately
+          timeout 30 qemu-system-arm \
+            -M versatilepb \
+            -cpu arm1176 \
+            -m 256 \
+            -kernel kernel.img \
+            -drive "file=${IMAGE_FILE},format=raw" \
+            -append "root=/dev/sda2 rootfstype=ext4 rw console=ttyAMA0" \
+            -nographic \
+            -serial stdio \
+            -no-reboot > "${BOOT_LOG}" 2> "${BOOT_ERRORS}" || QEMU_EXIT_CODE=$?
+
+          log_verbose "QEMU process completed with exit code: ${QEMU_EXIT_CODE:-0}"
+          
+          log_section "STEP 13: Analyzing Boot Output"
+          
+          log_verbose "Boot log size: $(wc -l < "${BOOT_LOG}") lines"
+          log_verbose "Error log size: $(wc -l < "${BOOT_ERRORS}") lines"
+          log_verbose ""
+          
+          log_verbose "=== BOOT LOG (first 100 lines) ==="
+          head -n 100 "${BOOT_LOG}" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "=== BOOT LOG (last 50 lines) ==="
+          tail -n 50 "${BOOT_LOG}" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose ""
+          log_verbose "=== ERROR LOG (all lines) ==="
+          cat "${BOOT_ERRORS}" | tee -a "${QEMU_LOG_FILE}"
+          
+          log_section "STEP 14: Checking for Boot Indicators"
+          
+          # Initialize counters
+          BOOT_INDICATORS=0
+          
+          # Check for various boot-related strings
+          if grep -qi "booting\|starting kernel" "${BOOT_LOG}"; then
+            log_verbose "✅ Found: Kernel boot messages"
+            ((BOOT_INDICATORS++))
+          else
+            log_verbose "❌ Not found: Kernel boot messages"
+          fi
+          
+          if grep -qi "linux version" "${BOOT_LOG}"; then
+            log_verbose "✅ Found: Linux version string"
+            ((BOOT_INDICATORS++))
+          else
+            log_verbose "❌ Not found: Linux version string"
+          fi
+          
+          if grep -qi "kernel command line" "${BOOT_LOG}"; then
+            log_verbose "✅ Found: Kernel command line"
+            ((BOOT_INDICATORS++))
+          else
+            log_verbose "❌ Not found: Kernel command line"
+          fi
+          
+          if grep -qi "mounting\|mount.*root" "${BOOT_LOG}"; then
+            log_verbose "✅ Found: Filesystem mounting"
+            ((BOOT_INDICATORS++))
+          else
+            log_verbose "❌ Not found: Filesystem mounting"
+          fi
+          
+          if grep -qi "systemd\|init" "${BOOT_LOG}"; then
+            log_verbose "✅ Found: Init system"
+            ((BOOT_INDICATORS++))
+          else
+            log_verbose "❌ Not found: Init system"
+          fi
+          
+          if grep -qi "panic\|fatal\|oops" "${BOOT_LOG}"; then
+            log_verbose "⚠️  Found: Kernel panic or fatal error"
+          fi
+          
+          log_verbose ""
+          log_verbose "Boot indicators found: ${BOOT_INDICATORS}/5"
+          
+          log_section "STEP 15: Determining Test Result"
+          
+          if [ ${BOOT_INDICATORS} -ge 3 ]; then
+            log_verbose "✅ QEMU boot test: PASSED (${BOOT_INDICATORS}/5 indicators)"
+            log_verbose "The kernel showed significant boot activity"
+            echo "qemu_test_result=passed" >> $GITHUB_OUTPUT
+          elif [ ${BOOT_INDICATORS} -ge 1 ]; then
+            log_verbose "⚠️  QEMU boot test: PARTIAL (${BOOT_INDICATORS}/5 indicators)"
+            log_verbose "The kernel showed some boot activity"
+            echo "qemu_test_result=partial" >> $GITHUB_OUTPUT
+          else
+            log_verbose "❌ QEMU boot test: INCONCLUSIVE (${BOOT_INDICATORS}/5 indicators)"
+            log_verbose "No clear boot indicators found"
+            echo "qemu_test_result=inconclusive" >> $GITHUB_OUTPUT
+          fi
+          
+          log_section "STEP 16: Finalizing Test"
+          
+          log_verbose "Copying logs to test directory..."
+          cp "${BOOT_LOG}" "boot-attempt.log" || true
+          
+          log_verbose ""
+          log_verbose "Test artifacts created:"
+          ls -lh boot-*.log kernel.img *.dtb 2>&1 | tee -a "${QEMU_LOG_FILE}"
+          
+          {
+            echo ""
+            echo "=================================================================="
+            echo "  QEMU BOOT TEST COMPLETE"
+            echo "=================================================================="
+            echo "Completed: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Result: ${BOOT_INDICATORS}/5 boot indicators found"
+            echo "Full logs available in: ${QEMU_LOG_FILE}"
+            echo "=================================================================="
+          } | tee -a "${QEMU_LOG_FILE}"
+          
+          log_verbose "✅ QEMU test complete - detailed log saved"
+          
+          set +x  # Disable verbose bash debugging
 
       - name: Generate test summary report
         if: success()
@@ -906,7 +1194,26 @@ jobs:
 
             echo "### ✅ Validation Results:" >> $GITHUB_STEP_SUMMARY
             echo "- **Image Validation:** ${VALIDATION_STATUS:-unknown}" >> $GITHUB_STEP_SUMMARY
-            echo "- **QEMU Boot Test:** ${QEMU_TEST_RESULT:-not run}" >> $GITHUB_STEP_SUMMARY
+            
+            # Enhanced QEMU result display
+            case "${QEMU_TEST_RESULT:-not_run}" in
+              passed)
+                echo "- **QEMU Boot Test:** ✅ Passed (kernel showed significant boot activity)" >> $GITHUB_STEP_SUMMARY
+                ;;
+              partial)
+                echo "- **QEMU Boot Test:** ⚠️ Partial (kernel showed some boot activity)" >> $GITHUB_STEP_SUMMARY
+                ;;
+              inconclusive)
+                echo "- **QEMU Boot Test:** ❓ Inconclusive (no clear boot indicators)" >> $GITHUB_STEP_SUMMARY
+                ;;
+              no_image|no_kernel|no_boot_partition|loop_failed|mount_failed)
+                echo "- **QEMU Boot Test:** ⚠️ Skipped (${QEMU_TEST_RESULT})" >> $GITHUB_STEP_SUMMARY
+                ;;
+              *)
+                echo "- **QEMU Boot Test:** ${QEMU_TEST_RESULT:-not run}" >> $GITHUB_STEP_SUMMARY
+                ;;
+            esac
+            
             echo "" >> $GITHUB_STEP_SUMMARY
 
             echo "### 🔗 Release URL:" >> $GITHUB_STEP_SUMMARY
@@ -919,12 +1226,21 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📝 Build Logs:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Detailed Log (Artifact):** Available in workflow artifacts (retained for 90 days)" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Build & Test Logs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Log (Artifact):** Available in workflow artifacts (retained for 90 days)" >> $GITHUB_STEP_SUMMARY
+          echo "- **QEMU Test Log (Artifact):** Detailed QEMU boot test logs with step-by-step analysis" >> $GITHUB_STEP_SUMMARY
           echo "- **Committed Log:** Check \`logs/\` directory in repository" >> $GITHUB_STEP_SUMMARY
 
           if [ -f "build/pi-gen-work/build-detailed.log" ]; then
             LOG_SIZE=$(stat -f%z "build/pi-gen-work/build-detailed.log" 2>/dev/null || stat -c%s "build/pi-gen-work/build-detailed.log")
             LOG_SIZE_MB=$(( LOG_SIZE / 1048576 ))
-            echo "- **Log Size:** ${LOG_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build Log Size:** ${LOG_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "build/qemu-testing/qemu-test-verbose.log" ]; then
+            QEMU_LOG_SIZE=$(stat -f%z "build/qemu-testing/qemu-test-verbose.log" 2>/dev/null || stat -c%s "build/qemu-testing/qemu-test-verbose.log")
+            QEMU_LOG_SIZE_KB=$(( QEMU_LOG_SIZE / 1024 ))
+            echo "- **QEMU Test Log Size:** ${QEMU_LOG_SIZE_KB}KB" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Tip:** Download QEMU test logs artifact for detailed step-by-step boot analysis" >> $GITHUB_STEP_SUMMARY
           fi
