@@ -12,8 +12,21 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     exit 1
 fi
 
+# Determine the correct config.txt path (varies by Raspberry Pi OS version)
+CONFIG_FILE=""
+if [ -f "${ROOTFS_DIR}/boot/firmware/config.txt" ]; then
+    CONFIG_FILE="${ROOTFS_DIR}/boot/firmware/config.txt"
+    echo "Using /boot/firmware/config.txt (Bookworm+)"
+elif [ -f "${ROOTFS_DIR}/boot/config.txt" ]; then
+    CONFIG_FILE="${ROOTFS_DIR}/boot/config.txt"
+    echo "Using /boot/config.txt (legacy)"
+else
+    echo "❌ Error: config.txt not found in /boot or /boot/firmware"
+    exit 1
+fi
+
 # Append HDMI configuration to config.txt
-cat >> "${ROOTFS_DIR}/boot/firmware/config.txt" << 'EOF'
+cat >> "${CONFIG_FILE}" << 'EOF'
 
 # HDMI Tester Configuration - Force 1920x1080 @ 60Hz
 # Force HDMI output even if no display detected
