@@ -105,8 +105,8 @@ echo "🔍 Checking required files..."
 echo ""
 
 FILES_TO_CHECK=(
-    "/opt/hdmi-tester/test-pattern.png"
-    "/opt/hdmi-tester/test-audio.mp3"
+    "/opt/hdmi-tester/image.png"
+    "/opt/hdmi-tester/audio.mp3"
     "/etc/systemd/system/hdmi-display.service"
     "/etc/systemd/system/hdmi-audio.service"
     "/home/pi/.xinitrc"

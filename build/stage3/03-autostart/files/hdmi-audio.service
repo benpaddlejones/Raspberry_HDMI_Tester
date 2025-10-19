@@ -7,7 +7,7 @@ Wants=sound.target
 Type=simple
 User=pi
 ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa --msg-level=all=info /opt/hdmi-tester/test-audio.mp3
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa --msg-level=all=info /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=10
 StandardOutput=journal

@@ -218,13 +218,13 @@ mkdir -p "${WORK_DIR}/stage3/02-audio-test/files"
 log_info "✓ Asset directories created"
 
 log_subsection "Copying Test Pattern Image"
-cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/test-pattern.png"
-log_checksum "${WORK_DIR}/stage3/01-test-image/files/test-pattern.png" "Test Pattern Image (Deployed)"
+cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/image.png"
+log_checksum "${WORK_DIR}/stage3/01-test-image/files/image.png" "Test Pattern Image (Deployed)"
 log_info "✓ Test pattern copied"
 
 log_subsection "Copying Test Audio"
-cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/test-audio.mp3"
-log_checksum "${WORK_DIR}/stage3/02-audio-test/files/test-audio.mp3" "Test Audio File (Deployed)"
+cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3"
+log_checksum "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" "Test Audio File (Deployed)"
 log_info "✓ Test audio copied"
 
 end_stage_timer "Asset Deployment" 0

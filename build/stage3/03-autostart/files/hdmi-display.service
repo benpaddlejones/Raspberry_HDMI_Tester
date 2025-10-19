@@ -8,7 +8,7 @@ Type=simple
 User=pi
 Environment=DISPLAY=:0
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/feh --fullscreen --hide-pointer --auto-zoom --verbose /opt/hdmi-tester/test-pattern.png
+ExecStart=/usr/bin/feh --fullscreen --hide-pointer --auto-zoom --verbose /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal
