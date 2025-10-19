@@ -138,31 +138,59 @@ CONFIG_FILES=(
 )
 
 CONFIG_FOUND=false
+HDMI_MODE_OK=false
+HDMI_DRIVE_OK=false
+
+# Check ALL config files that exist (both legacy and new locations)
 for config in "${CONFIG_FILES[@]}"; do
     if [ -f "${MOUNT_POINT}${config}" ]; then
         CONFIG_FOUND=true
         echo "  📝 Found: ${config}"
 
-        # Check for HDMI settings (ignore commented lines)
+        # Check this specific file for HDMI settings
+        HAS_MODE=false
+        HAS_DRIVE=false
+
         if grep -q "^[[:space:]]*hdmi_mode=16" "${MOUNT_POINT}${config}"; then
-            echo "  ✅ HDMI mode configured (1920x1080@60Hz)"
-        else
-            echo "  ⚠️  HDMI mode not found"
-            ALL_OK=false
+            HAS_MODE=true
+            HDMI_MODE_OK=true
         fi
 
         if grep -q "^[[:space:]]*hdmi_drive=2" "${MOUNT_POINT}${config}"; then
-            echo "  ✅ HDMI audio enabled"
-        else
-            echo "  ⚠️  HDMI audio not configured"
-            ALL_OK=false
+            HAS_DRIVE=true
+            HDMI_DRIVE_OK=true
         fi
-        break
+
+        # Report status for this file
+        if [ "$HAS_MODE" = true ]; then
+            echo "      ✅ hdmi_mode=16 found in this file"
+        fi
+        if [ "$HAS_DRIVE" = true ]; then
+            echo "      ✅ hdmi_drive=2 found in this file"
+        fi
+
+        # Don't break - check all config files
     fi
 done
 
 if [ "$CONFIG_FOUND" = false ]; then
-    echo "  ❌ config.txt not found"
+    echo "  ❌ config.txt not found in /boot or /boot/firmware"
+    ALL_OK=false
+fi
+
+# Overall HDMI configuration status
+echo ""
+if [ "$HDMI_MODE_OK" = true ]; then
+    echo "  ✅ HDMI mode configured (1920x1080@60Hz)"
+else
+    echo "  ❌ HDMI mode not found in any config.txt"
+    ALL_OK=false
+fi
+
+if [ "$HDMI_DRIVE_OK" = true ]; then
+    echo "  ✅ HDMI audio enabled"
+else
+    echo "  ❌ HDMI audio not configured in any config.txt"
     ALL_OK=false
 fi
 

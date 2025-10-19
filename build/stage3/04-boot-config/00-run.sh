@@ -12,21 +12,31 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     exit 1
 fi
 
-# Determine the correct config.txt path (varies by Raspberry Pi OS version)
-CONFIG_FILE=""
+# Find all config.txt files and write to ALL of them
+# (Raspberry Pi OS versions vary: /boot/config.txt vs /boot/firmware/config.txt)
+CONFIG_FILES=()
+
 if [ -f "${ROOTFS_DIR}/boot/firmware/config.txt" ]; then
-    CONFIG_FILE="${ROOTFS_DIR}/boot/firmware/config.txt"
-    echo "Using /boot/firmware/config.txt (Bookworm+)"
-elif [ -f "${ROOTFS_DIR}/boot/config.txt" ]; then
-    CONFIG_FILE="${ROOTFS_DIR}/boot/config.txt"
-    echo "Using /boot/config.txt (legacy)"
-else
-    echo "❌ Error: config.txt not found in /boot or /boot/firmware"
+    CONFIG_FILES+=("${ROOTFS_DIR}/boot/firmware/config.txt")
+    echo "Found: /boot/firmware/config.txt"
+fi
+
+if [ -f "${ROOTFS_DIR}/boot/config.txt" ]; then
+    CONFIG_FILES+=("${ROOTFS_DIR}/boot/config.txt")
+    echo "Found: /boot/config.txt"
+fi
+
+if [ ${#CONFIG_FILES[@]} -eq 0 ]; then
+    echo "❌ Error: No config.txt found in /boot or /boot/firmware"
     exit 1
 fi
 
-# Append HDMI configuration to config.txt
-cat >> "${CONFIG_FILE}" << 'EOF'
+echo "Writing HDMI configuration to ${#CONFIG_FILES[@]} config file(s)..."
+
+# Append HDMI configuration to ALL config.txt files found
+for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
+    echo "  Writing to: ${CONFIG_FILE}"
+    cat >> "${CONFIG_FILE}" << 'EOF'
 
 # HDMI Tester Configuration - Force 1920x1080 @ 60Hz
 # Force HDMI output even if no display detected
@@ -50,5 +60,6 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 EOF
+done
 
-echo "HDMI configuration added to config.txt"
+echo "✅ HDMI configuration added to all config.txt files"
