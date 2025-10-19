@@ -109,8 +109,9 @@ jobs:
           path: |
             build/pi-gen-work/work
             build/pi-gen-work/deploy
-          key: pi-gen-cache-${{ hashFiles('.github/release-config.json', 'scripts/**') }}
+          key: pi-gen-cache-${{ hashFiles('build/config', 'build/stage*/**', 'assets/**', 'scripts/build-image.sh', 'scripts/configure-boot.sh') }}
           restore-keys: |
+            pi-gen-cache-${{ hashFiles('build/config', 'build/stage*/**') }}-
             pi-gen-cache-
 
       - name: Build Raspberry Pi image
@@ -373,6 +374,188 @@ jobs:
             fi
           fi
 
+      - name: Validate built image
+        id: validation
+        run: |
+          echo "🔍 Validating built image..."
+
+          VERSION="${{ steps.config.outputs.version }}"
+          DEPLOY_DIR="build/pi-gen-work/deploy"
+
+          # Find the built image
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+
+          if [ -z "$IMAGE_FILE" ]; then
+            echo "❌ Error: No image file found for validation!"
+            exit 1
+          fi
+
+          echo "Found image: $IMAGE_FILE"
+
+          # Make validation script executable
+          chmod +x tests/validate-image.sh
+
+          # Run validation (using sudo as it needs to mount partitions)
+          if sudo ./tests/validate-image.sh "$IMAGE_FILE"; then
+            echo "✅ Image validation passed"
+            echo "validation_status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Image validation failed"
+            echo "validation_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report-${{ env.BUILD_TIMESTAMP }}
+          path: |
+            build/validation-*.log
+            build/validation-*.txt
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: QEMU boot test (optional)
+        id: qemu_test
+        continue-on-error: true
+        timeout-minutes: 5
+        run: |
+          echo "🔧 QEMU Boot Test"
+          echo "Note: This test has limitations and may not fully work"
+          echo ""
+
+          VERSION="${{ steps.config.outputs.version }}"
+          DEPLOY_DIR="build/pi-gen-work/deploy"
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+
+          if [ -z "$IMAGE_FILE" ]; then
+            echo "⚠️ No image file found for QEMU testing"
+            exit 0
+          fi
+
+          # Install QEMU ARM system emulator
+          echo "📥 Installing QEMU system emulator..."
+          sudo apt-get update -qq
+          sudo apt-get install -y qemu-system-arm 2>&1 | grep -v "^Reading\|^Building"
+
+          # Create test directory
+          TEST_DIR="build/qemu-test"
+          mkdir -p "${TEST_DIR}"
+          cd "${TEST_DIR}"
+
+          # Extract kernel from image for QEMU
+          echo "🔧 Extracting kernel from image..."
+
+          LOOP_DEVICE=$(sudo losetup -f)
+          sudo losetup -P "${LOOP_DEVICE}" "${IMAGE_FILE}"
+
+          BOOT_MOUNT="boot_mount"
+          mkdir -p "${BOOT_MOUNT}"
+
+          if sudo mount "${LOOP_DEVICE}p1" "${BOOT_MOUNT}" 2>/dev/null; then
+            echo "✅ Boot partition mounted"
+
+            # Copy kernel
+            if [ -f "${BOOT_MOUNT}/kernel8.img" ]; then
+              sudo cp "${BOOT_MOUNT}/kernel8.img" "kernel.img"
+              echo "✅ Extracted kernel8.img"
+            elif [ -f "${BOOT_MOUNT}/kernel7.img" ]; then
+              sudo cp "${BOOT_MOUNT}/kernel7.img" "kernel.img"
+              echo "✅ Extracted kernel7.img"
+            else
+              echo "⚠️ No kernel found, skipping QEMU test"
+              sudo umount "${BOOT_MOUNT}" 2>/dev/null || true
+              sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
+              exit 0
+            fi
+
+            # Copy DTB if available
+            if [ -f "${BOOT_MOUNT}/bcm2710-rpi-3-b.dtb" ]; then
+              sudo cp "${BOOT_MOUNT}/bcm2710-rpi-3-b.dtb" "device-tree.dtb"
+              echo "✅ Extracted device tree"
+            fi
+
+            # Cleanup mounts
+            sudo umount "${BOOT_MOUNT}" 2>/dev/null || true
+            sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
+            sudo chmod 644 kernel.img 2>/dev/null || true
+
+            # Attempt basic boot test
+            echo ""
+            echo "🚀 Attempting QEMU boot test (30 second timeout)..."
+            echo "Note: This is expected to fail or hang - RPi images don't boot well in QEMU"
+            echo ""
+
+            timeout 30 qemu-system-arm \
+              -M versatilepb \
+              -cpu arm1176 \
+              -m 256 \
+              -kernel kernel.img \
+              -drive "file=${IMAGE_FILE},format=raw" \
+              -append "root=/dev/sda2 rootfstype=ext4 rw console=ttyAMA0" \
+              -nographic \
+              -serial stdio \
+              -no-reboot 2>&1 | head -n 100 > boot-attempt.log || true
+
+            echo ""
+            echo "📄 Boot attempt log (first 50 lines):"
+            head -n 50 boot-attempt.log || true
+
+            # Check for any positive indicators
+            if grep -qi "booting\|kernel\|linux" boot-attempt.log; then
+              echo "✅ QEMU showed some boot activity"
+              echo "qemu_test_result=partial" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️ QEMU boot test inconclusive"
+              echo "qemu_test_result=inconclusive" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ Could not mount boot partition, skipping QEMU test"
+            sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
+            echo "qemu_test_result=skipped" >> $GITHUB_OUTPUT
+          fi
+
+          # Note: We continue-on-error so this never fails the workflow
+          exit 0
+
+      - name: Generate test summary report
+        if: success()
+        run: |
+          echo "📊 Generating comprehensive test summary..."
+
+          VERSION="${{ steps.config.outputs.version }}"
+          BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          COMMIT_SHA="${{ github.sha }}"
+          BUILD_ID="${{ github.run_id }}"
+          VALIDATION_STATUS="${{ steps.validation.outputs.validation_status }}"
+          QEMU_TEST_RESULT="${{ steps.qemu_test.outputs.qemu_test_result }}"
+
+          REPORT_FILE="build/pi-gen-work/deploy/TESTING_REPORT_v${VERSION}.md"
+
+          # Make script executable
+          chmod +x scripts/generate-test-report.sh
+
+          # Generate report
+          ./scripts/generate-test-report.sh \
+            "${VERSION}" \
+            "${BUILD_DATE}" \
+            "${COMMIT_SHA}" \
+            "${BUILD_ID}" \
+            "${VALIDATION_STATUS}" \
+            "${QEMU_TEST_RESULT}" \
+            "${REPORT_FILE}"
+
+          echo "report_file=${REPORT_FILE}" >> $GITHUB_OUTPUT
+
+          # Display summary
+          echo ""
+          echo "📄 Test Summary Report Preview:"
+          echo "================================"
+          head -n 30 "${REPORT_FILE}"
+          echo "================================"
+          echo "(Full report will be included in release assets)"
+
       - name: Prepare release assets
         id: assets
         run: |
@@ -419,22 +602,34 @@ jobs:
           cd ${DEPLOY_DIR}
           zip "${VERSIONED_ZIP}" "${VERSIONED_IMAGE}"
 
-          # Generate SHA256 checksum
-          echo "🔐 Generating checksum..."
-          sha256sum "${VERSIONED_ZIP}" > "${CHECKSUM_FILE}"
+          # Generate SHA256 checksums and verification instructions
+          echo "🔐 Generating checksums and verification instructions..."
+          chmod +x ${GITHUB_WORKSPACE}/scripts/generate-checksums.sh
+          ${GITHUB_WORKSPACE}/scripts/generate-checksums.sh "${VERSION}" "${DEPLOY_DIR}"
 
           # Get file sizes
           IMAGE_SIZE=$(ls -lh "${VERSIONED_IMAGE}" | awk '{print $5}')
           ZIP_SIZE=$(ls -lh "${VERSIONED_ZIP}" | awk '{print $5}')
 
+          TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
+          VERIFY_FILE="VERIFY_DOWNLOAD_v${VERSION}.txt"
+
           echo "image_size=$IMAGE_SIZE" >> $GITHUB_OUTPUT
           echo "zip_size=$ZIP_SIZE" >> $GITHUB_OUTPUT
           echo "zip_path=${DEPLOY_DIR}/${VERSIONED_ZIP}" >> $GITHUB_OUTPUT
           echo "checksum_path=${DEPLOY_DIR}/${CHECKSUM_FILE}" >> $GITHUB_OUTPUT
+          echo "testing_report=${DEPLOY_DIR}/${TESTING_REPORT}" >> $GITHUB_OUTPUT
+          echo "verify_file=${DEPLOY_DIR}/${VERIFY_FILE}" >> $GITHUB_OUTPUT
 
           echo "✅ Assets prepared"
           echo "   Image size: $IMAGE_SIZE"
           echo "   Compressed: $ZIP_SIZE"
+          if [ -f "${TESTING_REPORT}" ]; then
+            echo "   Testing report: ${TESTING_REPORT}"
+          fi
+          if [ -f "${VERIFY_FILE}" ]; then
+            echo "   Verification instructions: ${VERIFY_FILE}"
+          fi
 
       - name: Generate release notes
         id: notes
@@ -529,6 +724,8 @@ jobs:
           files: |
             ${{ steps.assets.outputs.zip_path }}
             ${{ steps.assets.outputs.checksum_path }}
+            ${{ steps.assets.outputs.testing_report }}
+            ${{ steps.assets.outputs.verify_file }}
           draft: false
           prerelease: ${{ steps.config.outputs.prerelease }}
           make_latest: true
@@ -647,6 +844,8 @@ jobs:
         run: |
           BUILD_EXIT_CODE="${{ env.BUILD_EXIT_CODE }}"
           BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
+          VALIDATION_STATUS="${{ steps.validation.outputs.validation_status }}"
+          QEMU_TEST_RESULT="${{ steps.qemu_test.outputs.qemu_test_result }}"
 
           if [ "${BUILD_EXIT_CODE}" = "0" ]; then
             echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
@@ -655,6 +854,12 @@ jobs:
             echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
             echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+
+            echo "### ✅ Validation Results:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Image Validation:** ${VALIDATION_STATUS:-unknown}" >> $GITHUB_STEP_SUMMARY
+            echo "- **QEMU Boot Test:** ${QEMU_TEST_RESULT:-not run}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
             echo "### 🔗 Release URL:" >> $GITHUB_STEP_SUMMARY
             echo "[View Release](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/tag/${{ steps.config.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
           else
