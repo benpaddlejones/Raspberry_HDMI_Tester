@@ -79,7 +79,7 @@ jobs:
           path: |
             build/pi-gen-work/work
             build/pi-gen-work/deploy
-          key: pi-gen-cache-${{ hashFiles('build/**', 'assets/**') }}
+          key: pi-gen-cache-${{ hashFiles('.github/release-config.json', 'scripts/**') }}
           restore-keys: |
             pi-gen-cache-
 
