@@ -72,6 +72,12 @@ jobs:
           sudo git clone https://github.com/RPi-Distro/pi-gen /opt/pi-gen
           echo "✅ pi-gen installed at /opt/pi-gen"
 
+      - name: Clean build directory
+        run: |
+          echo "🧹 Cleaning build directory..."
+          rm -rf build/pi-gen-work/*
+          echo "✅ Build directory cleaned"
+
       - name: Cache pi-gen downloads
         if: ${{ !inputs.force_rebuild }}
         uses: actions/cache@v3
