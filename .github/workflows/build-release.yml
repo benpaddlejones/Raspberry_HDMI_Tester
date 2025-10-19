@@ -320,30 +320,38 @@ jobs:
         id: notes
         run: |
           VERSION="${{ steps.config.outputs.version }}"
+          BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          # Read config and generate notes
-          cat > release_notes.md << 'EOF'
+          # Extract data from config
+          FEATURES=$(jq -r '.release_notes.features[] | "- " + .' .github/release-config.json)
+          COMPATIBILITY=$(jq -r '.release_notes.compatibility[] | "- " + .' .github/release-config.json)
+          KNOWN_ISSUES=$(jq -r '.release_notes.known_issues[] | "- " + .' .github/release-config.json)
+          BASE_OS=$(jq -r '.build.base_os' .github/release-config.json)
+          BUILD_SYSTEM=$(jq -r '.build.build_system' .github/release-config.json)
+
+          # Generate release notes
+          cat > release_notes.md << EOF
           # Raspberry Pi HDMI Tester v${{ steps.config.outputs.version }}
 
           ## 📦 Release: ${{ steps.config.outputs.name }}
 
-          **Build Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Build Date:** ${BUILD_DATE}
           **Commit:** ${{ github.sha }}
 
           ---
 
           ## ✨ Features
 
-          $(jq -r '.release_notes.features[] | "- " + .' .github/release-config.json)
+          ${FEATURES}
 
           ## 🔧 Compatibility
 
           Tested and compatible with:
-          $(jq -r '.release_notes.compatibility[] | "- " + .' .github/release-config.json)
+          ${COMPATIBILITY}
 
           ## ⚠️ Known Issues
 
-          $(jq -r '.release_notes.known_issues[] | "- " + .' .github/release-config.json)
+          ${KNOWN_ISSUES}
 
           ---
 
@@ -351,8 +359,8 @@ jobs:
 
           ### Quick Start (Windows 11)
 
-          1. **Download** `RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.zip`
-          2. **Extract** the `.img` file from the ZIP archive
+          1. **Download** \`RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.zip\`
+          2. **Extract** the \`.img\` file from the ZIP archive
           3. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
           4. **Insert** SD card into Raspberry Pi
           5. **Connect** HDMI to display
@@ -361,9 +369,9 @@ jobs:
           ### Verification
 
           Verify the download integrity:
-          ```bash
+          \`\`\`bash
           sha256sum -c RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.sha256
-          ```
+          \`\`\`
 
           ### Full Documentation
 
@@ -376,8 +384,8 @@ jobs:
 
           ## 📊 Build Information
 
-          - **Base OS:** $(jq -r '.build.base_os' .github/release-config.json)
-          - **Build System:** $(jq -r '.build.build_system' .github/release-config.json)
+          - **Base OS:** ${BASE_OS}
+          - **Build System:** ${BUILD_SYSTEM}
           - **Image Size:** ${{ steps.assets.outputs.image_size }}
           - **Compressed Size:** ${{ steps.assets.outputs.zip_size }}
 
