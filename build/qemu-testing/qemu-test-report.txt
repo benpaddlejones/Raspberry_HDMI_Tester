@@ -1,0 +1,16 @@
+==================================================
+QEMU Boot Test Report
+==================================================
+Date: Sun Oct 19 03:51:50 UTC 2025
+Image: 🔍 Fetching latest release from GitHub...
+📦 Latest release: v0.9.0
+⬇️  Downloading image...
+📂 Extracting image...
+Archive:  RaspberryPi_HDMI_Tester_v0.9.0.img.zip
+  inflating: RaspberryPi_HDMI_Tester_v0.9.0.img  
+✅ Image ready: ./RaspberryPi_HDMI_Tester_v0.9.0.img
+./RaspberryPi_HDMI_Tester_v0.9.0.img
+Image Size: 
+Test Timeout: 120 seconds
+
+WARNING: QEMU kernel not found at /usr/share/qemu/qemu-arm-kernel

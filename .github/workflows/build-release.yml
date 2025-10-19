@@ -102,6 +102,28 @@ jobs:
 
           echo "✅ Directory structure validated"
 
+      - name: Check available disk space
+        run: |
+          echo "📊 Checking available disk space..."
+          df -h
+
+          # Get available space in GB for current directory
+          AVAILABLE_GB=$(df --output=avail -BG . | tail -1 | tr -d 'G ')
+          echo "Available space: ${AVAILABLE_GB}GB"
+
+          # Require at least 15GB for build
+          if [ ${AVAILABLE_GB} -lt 15 ]; then
+            echo "❌ Insufficient disk space: ${AVAILABLE_GB}GB available, 15GB required"
+            echo "The pi-gen build process requires significant disk space for:"
+            echo "  - Downloading Debian packages (~3-4GB)"
+            echo "  - Building intermediate images (~5-6GB)"
+            echo "  - Final image and compression (~2-3GB)"
+            echo "  - Temporary files and caches (~2-3GB)"
+            exit 1
+          fi
+
+          echo "✅ Sufficient disk space available (${AVAILABLE_GB}GB)"
+
       - name: Cache pi-gen downloads
         if: ${{ !inputs.force_rebuild }}
         uses: actions/cache@v3
@@ -189,11 +211,17 @@ jobs:
           BUILD_EXIT_CODE=0
 
           echo "🚀 Launching build script..."
-          if sudo -E ./scripts/build-image.sh; then
+          # Timeout after 5400 seconds (90 minutes) to prevent indefinite hangs
+          # This matches the job-level timeout but provides better error reporting
+          if timeout 5400 sudo -E ./scripts/build-image.sh; then
             BUILD_EXIT_CODE=0
           else
             BUILD_EXIT_CODE=$?
-            echo "⚠️  Build script exited with code ${BUILD_EXIT_CODE}"
+            if [ ${BUILD_EXIT_CODE} -eq 124 ]; then
+              echo "❌ Build timed out after 90 minutes"
+            else
+              echo "⚠️  Build script exited with code ${BUILD_EXIT_CODE}"
+            fi
           fi
 
           # Store exit code for later steps (with default fallback)
@@ -516,9 +544,6 @@ jobs:
             echo "qemu_test_result=skipped" >> $GITHUB_OUTPUT
           fi
 
-          # Note: We continue-on-error so this never fails the workflow
-          exit 0
-
       - name: Generate test summary report
         if: success()
         run: |
@@ -583,7 +608,7 @@ jobs:
           if [ -z "$IMAGE_FILE" ]; then
             echo "❌ Error: No image file found!"
             echo "Contents of deploy directory:"
-            ls -la ${DEPLOY_DIR}/ || echo "Directory is empty or inaccessible"
+            ls -la "${DEPLOY_DIR}/" || echo "Directory is empty or inaccessible"
             exit 1
           fi
 

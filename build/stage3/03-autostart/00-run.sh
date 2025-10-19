@@ -1,6 +1,17 @@
 #!/bin/bash -e
 # Install and enable systemd services
 
+# Validate ROOTFS_DIR is set and exists
+if [ -z "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR not set"
+    exit 1
+fi
+
+if [ ! -d "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR does not exist: ${ROOTFS_DIR}"
+    exit 1
+fi
+
 # Install services
 install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
 install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"

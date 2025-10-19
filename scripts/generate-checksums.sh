@@ -33,6 +33,11 @@ cat > "${CHECKSUM_FILE}" << 'EOF'
 EOF
 
 # Replace version placeholder
+if [ ! -f "${CHECKSUM_FILE}" ]; then
+    echo "❌ Error: Checksum file was not created"
+    exit 1
+fi
+
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE}"
 
 # Add checksums

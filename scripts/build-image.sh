@@ -248,7 +248,8 @@ log_info "Command: sudo ./build.sh"
 PIGEN_OUTPUT_FILE="${WORK_DIR}/pigen-output.log"
 BUILD_EXIT_CODE=0
 
-if sudo ./build.sh 2>&1 | tee -a "${BUILD_LOG_FILE}" | tee "${PIGEN_OUTPUT_FILE}" > /dev/null; then
+# Optimized: Single tee writes to detailed log, redirect stdout to output file
+if sudo ./build.sh 2>&1 | tee -a "${BUILD_LOG_FILE}" > "${PIGEN_OUTPUT_FILE}"; then
     SHELL_EXIT_CODE=0
 else
     SHELL_EXIT_CODE=$?

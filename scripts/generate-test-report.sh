@@ -221,13 +221,19 @@ QEMU_ICON_PLACEHOLDER **QEMU Test:** QEMU_TEXT_PLACEHOLDER
 **Project:** [Raspberry Pi HDMI Tester](https://github.com/benpaddlejones/Raspberry_HDMI_Tester)
 ENDREPORT
 
-# Replace placeholders
-sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${OUTPUT_FILE}"
-sed -i "s/BUILD_DATE_PLACEHOLDER/${BUILD_DATE}/g" "${OUTPUT_FILE}"
-sed -i "s/COMMIT_SHA_PLACEHOLDER/${COMMIT_SHA}/g" "${OUTPUT_FILE}"
-sed -i "s/BUILD_ID_PLACEHOLDER/${BUILD_ID}/g" "${OUTPUT_FILE}"
-sed -i "s/VALIDATION_STATUS_PLACEHOLDER/${VALIDATION_STATUS}/g" "${OUTPUT_FILE}"
-sed -i "s/QEMU_TEXT_PLACEHOLDER/${QEMU_TEXT}/g" "${OUTPUT_FILE}"
-sed -i "s/QEMU_ICON_PLACEHOLDER/${QEMU_ICON}/g" "${OUTPUT_FILE}"
+# Verify report file was created
+if [ ! -f "${OUTPUT_FILE}" ]; then
+    echo "❌ Error: Report file was not created"
+    exit 1
+fi
+
+# Replace placeholders with error checking
+sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace VERSION"; exit 1; }
+sed -i "s/BUILD_DATE_PLACEHOLDER/${BUILD_DATE}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace BUILD_DATE"; exit 1; }
+sed -i "s/COMMIT_SHA_PLACEHOLDER/${COMMIT_SHA}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace COMMIT_SHA"; exit 1; }
+sed -i "s/BUILD_ID_PLACEHOLDER/${BUILD_ID}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace BUILD_ID"; exit 1; }
+sed -i "s/VALIDATION_STATUS_PLACEHOLDER/${VALIDATION_STATUS}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace VALIDATION_STATUS"; exit 1; }
+sed -i "s/QEMU_TEXT_PLACEHOLDER/${QEMU_TEXT}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace QEMU_TEXT"; exit 1; }
+sed -i "s/QEMU_ICON_PLACEHOLDER/${QEMU_ICON}/g" "${OUTPUT_FILE}" || { echo "❌ Error: Failed to replace QEMU_ICON"; exit 1; }
 
 echo "✅ Testing report generated: ${OUTPUT_FILE}"

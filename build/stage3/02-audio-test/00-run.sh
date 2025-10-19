@@ -1,5 +1,16 @@
 #!/bin/bash -e
 # Deploy audio test file
 
+# Validate ROOTFS_DIR is set and exists
+if [ -z "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR not set"
+    exit 1
+fi
+
+if [ ! -d "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR does not exist: ${ROOTFS_DIR}"
+    exit 1
+fi
+
 install -m 644 files/test-audio.mp3 "${ROOTFS_DIR}/opt/hdmi-tester/"
 chown 1000:1000 "${ROOTFS_DIR}/opt/hdmi-tester/test-audio.mp3"

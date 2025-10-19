@@ -57,9 +57,27 @@ trap cleanup EXIT
 echo "📁 Mounting image..."
 mkdir -p "${MOUNT_POINT}"
 kpartx -av "${IMAGE_FILE}"
-sleep 2
 
-# Find the loop device
+# Wait for device to be ready (up to 10 seconds)
+echo "⏳ Waiting for loop device to be ready..."
+for i in {1..10}; do
+    sleep 1
+    LOOP_DEVICE=$(losetup -l | grep "${IMAGE_FILE}" | awk '{print $1}' | head -n 1)
+    if [ -n "${LOOP_DEVICE}" ]; then
+        # Check if partition exists
+        if [ -e "${LOOP_DEVICE}p2" ] || [ -e "/dev/mapper/$(basename ${LOOP_DEVICE})p2" ]; then
+            echo "✅ Loop device ready: ${LOOP_DEVICE}"
+            break
+        fi
+    fi
+
+    if [ $i -eq 10 ]; then
+        echo "❌ Error: Loop device not ready after 10 seconds"
+        exit 1
+    fi
+done
+
+# Find the loop device (should be set from above loop)
 LOOP_DEVICE=$(losetup -l | grep "${IMAGE_FILE}" | awk '{print $1}' | head -n 1)
 if [ -z "${LOOP_DEVICE}" ]; then
     echo "❌ Error: Could not find loop device for image"
@@ -122,15 +140,15 @@ for config in "${CONFIG_FILES[@]}"; do
         CONFIG_FOUND=true
         echo "  📝 Found: ${config}"
 
-        # Check for HDMI settings
-        if grep -q "hdmi_mode=16" "${MOUNT_POINT}${config}"; then
+        # Check for HDMI settings (ignore commented lines)
+        if grep -q "^[[:space:]]*hdmi_mode=16" "${MOUNT_POINT}${config}"; then
             echo "  ✅ HDMI mode configured (1920x1080@60Hz)"
         else
             echo "  ⚠️  HDMI mode not found"
             ALL_OK=false
         fi
 
-        if grep -q "hdmi_drive=2" "${MOUNT_POINT}${config}"; then
+        if grep -q "^[[:space:]]*hdmi_drive=2" "${MOUNT_POINT}${config}"; then
             echo "  ✅ HDMI audio enabled"
         else
             echo "  ⚠️  HDMI audio not configured"

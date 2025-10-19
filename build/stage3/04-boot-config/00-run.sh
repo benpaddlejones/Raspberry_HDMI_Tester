@@ -1,6 +1,17 @@
 #!/bin/bash -e
 # Configure HDMI boot settings for 1920x1080 output
 
+# Validate ROOTFS_DIR is set and exists
+if [ -z "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR not set"
+    exit 1
+fi
+
+if [ ! -d "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR does not exist: ${ROOTFS_DIR}"
+    exit 1
+fi
+
 # Append HDMI configuration to config.txt
 cat >> "${ROOTFS_DIR}/boot/firmware/config.txt" << 'EOF'
 
