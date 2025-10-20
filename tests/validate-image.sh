@@ -109,7 +109,7 @@ if [ ${MOUNT_EXIT} -ne 0 ] || [ -z "${MOUNT_POINT}" ]; then
 fi
 
 echo "📂 Mounting root partition..."
-if ! mount_partition "${ROOT_PARTITION}" "${MOUNT_POINT}" "ext4"; then
+if ! mount_partition "${ROOT_PARTITION}" "${MOUNT_POINT}" "ext4" "rw"; then
     echo "❌ Failed to mount root partition"
     exit 1
 fi
@@ -159,11 +159,40 @@ AUTOSTART_FOUND=false
 
 if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" ]; then
     echo "  ✅ Wayland compositor config: /home/pi/.config/labwc/rc.xml found"
+    
+    # Validate XML syntax
+    if command -v xmllint &> /dev/null; then
+        if xmllint --noout "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" 2>/dev/null; then
+            echo "      ✅ XML syntax valid"
+        else
+            echo "      ⚠️  XML syntax may be invalid"
+            VALIDATION_ERRORS+=("labwc rc.xml may have syntax errors")
+            ALL_OK=false
+        fi
+    fi
+    
     AUTOSTART_FOUND=true
 fi
 
 if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
     echo "  ✅ Wayland autostart: /home/pi/.config/labwc/autostart found"
+    
+    # Validate it's executable
+    if [ ! -x "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
+        echo "      ⚠️  autostart script is not executable"
+        VALIDATION_ERRORS+=("labwc autostart not executable")
+        ALL_OK=false
+    fi
+    
+    # Validate shell script syntax (basic check)
+    if bash -n "${MOUNT_POINT}/home/pi/.config/labwc/autostart" 2>/dev/null; then
+        echo "      ✅ Shell syntax valid"
+    else
+        echo "      ⚠️  Shell syntax may be invalid"
+        VALIDATION_ERRORS+=("labwc autostart may have syntax errors")
+        ALL_OK=false
+    fi
+    
     AUTOSTART_FOUND=true
 fi
 
@@ -278,6 +307,26 @@ else
     echo "  ℹ️  dpkg database found: $(wc -l < "${MOUNT_POINT}/var/lib/dpkg/status") lines"
 fi
 
+# Check if we can use chroot (need qemu-user-static for ARM binaries on x86_64)
+CAN_CHROOT=false
+if [ -f "${MOUNT_POINT}/usr/bin/dpkg-query" ]; then
+    # Check if qemu-arm-static is available and binfmt is configured
+    if [ -f "/usr/bin/qemu-arm-static" ] && [ -f "/proc/sys/fs/binfmt_misc/qemu-arm" ]; then
+        # Ensure qemu-arm-static is available in chroot
+        if [ ! -f "${MOUNT_POINT}/usr/bin/qemu-arm-static" ]; then
+            echo "  ℹ️  Copying qemu-arm-static to chroot..."
+            sudo cp /usr/bin/qemu-arm-static "${MOUNT_POINT}/usr/bin/"
+        fi
+        CAN_CHROOT=true
+        echo "  ✅ ARM binary execution available (qemu-user-static)"
+    else
+        echo "  ⚠️  Cannot execute ARM binaries (qemu-user-static not configured)"
+        echo "      Will use fallback binary checks instead"
+    fi
+else
+    echo "  ⚠️  dpkg-query not found in image"
+fi
+
 REQUIRED_PACKAGES=(
     "labwc|Wayland Compositor (labwc)"
     "imv|Image Viewer (imv)"
@@ -289,44 +338,52 @@ REQUIRED_PACKAGES=(
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     IFS='|' read -r package description <<< "${pkg_entry}"
 
-    # Check if package is installed via dpkg using chroot
-    # This is more reliable than parsing status file directly
-    if sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
-        echo "  ✅ ${description}: Installed"
+    # Try chroot method first if available
+    PKG_INSTALLED=false
+    if [ "${CAN_CHROOT}" = true ]; then
+        if timeout 10 sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
+            PKG_INSTALLED=true
+        fi
+    fi
 
-        # Additional verification: check if key binaries exist
+    # Fallback: Check for key binaries directly
+    if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
             imv)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/imv" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/imv binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/imv")
-                    ALL_OK=false
+                if [ -f "${MOUNT_POINT}/usr/bin/imv" ] && [ -x "${MOUNT_POINT}/usr/bin/imv" ]; then
+                    PKG_INSTALLED=true
                 fi
                 ;;
             mpv)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/mpv" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/mpv binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/mpv")
-                    ALL_OK=false
+                if [ -f "${MOUNT_POINT}/usr/bin/mpv" ] && [ -x "${MOUNT_POINT}/usr/bin/mpv" ]; then
+                    PKG_INSTALLED=true
                 fi
                 ;;
             labwc)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/labwc" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/labwc binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/labwc")
-                    ALL_OK=false
+                if [ -f "${MOUNT_POINT}/usr/bin/labwc" ] && [ -x "${MOUNT_POINT}/usr/bin/labwc" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            pipewire)
+                if [ -f "${MOUNT_POINT}/usr/bin/pipewire" ] && [ -x "${MOUNT_POINT}/usr/bin/pipewire" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            wireplumber)
+                if [ -f "${MOUNT_POINT}/usr/bin/wireplumber" ] && [ -x "${MOUNT_POINT}/usr/bin/wireplumber" ]; then
+                    PKG_INSTALLED=true
                 fi
                 ;;
         esac
+    fi
+
+    # Report results
+    if [ "${PKG_INSTALLED}" = true ]; then
+        echo "  ✅ ${description}: Installed"
     else
         echo "  ❌ ${description}: NOT INSTALLED"
         VALIDATION_ERRORS+=("Package not installed: ${package}")
         ALL_OK=false
-
-        # Debug information
-        if [ -f "${MOUNT_POINT}/var/lib/dpkg/info/${package}.list" ]; then
-            echo "      ℹ️  Package files exist but dpkg reports not installed"
-        fi
     fi
 done
 

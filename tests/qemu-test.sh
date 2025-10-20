@@ -272,7 +272,25 @@ for kernel_name in kernel8.img kernel7l.img kernel7.img kernel.img; do
             exit 1
         fi
         sudo chmod 644 "${KERNEL_FILE}"
-        echo "✅ Extracted ${kernel_name}"
+        
+        # Validate kernel was copied successfully and is readable
+        if [ ! -f "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file not found after copy" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+        
+        if [ ! -r "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file not readable" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+        
+        if [ ! -s "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file is empty" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+        
+        KERNEL_SIZE=$(du -h "${KERNEL_FILE}" | cut -f1)
+        echo "✅ Extracted ${kernel_name} (${KERNEL_SIZE})"
         KERNEL_FOUND=true
         break
     fi
