@@ -348,6 +348,46 @@ log_checksum "${IMAGE_FILE}" "Final Image File"
 
 end_stage_timer "Deployment Validation" 0
 
+# Aggressive cleanup of intermediate build artifacts
+start_stage_timer "Build Cleanup"
+
+log_event "🧹" "Cleaning up intermediate build artifacts..."
+log_info "This will free up 3-5GB of disk space"
+
+# Clean apt cache from all stage rootfs directories
+log_subsection "Cleaning apt cache"
+if sudo rm -rf "${WORK_DIR}"/work/*/stage*-*/rootfs/var/cache/apt/* 2>/dev/null; then
+    log_info "✓ Apt cache cleaned"
+else
+    log_info "⚠️  No apt cache found to clean"
+fi
+
+# Clean temporary files from all stage rootfs directories
+log_subsection "Cleaning temporary files"
+if sudo rm -rf "${WORK_DIR}"/work/*/stage*-*/rootfs/tmp/* 2>/dev/null; then
+    log_info "✓ Temporary files cleaned"
+else
+    log_info "⚠️  No temporary files found to clean"
+fi
+
+# Remove downloaded .deb packages (no longer needed after installation)
+log_subsection "Cleaning downloaded packages"
+DEB_COUNT=$(find "${WORK_DIR}/work" -name "*.deb" -type f 2>/dev/null | wc -l)
+if [ ${DEB_COUNT} -gt 0 ]; then
+    log_info "Found ${DEB_COUNT} .deb files to remove"
+    find "${WORK_DIR}/work" -name "*.deb" -type f -delete 2>/dev/null || true
+    log_info "✓ Downloaded packages removed"
+else
+    log_info "⚠️  No .deb files found to clean"
+fi
+
+# Monitor disk space savings
+monitor_disk_space "After Build Cleanup"
+
+log_event "✅" "Cleanup complete - build artifacts removed"
+
+end_stage_timer "Build Cleanup" 0
+
 # Success!
 finalize_log "success"
 

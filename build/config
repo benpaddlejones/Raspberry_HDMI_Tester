@@ -47,3 +47,9 @@ DEPLOY_COMPRESSION="zip"
 
 # Reduce image size
 ENABLE_REDUCE_DISK_USAGE=1
+
+# Clean apt cache after package installation to reduce image size
+CLEAN_APT_CACHE=1
+
+# Remove documentation to save space (man pages, docs)
+CLEAN=1
