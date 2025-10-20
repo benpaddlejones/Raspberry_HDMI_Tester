@@ -51,17 +51,31 @@ jobs:
           echo "📥 Installing build tools..."
           sudo apt-get update
           sudo apt-get install -y \
+            quilt \
+            parted \
+            coreutils \
             qemu-user-static \
             debootstrap \
-            kpartx \
-            parted \
-            git \
+            zerofree \
             zip \
-            coreutils \
-            quilt \
+            dosfstools \
+            e2fsprogs \
+            libcap2-bin \
             libarchive-tools \
+            grep \
+            rsync \
+            xz-utils \
+            curl \
+            xxd \
+            file \
+            git \
+            kmod \
+            bc \
+            gpg \
+            pigz \
             arch-test \
             binfmt-support \
+            kpartx \
             qemu-utils
 
           echo "✅ Dependencies installed"
