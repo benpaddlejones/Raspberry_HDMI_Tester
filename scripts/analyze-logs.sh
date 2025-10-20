@@ -71,9 +71,24 @@ fi
 echo "=================================================================="
 echo "  ERROR AND WARNING SUMMARY"
 echo "=================================================================="
-ERROR_COUNT=$(grep -c "❌\|ERROR\|Error:" "${LOG_FILE}" 2>/dev/null || echo "0")
-WARNING_COUNT=$(grep -c "⚠️\|WARNING\|Warning:" "${LOG_FILE}" 2>/dev/null || echo "0")
-FAILED_COUNT=$(grep -c "FAILED\|Failed" "${LOG_FILE}" 2>/dev/null || echo "0")
+ERROR_COUNT=$(grep -c "❌\|ERROR\|Error:" "${LOG_FILE}" 2>/dev/null | head -n 1 || echo "0")
+WARNING_COUNT=$(grep -c "⚠️\|WARNING\|Warning:" "${LOG_FILE}" 2>/dev/null | head -n 1 || echo "0")
+FAILED_COUNT=$(grep -c "FAILED\|Failed" "${LOG_FILE}" 2>/dev/null | head -n 1 || echo "0")
+
+# Ensure variables are numeric
+ERROR_COUNT=${ERROR_COUNT//[^0-9]/}
+WARNING_COUNT=${WARNING_COUNT//[^0-9]/}
+FAILED_COUNT=${FAILED_COUNT//[^0-9]/}
+
+# Default to 0 if empty
+ERROR_COUNT=${ERROR_COUNT:-0}
+WARNING_COUNT=${WARNING_COUNT:-0}
+FAILED_COUNT=${FAILED_COUNT:-0}
+
+# Validate that variables are numeric (extra safety check)
+if ! [[ "${ERROR_COUNT}" =~ ^[0-9]+$ ]]; then ERROR_COUNT=0; fi
+if ! [[ "${WARNING_COUNT}" =~ ^[0-9]+$ ]]; then WARNING_COUNT=0; fi
+if ! [[ "${FAILED_COUNT}" =~ ^[0-9]+$ ]]; then FAILED_COUNT=0; fi
 
 echo "Errors: ${ERROR_COUNT}"
 echo "Warnings: ${WARNING_COUNT}"
@@ -81,7 +96,7 @@ echo "Failed operations: ${FAILED_COUNT}"
 echo ""
 
 # Show all errors
-if [ ${ERROR_COUNT} -gt 0 ]; then
+if [ "${ERROR_COUNT}" -gt 0 ] 2>/dev/null; then
     echo "=================================================================="
     echo "  ERRORS FOUND"
     echo "=================================================================="
@@ -132,7 +147,7 @@ echo "=================================================================="
 echo "  RECOMMENDATIONS"
 echo "=================================================================="
 
-if [ ${ERROR_COUNT} -gt 0 ]; then
+if [ "${ERROR_COUNT}" -gt 0 ] 2>/dev/null; then
     echo "⚠️  Errors detected:"
     echo "   1. Review the ERRORS FOUND section above"
     echo "   2. Check ERROR CONTEXT for surrounding log lines"
@@ -161,7 +176,7 @@ if grep -q "E: Failed to fetch\|404 Not Found" "${LOG_FILE}"; then
     echo "   - Try: apt-get update"
 fi
 
-if [ ${ERROR_COUNT} -eq 0 ] && grep -q "✅ SUCCESS" "${LOG_FILE}"; then
+if [ "${ERROR_COUNT}" -eq 0 ] 2>/dev/null && grep -q "✅ SUCCESS" "${LOG_FILE}"; then
     echo "✅ Build completed successfully!"
     echo "   - Image file should be in build/pi-gen-work/deploy/"
     echo "   - Next: Test with QEMU or flash to SD card"
