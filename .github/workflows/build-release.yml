@@ -434,9 +434,9 @@ jobs:
             # Push (only if build succeeded - for failed builds we'll push at the end)
             if [ "${BUILD_EXIT_CODE}" = "0" ]; then
               # Pull latest changes to avoid conflicts
-              git pull --rebase origin main || {
+              git pull --rebase origin ${GITHUB_REF_NAME} || {
                 echo "⚠️ Rebase failed, trying merge..."
-                git pull origin main
+                git pull origin ${GITHUB_REF_NAME}
               }
 
               git push || {
@@ -1183,9 +1183,9 @@ jobs:
             git commit -m "docs: Update README with release v${{ steps.config.outputs.version }} links [skip ci]"
 
             # Pull latest changes before pushing (in case logs were committed)
-            git pull --rebase origin main || {
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
               echo "⚠️ Rebase failed, trying merge..."
-              git pull origin main
+              git pull origin ${GITHUB_REF_NAME}
             }
 
             git push || {
@@ -1206,12 +1206,12 @@ jobs:
           git config --local user.name "github-actions[bot]"
 
           # Check if there are commits to push
-          if git log origin/main..HEAD --oneline | grep -q .; then
+          if git log origin/${GITHUB_REF_NAME}..HEAD --oneline | grep -q .; then
             echo "Found commits to push..."
 
-            git pull --rebase origin main || {
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
               echo "⚠️ Rebase failed, trying merge..."
-              git pull origin main
+              git pull origin ${GITHUB_REF_NAME}
             }
 
             git push || {
