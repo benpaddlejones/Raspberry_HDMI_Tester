@@ -12,3 +12,4 @@ You are looking for issues not limited to:
 - Un-logged events/processes
 - Events logged without details
 - Hard coded data
+- Missing packages

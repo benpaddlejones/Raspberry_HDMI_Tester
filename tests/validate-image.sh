@@ -271,6 +271,15 @@ echo ""
 echo "🔍 Checking for required packages..."
 echo ""
 
+# Verify dpkg database is accessible
+if [ ! -f "${MOUNT_POINT}/var/lib/dpkg/status" ]; then
+    echo "❌ Error: dpkg status file not found at ${MOUNT_POINT}/var/lib/dpkg/status"
+    VALIDATION_ERRORS+=("dpkg database missing")
+    ALL_OK=false
+else
+    echo "  ℹ️  dpkg database found: $(wc -l < "${MOUNT_POINT}/var/lib/dpkg/status") lines"
+fi
+
 REQUIRED_PACKAGES=(
     "xserver-xorg|X Server"
     "xinit|X Init"
@@ -281,22 +290,37 @@ REQUIRED_PACKAGES=(
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     IFS='|' read -r package description <<< "${pkg_entry}"
 
-    # Check if package is installed via dpkg
-    if [ -f "${MOUNT_POINT}/var/lib/dpkg/info/${package}.list" ]; then
-        # Verify package is actually installed (not removed)
-        if grep -q "^${package}$" "${MOUNT_POINT}/var/lib/dpkg/status" 2>/dev/null && \
-           grep -A 1 "^Package: ${package}$" "${MOUNT_POINT}/var/lib/dpkg/status" 2>/dev/null | \
-           grep -q "^Status:.*installed"; then
-            echo "  ✅ ${description}: Installed"
-        else
-            echo "  ❌ ${description}: Package files exist but not installed"
-            VALIDATION_ERRORS+=("Package not properly installed: ${package}")
-            ALL_OK=false
-        fi
+    # Check if package is installed via dpkg using chroot
+    # This is more reliable than parsing status file directly
+    if sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
+        echo "  ✅ ${description}: Installed"
+
+        # Additional verification: check if key binaries exist
+        case "${package}" in
+            feh)
+                if [ ! -f "${MOUNT_POINT}/usr/bin/feh" ]; then
+                    echo "      ⚠️  Warning: /usr/bin/feh binary not found"
+                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/feh")
+                    ALL_OK=false
+                fi
+                ;;
+            mpv)
+                if [ ! -f "${MOUNT_POINT}/usr/bin/mpv" ]; then
+                    echo "      ⚠️  Warning: /usr/bin/mpv binary not found"
+                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/mpv")
+                    ALL_OK=false
+                fi
+                ;;
+        esac
     else
         echo "  ❌ ${description}: NOT INSTALLED"
         VALIDATION_ERRORS+=("Package not installed: ${package}")
         ALL_OK=false
+
+        # Debug information
+        if [ -f "${MOUNT_POINT}/var/lib/dpkg/info/${package}.list" ]; then
+            echo "      ℹ️  Package files exist but dpkg reports not installed"
+        fi
     fi
 done
 

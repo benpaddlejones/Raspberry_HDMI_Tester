@@ -1,21 +1,31 @@
 #!/bin/bash -e
-# Install packages for HDMI testing
+# Configure HDMI testing audio settings
+# Note: Packages are installed via 00-packages file by pi-gen
 
-# Update package lists
-apt-get update
+# Verify packages were installed
+echo "🔍 Verifying required packages are installed..."
+PACKAGES_OK=true
 
-# Install required packages for HDMI testing
-# Using explicit list to ensure all dependencies are clear
-apt-get install -y --no-install-recommends \
-    xserver-xorg \
-    xinit \
-    feh \
-    mpv \
-    alsa-utils
+for pkg in xserver-xorg xinit feh mpv alsa-utils; do
+    if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+        echo "  ✅ $pkg: Installed"
+    else
+        echo "  ❌ $pkg: NOT INSTALLED!"
+        PACKAGES_OK=false
+    fi
+done
 
-# Clean up to reduce image size
+if [ "$PACKAGES_OK" = false ]; then
+    echo "❌ ERROR: Some packages are missing!"
+    echo "This should not happen - packages should be installed via 00-packages file"
+    exit 1
+fi
+
+echo "✅ All required packages verified"
+echo ""
+
+# Clean up apt cache to reduce image size
 apt-get clean
-rm -rf /var/lib/apt/lists/*
 
 # Configure ALSA to play through BOTH HDMI and 3.5mm jack simultaneously
 # This creates a virtual device that duplicates audio to both outputs
