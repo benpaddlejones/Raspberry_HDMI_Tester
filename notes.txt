@@ -1,16 +1,14 @@
-Recommended Fixes
-Fix 1: Detect pi-gen failures properly (Must do first)
+I NEED this to validate without fail.
 
-Parse pi-gen output for Build failed message
-Don't rely solely on exit code
-Fix 2: Handle missing packages (One of these options):
-
-Option A: Override stage2/01-sys-tweaks/00-packages to remove unavailable packages
-Option B: Add SKIP file to stage2 to skip it entirely (risky)
-Option C: Check if we're using the wrong Raspberry Pi OS release/repo
-Next Steps Recommendation
-Would you like me to:
-
-Fix the exit code detection bug so failures are properly caught?
-Investigate which Raspberry Pi OS release should have these packages?
-Create a workaround to skip these problematic packages?
+** YOUR TASK**
+Perform a LINE BY LINE code review, do not assume ANYTHING.
+You are looking for issues not limited to:
+- File/folder permissions
+- Order of operations
+- File/folder paths
+- Files/folders not created yet
+- Race conditions
+- Uncaught exceptions
+- Un-logged events/processes
+- Events logged without details
+- Hard coded data
