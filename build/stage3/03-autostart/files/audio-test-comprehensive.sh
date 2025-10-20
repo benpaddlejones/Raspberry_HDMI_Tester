@@ -7,7 +7,8 @@ AUDIO_FILE="/opt/hdmi-tester/audio.mp3"
 
 # Logging function
 log_msg() {
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$timestamp] $1" | tee -a "$LOG_FILE"
 }
 
@@ -19,7 +20,8 @@ check_audio_file() {
     fi
 
     log_msg "✅ Audio file found: $AUDIO_FILE"
-    local file_info=$(file "$AUDIO_FILE")
+    local file_info
+    file_info=$(file "$AUDIO_FILE")
     log_msg "   File info: $file_info"
     return 0
 }
@@ -29,8 +31,11 @@ test_alsa_devices() {
     log_msg "🔍 Testing ALSA devices..."
 
     # List all audio devices
-    local devices=$(aplay -l 2>/dev/null)
-    if [ $? -eq 0 ]; then
+    local devices
+    local aplay_exit
+    devices=$(aplay -l 2>/dev/null)
+    aplay_exit=$?
+    if [ ${aplay_exit} -eq 0 ]; then
         log_msg "📋 Available audio devices:"
         echo "$devices" | while IFS= read -r line; do
             log_msg "   $line"
