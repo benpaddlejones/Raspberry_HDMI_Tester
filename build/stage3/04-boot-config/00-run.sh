@@ -60,8 +60,14 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 
-# Enable HDMI audio
+# Enable both HDMI and 3.5mm audio
 dtparam=audio=on
+
+# Ensure HDMI audio is enabled
+hdmi_drive=2
+
+# Audio configuration for both outputs
+dtparam=audio_pwm_mode=2
 EOF
 done
 

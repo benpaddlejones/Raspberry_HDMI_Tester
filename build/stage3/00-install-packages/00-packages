@@ -3,3 +3,5 @@ xinit
 feh
 mpv
 alsa-utils
+pulseaudio
+pulseaudio-utils
