@@ -66,6 +66,39 @@ jobs:
 
           echo "✅ Dependencies installed"
 
+      - name: Enable binfmt_misc for ARM emulation
+        run: |
+          echo "🔧 Enabling binfmt_misc kernel module for ARM emulation..."
+          
+          # Check if binfmt_misc is available as a module
+          if [ -f /proc/sys/fs/binfmt_misc/status ]; then
+            echo "✅ binfmt_misc already enabled via filesystem"
+          else
+            # Try to mount binfmt_misc filesystem
+            sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null || true
+            
+            if [ -f /proc/sys/fs/binfmt_misc/status ]; then
+              echo "✅ binfmt_misc mounted successfully"
+            else
+              echo "⚠️  binfmt_misc not available via mount, checking systemd service..."
+            fi
+          fi
+          
+          # Ensure qemu-user-static registers ARM emulation
+          echo "🔧 Registering QEMU ARM handlers..."
+          sudo systemctl restart systemd-binfmt.service || true
+          
+          # Verify registration
+          if [ -f /proc/sys/fs/binfmt_misc/qemu-arm ]; then
+            echo "✅ QEMU ARM handler registered"
+            cat /proc/sys/fs/binfmt_misc/qemu-arm
+          else
+            echo "⚠️  QEMU ARM handler not found, manually registering..."
+            sudo update-binfmts --enable qemu-arm || true
+          fi
+          
+          echo "✅ ARM emulation configured"
+
       - name: Install pi-gen
         run: |
           echo "📥 Installing pi-gen..."
