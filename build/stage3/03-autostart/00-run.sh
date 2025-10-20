@@ -49,12 +49,12 @@ if [ -z "$WAYLAND_DISPLAY" ] && [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
     # Create it if it doesn't exist (shouldn't be necessary, but safety check)
     mkdir -p "$XDG_RUNTIME_DIR"
     chmod 700 "$XDG_RUNTIME_DIR"
-    
+
     # Set Wayland environment variables
     export WLR_BACKENDS=drm
     export WLR_RENDERER=gles2
     export WLR_DRM_NO_MODIFIERS=1
-    
+
     # Start labwc compositor (don't use exec so we can recover from crashes)
     if command -v labwc >/dev/null 2>&1; then
         echo "Starting Wayland compositor (labwc)..."

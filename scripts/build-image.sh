@@ -398,9 +398,9 @@ if [ -d "${WORK_DIR}/work" ]; then
     APT_COUNT=$(find "${WORK_DIR}/work" -path "*/rootfs/var/cache/apt/*" -type f 2>/dev/null | wc -l)
     TMP_COUNT=$(find "${WORK_DIR}/work" -path "*/rootfs/tmp/*" -type f 2>/dev/null | wc -l)
     DEB_COUNT=$(find "${WORK_DIR}/work" -name "*.deb" -type f 2>/dev/null | wc -l)
-    
+
     log_info "Found ${APT_COUNT} apt cache files, ${TMP_COUNT} temp files, ${DEB_COUNT} .deb packages"
-    
+
     # Single find with multiple conditions for efficiency
     # Removes: apt cache, tmp files, and .deb packages in one pass
     find "${WORK_DIR}/work" \( \
@@ -408,7 +408,7 @@ if [ -d "${WORK_DIR}/work" ]; then
         -path "*/rootfs/tmp/*" -o \
         -name "*.deb" \
     \) -type f -delete 2>/dev/null || true
-    
+
     log_info "✓ Build artifacts cleaned (${APT_COUNT} + ${TMP_COUNT} + ${DEB_COUNT} files)"
 else
     log_info "⚠️  No work directory found to clean"

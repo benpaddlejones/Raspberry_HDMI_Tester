@@ -159,7 +159,7 @@ AUTOSTART_FOUND=false
 
 if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" ]; then
     echo "  ✅ Wayland compositor config: /home/pi/.config/labwc/rc.xml found"
-    
+
     # Validate XML syntax
     if command -v xmllint &> /dev/null; then
         if xmllint --noout "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" 2>/dev/null; then
@@ -170,20 +170,20 @@ if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" ]; then
             ALL_OK=false
         fi
     fi
-    
+
     AUTOSTART_FOUND=true
 fi
 
 if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
     echo "  ✅ Wayland autostart: /home/pi/.config/labwc/autostart found"
-    
+
     # Validate it's executable
     if [ ! -x "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
         echo "      ⚠️  autostart script is not executable"
         VALIDATION_ERRORS+=("labwc autostart not executable")
         ALL_OK=false
     fi
-    
+
     # Validate shell script syntax (basic check)
     if bash -n "${MOUNT_POINT}/home/pi/.config/labwc/autostart" 2>/dev/null; then
         echo "      ✅ Shell syntax valid"
@@ -192,7 +192,7 @@ if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
         VALIDATION_ERRORS+=("labwc autostart may have syntax errors")
         ALL_OK=false
     fi
-    
+
     AUTOSTART_FOUND=true
 fi
 

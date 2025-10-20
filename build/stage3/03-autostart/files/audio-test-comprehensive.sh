@@ -54,7 +54,7 @@ test_hdmi_audio() {
 
     # Create error log for debugging
     local error_log="/tmp/hdmi-audio-test.log"
-    
+
     # Try to play a short test tone to HDMI
     if timeout 5 aplay -D plughw:0,1 /dev/zero 2>"$error_log"; then
         log_msg "✅ HDMI audio device responsive"
@@ -80,7 +80,7 @@ test_analog_audio() {
 
     # Create error log for debugging
     local error_log="/tmp/analog-audio-test.log"
-    
+
     # Try to play a short test tone to 3.5mm
     if timeout 5 aplay -D plughw:0,0 /dev/zero 2>"$error_log"; then
         log_msg "✅ 3.5mm audio device responsive"
