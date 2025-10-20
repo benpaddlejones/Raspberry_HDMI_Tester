@@ -22,8 +22,8 @@ install -m 755 files/troubleshoot-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
 # Install comprehensive audio test script
 install -m 755 files/audio-test-comprehensive.sh "${ROOTFS_DIR}/opt/hdmi-tester/"
 
-# Install audio verification script (copy from scripts directory)
-install -m 755 "${PWD}/../../scripts/verify-audio.sh" "${ROOTFS_DIR}/usr/local/bin/"
+# Install audio verification script
+install -m 755 files/verify-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
 
 # Enable services
 on_chroot << EOF
