@@ -1,5 +1,5 @@
 [Unit]
-Description=Audio Test Playback (HDMI + 3.5mm Jack)
+Description=HDMI Audio Test - ALSA Direct Output (HDMI + 3.5mm Jack)
 After=sound.target graphical.target systemd-user-sessions.service
 Wants=sound.target
 StartLimitIntervalSec=300
@@ -10,7 +10,6 @@ Type=simple
 User=pi
 Group=audio
 Environment=XDG_RUNTIME_DIR=/run/user/1000
-Environment=PULSE_RUNTIME_PATH=/run/user/1000/pulse
 # Run comprehensive audio test and setup
 ExecStartPre=/opt/hdmi-tester/audio-test-comprehensive.sh
 # Wait a bit more for audio subsystem

@@ -1,7 +1,11 @@
+# Display packages
 xserver-xorg
 xinit
 feh
+
+# Audio/Video playback
 mpv
+
+# Audio system (ALSA-only, no PulseAudio)
+# Using direct ALSA with custom /etc/asound.conf for dual output
 alsa-utils
-pulseaudio
-pulseaudio-utils
