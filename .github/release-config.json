@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.15",
   "name": "Stable Release",
   "description": "Stable release of Raspberry Pi HDMI Tester",
   "prerelease": false,
