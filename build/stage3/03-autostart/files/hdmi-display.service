@@ -1,14 +1,17 @@
 [Unit]
-Description=HDMI Test Pattern Display
-After=graphical.target
-Wants=graphical.target
+Description=HDMI Test Pattern Display (Wayland)
+After=graphical.target pipewire.service wireplumber.service
+Wants=graphical.target pipewire.service wireplumber.service
 
 [Service]
 Type=simple
 User=pi
-Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_BACKENDS=drm
+Environment=WLR_RENDERER=gles2
+Environment=WLR_DRM_NO_MODIFIERS=1
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/feh --fullscreen --hide-pointer --auto-zoom --verbose /opt/hdmi-tester/image.png
+ExecStart=/usr/bin/imv -f -n /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal

@@ -177,12 +177,12 @@ Edit `build/stage-custom/03-autostart/00-run.sh` and remove or comment out:
 # ...
 ```
 
-### Disable Auto-Start X11
+### Disable Auto-Start Wayland
 
-Edit `build/stage-custom/03-autostart/00-run.sh` and remove:
+Edit `build/stage3/03-autostart/00-run.sh` and remove:
 
 ```bash
-# Auto-start X on login
+# Auto-start Wayland compositor on login
 # cat >> "${ROOTFS_DIR}/home/pi/.bashrc" << 'EOF'
 # ...
 ```
@@ -191,15 +191,14 @@ Edit `build/stage-custom/03-autostart/00-run.sh` and remove:
 
 ### Add Packages to Build
 
-Edit `build/stage-custom/00-install-packages/00-packages`:
+Edit `build/stage3/00-install-packages/00-packages`:
 
 ```
-xserver-xorg
-xinit
-feh
+labwc
+imv
 mpv
-alsa-utils
-pulseaudio
+pipewire
+wireplumber
 your-package-here
 another-package
 ```
@@ -226,39 +225,39 @@ If you need to access the Pi:
 
 ### Modify Display Service
 
-Edit `build/stage-custom/03-autostart/files/hdmi-display.service`:
+Edit `build/stage3/03-autostart/files/hdmi-display.service`:
 
 ```ini
 [Service]
 # Change delay before starting
 ExecStartPre=/bin/sleep 5    # Change this number
 
-# Use different viewer
-ExecStart=/usr/bin/eog --fullscreen /opt/hdmi-tester/test-pattern.png
+# Use different Wayland image viewer
+ExecStart=/usr/bin/imv -f -n /opt/hdmi-tester/image.png
 
-# Add options
-ExecStart=/usr/bin/feh --fullscreen --hide-pointer --slideshow-delay 5 /path/to/images/
+# Or use swayimg for slideshow
+ExecStart=/usr/bin/swayimg -f -s 5 /path/to/images/
 ```
 
 ### Modify Audio Service
 
-Edit `build/stage-custom/03-autostart/files/hdmi-audio.service`:
+Edit `build/stage3/03-autostart/files/hdmi-audio.service`:
 
 ```ini
 [Service]
-# Change audio device
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=pulse /opt/hdmi-tester/test-audio.mp3
+# Change audio via PipeWire
+ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=pipewire /opt/hdmi-tester/audio.mp3
 
-# Adjust volume
-ExecStartPre=/usr/bin/amixer set Master 80%
+# Adjust volume (PipeWire)
+ExecStartPre=/usr/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 80%
 
 # Play once (no loop)
-ExecStart=/usr/bin/mpv --no-video /opt/hdmi-tester/test-audio.mp3
+ExecStart=/usr/bin/mpv --no-video /opt/hdmi-tester/audio.mp3
 ```
 
 ### Add New Service
 
-1. **Create service file** in `build/stage-custom/03-autostart/files/`:
+1. **Create service file** in `build/stage3/03-autostart/files/`:
    ```ini
    [Unit]
    Description=My Custom Service

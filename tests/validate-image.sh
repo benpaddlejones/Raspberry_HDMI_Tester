@@ -151,34 +151,32 @@ done
 echo ""
 
 # Check for auto-start configuration
-echo "🔍 Checking auto-start configuration..."
+echo "🔍 Checking auto-start configuration (Wayland)..."
 echo ""
 
-# Check for .xinitrc or .bash_profile that starts X
+# Check for labwc config or .bash_profile that starts Wayland
 AUTOSTART_FOUND=false
 
-if [ -f "${MOUNT_POINT}/home/pi/.xinitrc" ]; then
-    echo "  ✅ X auto-start: /home/pi/.xinitrc found"
+if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" ]; then
+    echo "  ✅ Wayland compositor config: /home/pi/.config/labwc/rc.xml found"
     AUTOSTART_FOUND=true
 fi
 
-# Alternative: Check if .bash_profile or .profile starts X
-if [ -f "${MOUNT_POINT}/home/pi/.bash_profile" ]; then
-    if grep -q "startx" "${MOUNT_POINT}/home/pi/.bash_profile" 2>/dev/null; then
-        echo "  ✅ X auto-start: startx in .bash_profile"
-        AUTOSTART_FOUND=true
-    fi
+if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
+    echo "  ✅ Wayland autostart: /home/pi/.config/labwc/autostart found"
+    AUTOSTART_FOUND=true
 fi
 
-if [ -f "${MOUNT_POINT}/home/pi/.profile" ]; then
-    if grep -q "startx" "${MOUNT_POINT}/home/pi/.profile" 2>/dev/null; then
-        echo "  ✅ X auto-start: startx in .profile"
+# Check if .bashrc starts labwc
+if [ -f "${MOUNT_POINT}/home/pi/.bashrc" ]; then
+    if grep -q "labwc" "${MOUNT_POINT}/home/pi/.bashrc" 2>/dev/null; then
+        echo "  ✅ Wayland auto-start: labwc in .bashrc"
         AUTOSTART_FOUND=true
     fi
 fi
 
 if [ "${AUTOSTART_FOUND}" = false ]; then
-    echo "  ⚠️  Auto-start configuration not found (may use alternative method)"
+    echo "  ⚠️  Wayland auto-start configuration not found"
 fi
 
 echo ""
@@ -281,10 +279,11 @@ else
 fi
 
 REQUIRED_PACKAGES=(
-    "xserver-xorg|X Server"
-    "xinit|X Init"
-    "feh|Image Viewer (feh)"
+    "labwc|Wayland Compositor (labwc)"
+    "imv|Image Viewer (imv)"
     "mpv|Media Player (mpv)"
+    "pipewire|PipeWire Audio Server"
+    "wireplumber|WirePlumber Session Manager"
 )
 
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
@@ -297,10 +296,10 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
 
         # Additional verification: check if key binaries exist
         case "${package}" in
-            feh)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/feh" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/feh binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/feh")
+            imv)
+                if [ ! -f "${MOUNT_POINT}/usr/bin/imv" ]; then
+                    echo "      ⚠️  Warning: /usr/bin/imv binary not found"
+                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/imv")
                     ALL_OK=false
                 fi
                 ;;
@@ -308,6 +307,13 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
                 if [ ! -f "${MOUNT_POINT}/usr/bin/mpv" ]; then
                     echo "      ⚠️  Warning: /usr/bin/mpv binary not found"
                     VALIDATION_ERRORS+=("Binary missing: /usr/bin/mpv")
+                    ALL_OK=false
+                fi
+                ;;
+            labwc)
+                if [ ! -f "${MOUNT_POINT}/usr/bin/labwc" ]; then
+                    echo "      ⚠️  Warning: /usr/bin/labwc binary not found"
+                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/labwc")
                     ALL_OK=false
                 fi
                 ;;

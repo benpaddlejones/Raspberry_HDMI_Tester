@@ -242,12 +242,13 @@ The project uses 5 custom stages:
 - `00-run-chroot.sh`: Runs inside chroot, installs packages
 
 **Packages installed**:
-- `xserver-xorg` - X11 display server
-- `xinit` - X initialization
-- `feh` - Lightweight image viewer
+- `labwc` - Lightweight Wayland compositor
+- `imv` - Wayland-native image viewer
 - `mpv` - Media player with loop support
-- `alsa-utils` - Audio utilities
-- `pulseaudio` - Sound server
+- `pipewire` - Modern audio server
+- `wireplumber` - PipeWire session manager
+- `wlroots` - Wayland compositor library
+- `wl-clipboard` - Wayland clipboard utilities
 
 #### Stage 01: Test Image
 
@@ -284,8 +285,8 @@ The project uses 5 custom stages:
 - `files/hdmi-audio.service`: Audio service
 
 **Services created**:
-- `hdmi-display.service`: Launches feh with test pattern
-- `hdmi-audio.service`: Plays audio with mpv --loop=inf
+- `hdmi-display.service`: Launches imv with test pattern (Wayland)
+- `hdmi-audio.service`: Plays audio with mpv via PipeWire
 
 **What it does**:
 - Copies service files to `/etc/systemd/system/`
@@ -300,9 +301,10 @@ The project uses 5 custom stages:
 - `00-run.sh`: Configuration script
 
 **Modifications**:
-- `/boot/config.txt`: HDMI settings (1920x1080@60Hz, audio enabled)
+- `/boot/config.txt`: HDMI settings (1920x1080@60Hz, audio enabled, vc4-kms-v3d)
 - `/etc/systemd/system/getty@tty1.service.d/autologin.conf`: Auto-login
-- `/home/pi/.bashrc`: Auto-start X server
+- `/home/pi/.bashrc`: Auto-start Wayland compositor (labwc)
+- `/home/pi/.config/labwc/`: Wayland compositor configuration
 
 ## Technical Architecture
 
@@ -311,7 +313,7 @@ The project uses 5 custom stages:
 **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
 - Minimal footprint (~1.5-2GB image)
 - No desktop environment by default
-- X11 added in custom stage
+- Wayland compositor (labwc) added in custom stage
 
 **Builder**: pi-gen
 - Official Raspberry Pi image builder
@@ -326,16 +328,16 @@ The project uses 5 custom stages:
 ### Boot Flow
 
 1. **Raspberry Pi boots** from SD card
-2. **Kernel loads** with optimized parameters
-3. **systemd starts** system services
+2. **Kernel loads** with optimized parameters (vc4-kms-v3d driver)
+3. **systemd starts** system services (including PipeWire)
 4. **Auto-login** on tty1 (user: `pi`)
-5. **.bashrc executes** → Starts X server
-6. **X server launches** (no window manager)
+5. **.bashrc executes** → Starts Wayland compositor (labwc)
+6. **Wayland compositor launches** with Mesa/vc4 GPU acceleration
 7. **systemd services start**:
-   - `hdmi-display.service` → Displays test pattern (feh)
-   - `hdmi-audio.service` → Plays audio (mpv --loop=inf)
+   - `hdmi-display.service` → Displays test pattern (imv)
+   - `hdmi-audio.service` → Plays audio (mpv via PipeWire)
 8. **Display shows** test pattern at 1920x1080@60Hz
-9. **Audio plays** continuously through HDMI
+9. **Audio plays** continuously through HDMI via PipeWire
 
 ### HDMI Configuration
 
@@ -352,8 +354,11 @@ hdmi_drive=2
 hdmi_group=1
 hdmi_mode=16
 
-# GPU memory allocation
-gpu_mem=128
+# GPU memory allocation (increased for Wayland)
+gpu_mem=256
+
+# Enable vc4-kms-v3d for Wayland/Mesa
+dtoverlay=vc4-kms-v3d
 ```
 
 ### systemd Services
@@ -361,15 +366,16 @@ gpu_mem=128
 **hdmi-display.service**:
 ```ini
 [Unit]
-Description=HDMI Test Pattern Display
-After=graphical.target
+Description=HDMI Test Pattern Display (Wayland)
+After=graphical.target pipewire.service
 Wants=graphical.target
 
 [Service]
 Type=simple
 User=pi
-Environment=DISPLAY=:0
-ExecStart=/usr/bin/feh --fullscreen --hide-pointer --no-fehbg /opt/hdmi-tester/image.png
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_BACKENDS=drm
+ExecStart=/usr/bin/imv -f -n /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=5
 
@@ -380,14 +386,15 @@ WantedBy=graphical.target
 **hdmi-audio.service**:
 ```ini
 [Unit]
-Description=HDMI Audio Test
-After=sound.target
-Wants=sound.target
+Description=HDMI Audio Test (PipeWire)
+After=sound.target pipewire.service wireplumber.service
+Wants=sound.target pipewire.service
 
 [Service]
 Type=simple
 User=pi
-ExecStart=/usr/bin/mpv --no-video --loop=inf /opt/hdmi-tester/audio.mp3
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=/usr/bin/mpv --no-video --loop=inf --ao=pipewire /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=5
 

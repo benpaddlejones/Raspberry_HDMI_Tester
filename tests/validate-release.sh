@@ -378,10 +378,11 @@ check_package() {
     fi
 }
 
-check_package "xserver-xorg" "X Server"
-check_package "xinit" "X Init"
-check_package "feh" "feh (image viewer)"
+check_package "labwc" "Wayland Compositor (labwc)"
+check_package "imv" "imv (image viewer)"
 check_package "mpv" "mpv (media player)"
+check_package "pipewire" "PipeWire (audio server)"
+check_package "wireplumber" "WirePlumber (session manager)"
 
 echo ""
 echo "👤 User Configuration:" | tee -a "${REPORT_FILE}"

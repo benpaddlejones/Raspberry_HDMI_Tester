@@ -94,11 +94,11 @@ See `logs/README.md` for detailed documentation on the logging system.
 ### Build Stages
 The build process uses these custom stages:
 
-1. **00-install-packages** - Installs X11, feh, mpv, audio utilities
+1. **00-install-packages** - Installs Wayland (labwc), imv, mpv, PipeWire audio
 2. **01-test-image** - Deploys test pattern from `assets/image.png`
 3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
-4. **03-autostart** - Configures systemd services for auto-boot
-5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables SSH
+4. **03-autostart** - Configures systemd services and Wayland compositor
+5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables vc4-kms-v3d, SSH
 
 ### Build Time
 - **First build**: 45-60 minutes (downloads packages)
@@ -217,14 +217,13 @@ FIRST_USER_PASS="mypassword"
 ```
 
 **Add additional packages:**
-Edit `build/stage-custom/00-install-packages/00-packages`:
+Edit `build/stage3/00-install-packages/00-packages`:
 ```
-xserver-xorg
-xinit
-feh
+labwc
+imv
 mpv
-alsa-utils
-pulseaudio
+pipewire
+wireplumber
 your-package-here
 ```
 

@@ -1,11 +1,27 @@
-# Display packages
-xserver-xorg
-xinit
-feh
+# Wayland compositor and display packages
+sway
+wayfire
+wlroots
+labwc
 
-# Audio/Video playback
+# Wayland utilities
+wl-clipboard
+wlr-randr
+wayland-protocols
+
+# Image viewer for Wayland
+imv
+
+# Audio/Video playback (Wayland-compatible)
 mpv
 
-# Audio system (ALSA-only, no PulseAudio)
-# Using direct ALSA with custom /etc/asound.conf for dual output
+# Audio system (ALSA + PipeWire for Wayland)
 alsa-utils
+pipewire
+pipewire-alsa
+pipewire-audio
+wireplumber
+
+# Session management
+dbus-user-session
+systemd
