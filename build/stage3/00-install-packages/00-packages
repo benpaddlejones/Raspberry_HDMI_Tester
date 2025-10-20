@@ -1,7 +1,5 @@
 # Wayland compositor and dependencies
 labwc
-wlroots
-libwlroots11
 
 # Mesa drivers for vc4-kms-v3d (GPU acceleration)
 mesa-utils
