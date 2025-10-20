@@ -1,130 +1,185 @@
 #!/bin/bash
 # Validate built image has required files and configuration
+# This script performs comprehensive validation of HDMI Tester images
 
 set -e
+set -u
+set -o pipefail
 
-if [ $# -lt 1 ]; then
+# Get script directory and source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+# Source validation utilities
+if [ ! -f "${PROJECT_ROOT}/scripts/validation-utils.sh" ]; then
+    echo "❌ Error: validation-utils.sh not found"
+    exit 1
+fi
+
+# shellcheck source=../scripts/validation-utils.sh
+source "${PROJECT_ROOT}/scripts/validation-utils.sh"
+
+# Show usage
+show_usage() {
     echo "Usage: $0 <image_file.img>"
     echo ""
     echo "This script validates that the HDMI Tester image contains all required files."
     echo ""
     echo "Example: $0 build/pi-gen-work/deploy/image.img"
     exit 1
+}
+
+# Check arguments
+if [ $# -lt 1 ]; then
+    show_usage
 fi
 
 IMAGE_FILE="$1"
-MOUNT_POINT="/tmp/hdmi-tester-mount"
-LOOP_DEVICE=""
 
+# Validate image file exists
 if [ ! -f "${IMAGE_FILE}" ]; then
     echo "❌ Error: Image file not found: ${IMAGE_FILE}"
     exit 1
 fi
+
+# Get absolute path for cleanup
+IMAGE_FILE=$(readlink -f "${IMAGE_FILE}")
 
 echo "=================================================="
 echo "Validating HDMI Tester Image"
 echo "=================================================="
 echo ""
 echo "Image: ${IMAGE_FILE}"
+echo "Size: $(du -h "${IMAGE_FILE}" | cut -f1)"
 echo ""
 
-# Check if running with sudo
-if [ "$EUID" -ne 0 ]; then
-    echo "❌ Error: This script requires sudo privileges to mount the image."
-    echo "Please run: sudo $0 $@"
+# Check prerequisites
+echo "🔍 Checking prerequisites..."
+if ! check_root_or_sudo; then
     exit 1
 fi
 
-# Cleanup function
-cleanup() {
-    echo ""
-    echo "🧹 Cleaning up..."
-    if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
-        umount "${MOUNT_POINT}" 2>/dev/null || true
-    fi
-    if [ -n "${LOOP_DEVICE}" ]; then
-        kpartx -d "${IMAGE_FILE}" 2>/dev/null || true
-    fi
-    if [ -d "${MOUNT_POINT}" ]; then
-        rmdir "${MOUNT_POINT}" 2>/dev/null || true
-    fi
-}
-
-# Set trap to cleanup on exit
-trap cleanup EXIT
-
-# Mount image
-echo "📁 Mounting image..."
-mkdir -p "${MOUNT_POINT}"
-kpartx -av "${IMAGE_FILE}"
-
-# Wait for device to be ready (up to 10 seconds)
-echo "⏳ Waiting for loop device to be ready..."
-for i in {1..10}; do
-    sleep 1
-    LOOP_DEVICE=$(losetup -l | grep "${IMAGE_FILE}" | awk '{print $1}' | head -n 1)
-    if [ -n "${LOOP_DEVICE}" ]; then
-        # Check if partition exists
-        if [ -e "${LOOP_DEVICE}p2" ] || [ -e "/dev/mapper/$(basename ${LOOP_DEVICE})p2" ]; then
-            echo "✅ Loop device ready: ${LOOP_DEVICE}"
-            break
-        fi
-    fi
-
-    if [ $i -eq 10 ]; then
-        echo "❌ Error: Loop device not ready after 10 seconds"
-        exit 1
-    fi
-done
-
-# Find the loop device (should be set from above loop)
-LOOP_DEVICE=$(losetup -l | grep "${IMAGE_FILE}" | awk '{print $1}' | head -n 1)
-if [ -z "${LOOP_DEVICE}" ]; then
-    echo "❌ Error: Could not find loop device for image"
+if ! check_required_commands losetup mount umount mountpoint grep awk; then
     exit 1
 fi
 
-# Mount root partition (usually partition 2)
-ROOT_PARTITION="${LOOP_DEVICE}p2"
-if [ ! -e "${ROOT_PARTITION}" ]; then
-    # Try alternative naming
-    ROOT_PARTITION="/dev/mapper/$(basename ${LOOP_DEVICE})p2"
-fi
-
-if [ ! -e "${ROOT_PARTITION}" ]; then
-    echo "❌ Error: Could not find root partition"
-    exit 1
-fi
-
-mount "${ROOT_PARTITION}" "${MOUNT_POINT}"
-echo "✅ Image mounted at ${MOUNT_POINT}"
 echo ""
+
+# Setup cleanup traps
+setup_traps
+
+# Setup loop device
+echo "📁 Setting up loop device..."
+LOOP_DEVICE=$(setup_loop_device "${IMAGE_FILE}")
+LOOP_EXIT=$?
+if [ ${LOOP_EXIT} -ne 0 ] || [ -z "${LOOP_DEVICE}" ]; then
+    echo "❌ Failed to setup loop device"
+    exit 1
+fi
+
+echo "✅ Loop device ready: ${LOOP_DEVICE}"
+echo ""
+
+# Verify boot partition exists
+echo "🔍 Verifying partitions..."
+BOOT_PARTITION=$(verify_partition "${LOOP_DEVICE}" 1)
+BOOT_EXIT=$?
+if [ ${BOOT_EXIT} -ne 0 ] || [ -z "${BOOT_PARTITION}" ]; then
+    echo "❌ Error: Boot partition not found"
+    exit 1
+fi
+echo "  ✅ Boot partition: ${BOOT_PARTITION}"
+
+# Verify root partition exists
+ROOT_PARTITION=$(verify_partition "${LOOP_DEVICE}" 2)
+ROOT_EXIT=$?
+if [ ${ROOT_EXIT} -ne 0 ] || [ -z "${ROOT_PARTITION}" ]; then
+    echo "❌ Error: Root partition not found"
+    exit 1
+fi
+echo "  ✅ Root partition: ${ROOT_PARTITION}"
+echo ""
+
+# Mount root partition
+MOUNT_POINT=$(create_temp_dir "/tmp" "hdmi-tester-mount")
+MOUNT_EXIT=$?
+if [ ${MOUNT_EXIT} -ne 0 ] || [ -z "${MOUNT_POINT}" ]; then
+    echo "❌ Failed to create mount point"
+    exit 1
+fi
+
+echo "📂 Mounting root partition..."
+if ! mount_partition "${ROOT_PARTITION}" "${MOUNT_POINT}" "ext4"; then
+    echo "❌ Failed to mount root partition"
+    exit 1
+fi
+
+echo "✅ Root partition mounted at ${MOUNT_POINT}"
+echo ""
+
+# Track variables for validation
+ALL_OK=true
+MISSING_FILES=()
+VALIDATION_ERRORS=()
 
 # Check for required files
 echo "🔍 Checking required files..."
 echo ""
 
 FILES_TO_CHECK=(
-    "/opt/hdmi-tester/image.png"
-    "/opt/hdmi-tester/audio.mp3"
-    "/etc/systemd/system/hdmi-display.service"
-    "/etc/systemd/system/hdmi-audio.service"
-    "/home/pi/.xinitrc"
+    "/opt/hdmi-tester/image.png|Test Pattern Image"
+    "/opt/hdmi-tester/audio.mp3|Test Audio File"
+    "/etc/systemd/system/hdmi-display.service|HDMI Display Service"
+    "/etc/systemd/system/hdmi-audio.service|HDMI Audio Service"
 )
 
-ALL_OK=true
-MISSING_FILES=()
+for file_entry in "${FILES_TO_CHECK[@]}"; do
+    IFS='|' read -r file description <<< "${file_entry}"
+    full_path="${MOUNT_POINT}${file}"
 
-for file in "${FILES_TO_CHECK[@]}"; do
-    if [ -f "${MOUNT_POINT}${file}" ]; then
-        SIZE=$(du -h "${MOUNT_POINT}${file}" | cut -f1)
-        echo "  ✅ ${file} (${SIZE})"
+    if validate_file_readable "${full_path}"; then
+        size=$(du -h "${full_path}" 2>/dev/null | cut -f1 || echo "?")
+        echo "  ✅ ${description}: ${file} (${size})"
     else
-        echo "  ❌ MISSING: ${file}"
+        echo "  ❌ ${description}: MISSING or UNREADABLE: ${file}"
         MISSING_FILES+=("${file}")
+        VALIDATION_ERRORS+=("Missing or unreadable file: ${file}")
         ALL_OK=false
     fi
 done
+
+echo ""
+
+# Check for auto-start configuration
+echo "🔍 Checking auto-start configuration..."
+echo ""
+
+# Check for .xinitrc or .bash_profile that starts X
+AUTOSTART_FOUND=false
+
+if [ -f "${MOUNT_POINT}/home/pi/.xinitrc" ]; then
+    echo "  ✅ X auto-start: /home/pi/.xinitrc found"
+    AUTOSTART_FOUND=true
+fi
+
+# Alternative: Check if .bash_profile or .profile starts X
+if [ -f "${MOUNT_POINT}/home/pi/.bash_profile" ]; then
+    if grep -q "startx" "${MOUNT_POINT}/home/pi/.bash_profile" 2>/dev/null; then
+        echo "  ✅ X auto-start: startx in .bash_profile"
+        AUTOSTART_FOUND=true
+    fi
+fi
+
+if [ -f "${MOUNT_POINT}/home/pi/.profile" ]; then
+    if grep -q "startx" "${MOUNT_POINT}/home/pi/.profile" 2>/dev/null; then
+        echo "  ✅ X auto-start: startx in .profile"
+        AUTOSTART_FOUND=true
+    fi
+fi
+
+if [ "${AUTOSTART_FOUND}" = false ]; then
+    echo "  ⚠️  Auto-start configuration not found (may use alternative method)"
+fi
 
 echo ""
 
@@ -132,85 +187,116 @@ echo ""
 echo "🔍 Checking HDMI boot configuration..."
 echo ""
 
-CONFIG_FILES=(
-    "/boot/config.txt"
-    "/boot/firmware/config.txt"
+# Define configuration files to check (both old and new locations)
+CONFIG_PATHS=(
+    "${MOUNT_POINT}/boot/config.txt"
+    "${MOUNT_POINT}/boot/firmware/config.txt"
 )
 
 CONFIG_FOUND=false
-HDMI_MODE_OK=false
-HDMI_DRIVE_OK=false
 
-# Check ALL config files that exist (both legacy and new locations)
-for config in "${CONFIG_FILES[@]}"; do
-    if [ -f "${MOUNT_POINT}${config}" ]; then
+# Required HDMI settings to check (uncommented)
+REQUIRED_SETTINGS=(
+    "hdmi_force_hotplug=1|HDMI Force Hotplug"
+    "hdmi_drive=2|HDMI Audio"
+    "hdmi_group=1|HDMI Group (CEA)"
+    "hdmi_mode=16|HDMI Mode (1920x1080@60Hz)"
+)
+
+for config_path in "${CONFIG_PATHS[@]}"; do
+    if [ -f "${config_path}" ]; then
         CONFIG_FOUND=true
-        echo "  📝 Found: ${config}"
+        echo "  📝 Found: ${config_path##${MOUNT_POINT}}"
 
-        # Check this specific file for HDMI settings
-        HAS_MODE=false
-        HAS_DRIVE=false
+        # Check each required setting
+        for setting_entry in "${REQUIRED_SETTINGS[@]}"; do
+            IFS='|' read -r pattern description <<< "${setting_entry}"
 
-        if grep -q "^[[:space:]]*hdmi_mode=16" "${MOUNT_POINT}${config}"; then
-            HAS_MODE=true
-            HDMI_MODE_OK=true
-        fi
+            if validate_config_setting "${config_path}" "^[[:space:]]*${pattern}"; then
+                echo "      ✅ ${description}: Configured"
+            else
+                echo "      ❌ ${description}: NOT CONFIGURED or commented"
+                VALIDATION_ERRORS+=("Missing HDMI setting: ${description}")
+                ALL_OK=false
+            fi
+        done
 
-        if grep -q "^[[:space:]]*hdmi_drive=2" "${MOUNT_POINT}${config}"; then
-            HAS_DRIVE=true
-            HDMI_DRIVE_OK=true
-        fi
-
-        # Report status for this file
-        if [ "$HAS_MODE" = true ]; then
-            echo "      ✅ hdmi_mode=16 found in this file"
-        fi
-        if [ "$HAS_DRIVE" = true ]; then
-            echo "      ✅ hdmi_drive=2 found in this file"
-        fi
-
-        # Don't break - check all config files
+        echo ""
+        # Only check first config file found
+        break
     fi
 done
 
-if [ "$CONFIG_FOUND" = false ]; then
+if [ "${CONFIG_FOUND}" = false ]; then
     echo "  ❌ config.txt not found in /boot or /boot/firmware"
-    ALL_OK=false
-fi
-
-# Overall HDMI configuration status
-echo ""
-if [ "$HDMI_MODE_OK" = true ]; then
-    echo "  ✅ HDMI mode configured (1920x1080@60Hz)"
-else
-    echo "  ❌ HDMI mode not found in any config.txt"
-    ALL_OK=false
-fi
-
-if [ "$HDMI_DRIVE_OK" = true ]; then
-    echo "  ✅ HDMI audio enabled"
-else
-    echo "  ❌ HDMI audio not configured in any config.txt"
+    VALIDATION_ERRORS+=("config.txt not found")
     ALL_OK=false
 fi
 
 echo ""
 
 # Check if services are enabled
-echo "🔍 Checking systemd service links..."
+echo "🔍 Checking systemd service enablement..."
 echo ""
 
-SERVICE_LINKS=(
-    "/etc/systemd/system/graphical.target.wants/hdmi-display.service"
-    "/etc/systemd/system/multi-user.target.wants/hdmi-audio.service"
+SERVICES_TO_CHECK=(
+    "hdmi-display.service|HDMI Display Service|graphical.target"
+    "hdmi-audio.service|HDMI Audio Service|multi-user.target"
 )
 
-for link in "${SERVICE_LINKS[@]}"; do
-    if [ -L "${MOUNT_POINT}${link}" ]; then
-        echo "  ✅ ${link}"
+for service_entry in "${SERVICES_TO_CHECK[@]}"; do
+    IFS='|' read -r service description target <<< "${service_entry}"
+
+    # Check if service file exists
+    service_file="${MOUNT_POINT}/etc/systemd/system/${service}"
+    if [ ! -f "${service_file}" ]; then
+        echo "  ❌ ${description}: Service file not found"
+        VALIDATION_ERRORS+=("Service file not found: ${service}")
+        ALL_OK=false
+        continue
+    fi
+
+    # Check if service is enabled via symlink
+    symlink_path="${MOUNT_POINT}/etc/systemd/system/${target}.wants/${service}"
+    if verify_symlink "${symlink_path}"; then
+        echo "  ✅ ${description}: Enabled in ${target}"
     else
-        echo "  ⚠️  Not enabled: ${link}"
-        # Not critical, services might still work
+        echo "  ⚠️  ${description}: Not enabled in ${target} (may use alternative method)"
+    fi
+done
+
+echo ""
+
+# Check for required packages
+echo "🔍 Checking for required packages..."
+echo ""
+
+REQUIRED_PACKAGES=(
+    "xserver-xorg|X Server"
+    "xinit|X Init"
+    "feh|Image Viewer (feh)"
+    "mpv|Media Player (mpv)"
+)
+
+for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
+    IFS='|' read -r package description <<< "${pkg_entry}"
+
+    # Check if package is installed via dpkg
+    if [ -f "${MOUNT_POINT}/var/lib/dpkg/info/${package}.list" ]; then
+        # Verify package is actually installed (not removed)
+        if grep -q "^${package}$" "${MOUNT_POINT}/var/lib/dpkg/status" 2>/dev/null && \
+           grep -A 1 "^Package: ${package}$" "${MOUNT_POINT}/var/lib/dpkg/status" 2>/dev/null | \
+           grep -q "^Status:.*installed"; then
+            echo "  ✅ ${description}: Installed"
+        else
+            echo "  ❌ ${description}: Package files exist but not installed"
+            VALIDATION_ERRORS+=("Package not properly installed: ${package}")
+            ALL_OK=false
+        fi
+    else
+        echo "  ❌ ${description}: NOT INSTALLED"
+        VALIDATION_ERRORS+=("Package not installed: ${package}")
+        ALL_OK=false
     fi
 done
 
@@ -225,25 +311,21 @@ if [ "${ALL_OK}" = true ]; then
     echo "  • Test pattern and audio files"
     echo "  • Systemd services"
     echo "  • HDMI configuration"
-    echo "  • X11 auto-start configuration"
+    echo "  • Required packages"
     echo ""
     echo "The image is ready to flash to an SD card!"
     exit 0
 else
     echo "❌ VALIDATION FAILED!"
     echo ""
-    echo "Some required files or configurations are missing."
+    echo "Found ${#VALIDATION_ERRORS[@]} error(s):"
     echo ""
 
-    # List missing files explicitly for debugging
-    if [ ${#MISSING_FILES[@]} -gt 0 ]; then
-        echo "Missing files:"
-        for file in "${MISSING_FILES[@]}"; do
-            echo "  - ${file}"
-        done
-        echo ""
-    fi
+    for error in "${VALIDATION_ERRORS[@]}"; do
+        echo "  - ${error}"
+    done
 
+    echo ""
     echo "Please review the build process and try again."
     echo "Check the build logs for errors during stage execution."
     exit 1
