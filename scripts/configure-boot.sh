@@ -7,7 +7,7 @@ if [ $# -lt 1 ]; then
     echo "Usage: $0 <mount_point>"
     echo ""
     echo "This script configures HDMI settings in an already-mounted boot partition."
-    echo "For new builds, HDMI configuration is handled by stage-custom/04-boot-config."
+    echo "For new builds, HDMI configuration is handled by stage3/04-boot-config."
     echo ""
     echo "Example: $0 /mnt/boot"
     exit 1
