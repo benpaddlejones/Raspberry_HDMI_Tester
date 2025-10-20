@@ -36,6 +36,14 @@ echo "Writing HDMI configuration to ${#CONFIG_FILES[@]} config file(s)..."
 # Append HDMI configuration to ALL config.txt files found
 for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     echo "  Writing to: ${CONFIG_FILE}"
+    
+    # Validate file is writable
+    if [ ! -w "${CONFIG_FILE}" ]; then
+        echo "❌ Error: Config file not writable: ${CONFIG_FILE}"
+        exit 1
+    fi
+    
+    # Append configuration
     cat >> "${CONFIG_FILE}" << 'EOF'
 
 # HDMI Tester Configuration - Force 1920x1080 @ 60Hz with Wayland
@@ -69,6 +77,12 @@ dtoverlay=vc4-kms-v3d
 # Audio configuration for both outputs
 dtparam=audio_pwm_mode=2
 EOF
+    
+    # Verify configuration was added
+    if ! grep -q "HDMI Tester Configuration" "${CONFIG_FILE}"; then
+        echo "❌ Error: Failed to write HDMI configuration to ${CONFIG_FILE}"
+        exit 1
+    fi
 done
 
 echo "✅ HDMI configuration added to all config.txt files"

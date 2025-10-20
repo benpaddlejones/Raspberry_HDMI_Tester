@@ -1,7 +1,8 @@
 [Unit]
 Description=HDMI Audio Test - PipeWire Output (HDMI + 3.5mm Jack)
-After=sound.target graphical.target systemd-user-sessions.service pipewire.service wireplumber.service
-Wants=sound.target pipewire.service wireplumber.service
+After=sound.target graphical.target user@1000.service
+Wants=sound.target user@1000.service
+Requires=user@1000.service
 StartLimitIntervalSec=300
 StartLimitBurst=5
 
@@ -9,11 +10,15 @@ StartLimitBurst=5
 Type=simple
 User=pi
 Group=audio
+# Ensure XDG_RUNTIME_DIR exists
+RuntimeDirectory=user/1000
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 # Run comprehensive audio test and setup
 ExecStartPre=/opt/hdmi-tester/audio-test-comprehensive.sh
-# Wait for PipeWire to be ready
-ExecStartPre=/bin/sleep 5
+# Wait for PipeWire socket to be available (max 30 seconds)
+ExecStartPre=/bin/bash -c 'for i in {1..60}; do [ -S /run/user/1000/pipewire-0 ] && exit 0; sleep 0.5; done; exit 1'
+# Additional delay to ensure PipeWire is ready
+ExecStartPre=/bin/sleep 2
 # Use PipeWire for audio output (automatic device selection)
 ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=pipewire --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always

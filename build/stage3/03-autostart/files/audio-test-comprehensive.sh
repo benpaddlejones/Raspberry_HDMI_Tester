@@ -47,12 +47,24 @@ test_alsa_devices() {
 test_hdmi_audio() {
     log_msg "🔊 Testing HDMI audio (Card 0, Device 1)..."
 
+    # Create error log for debugging
+    local error_log="/tmp/hdmi-audio-test.log"
+    
     # Try to play a short test tone to HDMI
-    if timeout 5 aplay -D plughw:0,1 /dev/zero 2>/dev/null; then
+    if timeout 5 aplay -D plughw:0,1 /dev/zero 2>"$error_log"; then
         log_msg "✅ HDMI audio device responsive"
+        rm -f "$error_log"
         return 0
     else
-        log_msg "❌ HDMI audio device not responsive"
+        local exit_code=$?
+        log_msg "❌ HDMI audio device not responsive (exit code: $exit_code)"
+        if [ -s "$error_log" ]; then
+            log_msg "   Error details:"
+            while IFS= read -r line; do
+                log_msg "   $line"
+            done < "$error_log"
+        fi
+        rm -f "$error_log"
         return 1
     fi
 }
@@ -61,12 +73,24 @@ test_hdmi_audio() {
 test_analog_audio() {
     log_msg "🔊 Testing 3.5mm audio (Card 0, Device 0)..."
 
+    # Create error log for debugging
+    local error_log="/tmp/analog-audio-test.log"
+    
     # Try to play a short test tone to 3.5mm
-    if timeout 5 aplay -D plughw:0,0 /dev/zero 2>/dev/null; then
+    if timeout 5 aplay -D plughw:0,0 /dev/zero 2>"$error_log"; then
         log_msg "✅ 3.5mm audio device responsive"
+        rm -f "$error_log"
         return 0
     else
-        log_msg "❌ 3.5mm audio device not responsive"
+        local exit_code=$?
+        log_msg "❌ 3.5mm audio device not responsive (exit code: $exit_code)"
+        if [ -s "$error_log" ]; then
+            log_msg "   Error details:"
+            while IFS= read -r line; do
+                log_msg "   $line"
+            done < "$error_log"
+        fi
+        rm -f "$error_log"
         return 1
     fi
 }

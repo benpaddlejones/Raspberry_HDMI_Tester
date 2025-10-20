@@ -1,8 +1,13 @@
-# Wayland compositor and display packages
-sway
-wayfire
-wlroots
+# Wayland compositor and dependencies
 labwc
+wlroots
+libwlroots11
+
+# Mesa drivers for vc4-kms-v3d (GPU acceleration)
+mesa-utils
+mesa-utils-bin
+libgl1-mesa-dri
+libgles2-mesa
 
 # Wayland utilities
 wl-clipboard
@@ -19,7 +24,6 @@ mpv
 alsa-utils
 pipewire
 pipewire-alsa
-pipewire-audio
 wireplumber
 
 # Session management

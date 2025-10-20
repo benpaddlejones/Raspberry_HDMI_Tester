@@ -1,7 +1,7 @@
 # Wayland Migration Summary
 
-**Branch**: `wayland`  
-**Date**: October 20, 2025  
+**Branch**: `wayland`
+**Date**: October 20, 2025
 **Status**: Complete
 
 ## Overview
@@ -197,8 +197,8 @@ The main branch still contains the X11-based implementation.
 
 ## Migration Author
 
-**Ben Jones**  
-**Date**: October 20, 2025  
+**Ben Jones**
+**Date**: October 20, 2025
 **Contact**: See GitHub profile
 
 ---

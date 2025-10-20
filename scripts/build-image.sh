@@ -220,11 +220,27 @@ log_info "✓ Asset directories created"
 log_subsection "Copying Test Pattern Image"
 cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/image.png"
 log_checksum "${WORK_DIR}/stage3/01-test-image/files/image.png" "Test Pattern Image (Deployed)"
+
+# Verify copy succeeded
+if [ ! -f "${WORK_DIR}/stage3/01-test-image/files/image.png" ]; then
+    log_event "❌" "Failed to copy test pattern image"
+    end_stage_timer "Asset Deployment" 1
+    finalize_log "failure" "Failed to copy test pattern image"
+    exit 1
+fi
 log_info "✓ Test pattern copied"
 
 log_subsection "Copying Test Audio"
 cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3"
 log_checksum "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" "Test Audio File (Deployed)"
+
+# Verify copy succeeded
+if [ ! -f "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" ]; then
+    log_event "❌" "Failed to copy test audio file"
+    end_stage_timer "Asset Deployment" 1
+    finalize_log "failure" "Failed to copy test audio file"
+    exit 1
+fi
 log_info "✓ Test audio copied"
 
 end_stage_timer "Asset Deployment" 0
