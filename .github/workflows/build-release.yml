@@ -1107,6 +1107,7 @@ jobs:
           tag_name: ${{ steps.config.outputs.tag }}
           name: "v${{ steps.config.outputs.version }} - ${{ steps.config.outputs.name }}"
           body_path: release_notes.md
+          target_commitish: ${{ github.ref_name }}
           files: |
             ${{ steps.assets.outputs.zip_path }}
             ${{ steps.assets.outputs.checksum_path }}
