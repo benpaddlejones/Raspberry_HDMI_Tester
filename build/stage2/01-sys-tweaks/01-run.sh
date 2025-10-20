@@ -49,7 +49,15 @@ on_chroot << EOF
 usermod --pass='*' root
 EOF
 
+# Remove SSH host keys for security (will be regenerated on first boot)
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
+
+# Install and enable SSH key regeneration service for first boot
+install -m 644 files/regenerate-ssh-keys.service "${ROOTFS_DIR}/etc/systemd/system/regenerate-ssh-keys.service"
+on_chroot << EOF
+systemctl enable regenerate-ssh-keys.service
+EOF
+
 sed -i 's/^FONTFACE=.*/FONTFACE=""/;s/^FONTSIZE=.*/FONTSIZE=""/' "${ROOTFS_DIR}/etc/default/console-setup"
 sed -i "s/PLACEHOLDER//" "${ROOTFS_DIR}/etc/default/keyboard"
 on_chroot << EOF
