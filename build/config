@@ -21,6 +21,10 @@ TIMEZONE_DEFAULT="UTC"
 FIRST_USER_NAME="pi"
 FIRST_USER_PASS="raspberry"
 
+# Disable first boot user rename - keep default "pi" user
+# This prevents the setup wizard from running on first boot
+DISABLE_FIRST_BOOT_USER_RENAME=1
+
 # Enable SSH for debugging
 ENABLE_SSH=1
 

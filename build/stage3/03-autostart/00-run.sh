@@ -16,6 +16,9 @@ fi
 install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
 install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"
 
+# Install troubleshooting script
+install -m 755 files/troubleshoot-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
+
 # Enable services
 on_chroot << EOF
 systemctl enable hdmi-display.service

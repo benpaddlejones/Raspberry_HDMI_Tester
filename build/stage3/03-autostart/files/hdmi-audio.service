@@ -1,17 +1,19 @@
 [Unit]
 Description=HDMI Audio Test Playback
-After=sound.target
+After=sound.target graphical.target
 Wants=sound.target
 
 [Service]
 Type=simple
 User=pi
-ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa --msg-level=all=info /opt/hdmi-tester/audio.mp3
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStartPre=/bin/sleep 15
+# Use default ALSA device (configured in /etc/asound.conf)
+ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target

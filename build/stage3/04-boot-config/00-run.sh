@@ -59,6 +59,9 @@ disable_splash=1
 
 # Reduce boot delay
 boot_delay=0
+
+# Enable HDMI audio
+dtparam=audio=on
 EOF
 done
 
