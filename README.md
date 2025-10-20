@@ -270,7 +270,7 @@ See the [LICENSE](LICENSE) file for full details.
 
 ### MIT License Summary
 ```
-Copyright (c) 2025 Ben Paddle Jones
+Copyright (c) 2025 Ben Jones
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software to use, copy, modify, merge, publish, distribute, sublicense,

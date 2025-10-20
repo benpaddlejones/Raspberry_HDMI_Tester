@@ -1,6 +1,39 @@
 # Troubleshooting Guide
 
-This guide helps you diagnose and fix common issues with the Raspberry Pi HDMI Tester in GitHub Codespaces and Windows 11.
+**This guide has been split into two focused documents:**
+
+## For End Users
+
+**Having problems using the HDMI Tester on your Raspberry Pi?**
+
+See: **[User Troubleshooting Guide](TROUBLESHOOTING-USER.md)**
+
+This guide covers:
+- ✅ Raspberry Pi won't boot
+- ✅ No display output
+- ✅ No audio
+- ✅ Flashing SD card issues
+- ✅ How to get logs and report issues
+
+## For Developers
+
+**Having problems building or customizing the image?**
+
+See: **[Build Troubleshooting Guide](TROUBLESHOOTING-BUILD.md)**
+
+This guide covers:
+- ✅ GitHub Codespaces build failures
+- ✅ GitHub Actions build failures
+- ✅ pi-gen errors
+- ✅ Custom stage issues
+- ✅ Build log analysis
+- ✅ QEMU testing problems
+
+---
+
+## Legacy Content Below
+
+The sections below are kept for reference but are now better organized in the specialized guides above.
 
 ## Table of Contents
 - [Using Build Logs for Debugging](#using-build-logs-for-debugging)
