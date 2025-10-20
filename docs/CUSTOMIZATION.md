@@ -401,4 +401,4 @@ sudo rm -rf build/pi-gen-work
 - **Raspberry Pi Config**: https://www.raspberrypi.com/documentation/computers/config_txt.html
 - **systemd Services**: `man systemd.service`
 - **GitHub Issues**: https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues
-- **Troubleshooting**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- **Troubleshooting**: See [TROUBLESHOOTING-BUILD.md](TROUBLESHOOTING-BUILD.md)

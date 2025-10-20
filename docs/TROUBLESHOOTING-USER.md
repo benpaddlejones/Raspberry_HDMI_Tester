@@ -548,7 +548,7 @@ SSH is enabled by default for troubleshooting.
 3. **Fill in**:
    - **Title**: Short description (e.g., "No HDMI audio on Samsung TV")
    - **Description**: Your hardware, problem details, what you tested
-   
+
 4. **Attach logs**: Drag and drop `debug.log` file onto the issue text box
 
 5. **Click "Submit new issue"**

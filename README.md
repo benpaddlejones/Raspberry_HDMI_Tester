@@ -126,7 +126,7 @@ Want to use your own test pattern or audio? See the [Customization Guide](docs/C
 
 ### Other Issues?
 
-See the complete [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for:
+See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 - Platform-specific flashing issues
 - Boot problems
 - Display configuration
@@ -194,7 +194,7 @@ Follow this order for the best experience:
 
 1. **Start Here**: [README.md](README.md) *(you are here)* - Overview and quick start
 2. **Flash the Image**: [FLASHING.md](docs/FLASHING.md) - Choose your operating system
-3. **Having Issues?** [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Fix common problems
+3. **Having Issues?** [TROUBLESHOOTING-USER.md](docs/TROUBLESHOOTING-USER.md) - Fix common problems
 4. **Want to Customize?** [CUSTOMIZATION.md](docs/CUSTOMIZATION.md) - Change test pattern or audio
 
 ### 🔧 Developers (Building from Source)
@@ -203,7 +203,7 @@ Follow this order to build and contribute:
 1. **Start Here**: [DEVELOPMENT.md](docs/DEVELOPMENT.md) - Development environment setup
 2. **Build Process**: [BUILDING.md](docs/BUILDING.md) - Step-by-step build instructions
 3. **Customize**: [CUSTOMIZATION.md](docs/CUSTOMIZATION.md) - Modify the build
-4. **Debug**: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Fix build issues
+4. **Debug**: [TROUBLESHOOTING-BUILD.md](docs/TROUBLESHOOTING-BUILD.md) - Fix build issues
 
 ### 📄 Complete Documentation List
 

@@ -1,14 +1,18 @@
 [Unit]
-Description=HDMI Audio Test Playback
-After=sound.target graphical.target
+Description=Audio Test Playback (HDMI + 3.5mm Jack)
+After=sound.target graphical.target systemd-user-sessions.service
 Wants=sound.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
 User=pi
+Group=audio
 Environment=XDG_RUNTIME_DIR=/run/user/1000
-ExecStartPre=/bin/sleep 15
-# Use default ALSA device (configured in /etc/asound.conf)
+# Wait for audio subsystem to be fully ready
+ExecStartPre=/bin/sleep 20
+# Use ALSA with default device (configured to play through both HDMI and 3.5mm)
 ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=10

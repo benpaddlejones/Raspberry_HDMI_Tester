@@ -291,5 +291,5 @@ After building:
 
 - **Build logs**: Check `build/pi-gen-work/work.log`
 - **Pi-gen documentation**: https://github.com/RPi-Distro/pi-gen
-- **Troubleshooting**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- **Troubleshooting**: See [TROUBLESHOOTING-BUILD.md](TROUBLESHOOTING-BUILD.md)
 - **GitHub Issues**: https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues

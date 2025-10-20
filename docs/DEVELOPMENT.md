@@ -166,7 +166,8 @@ Raspberry_HDMI_Tester/
 │   ├── FLASHING-macOS.md       # macOS flashing guide
 │   ├── FLASHING-Linux.md       # Linux flashing guide
 │   ├── CUSTOMIZATION.md        # Customization options
-│   ├── TROUBLESHOOTING.md      # Troubleshooting guide
+│   ├── TROUBLESHOOTING-BUILD.md  # Build troubleshooting guide
+│   ├── TROUBLESHOOTING-USER.md   # User troubleshooting guide
 │   └── DEVELOPMENT.md          # This file
 │
 ├── README.md                   # User-facing documentation
@@ -487,7 +488,7 @@ grep -i "failed" build/pi-gen-work/build-detailed.log
 
 ### Common Build Issues
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive troubleshooting.
+See [TROUBLESHOOTING-BUILD.md](TROUBLESHOOTING-BUILD.md) for comprehensive troubleshooting.
 
 ## Customization
 
