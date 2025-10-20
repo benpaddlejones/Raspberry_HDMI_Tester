@@ -5,7 +5,7 @@ labwc
 mesa-utils
 mesa-utils-bin
 libgl1-mesa-dri
-libgles2-mesa
+libgles2
 
 # Wayland utilities
 wl-clipboard
