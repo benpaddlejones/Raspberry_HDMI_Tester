@@ -39,8 +39,9 @@ sleep 2
 # Disable screen blanking
 wlr-randr --output HDMI-A-1 --on 2>/dev/null || true
 
-# Start image display in background
-imv -f -n /opt/hdmi-tester/image.png &
+# Start image display using fbi (framebuffer image viewer)
+# -T 1 outputs to HDMI, -a auto-zooms to fit screen
+fbi -T 1 -a --noverbose /opt/hdmi-tester/image.png &
 
 # Wait a moment for display to start
 sleep 1

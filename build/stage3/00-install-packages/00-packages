@@ -12,10 +12,10 @@ wl-clipboard
 wlr-randr
 wayland-protocols
 
-# Image viewer for Wayland
-imv
+# Framebuffer image viewer (works without X11/Wayland)
+fbi
 
-# Audio/Video playback (Wayland-compatible)
+# Audio/Video playback
 mpv
 
 # Audio system (ALSA + PipeWire for Wayland)

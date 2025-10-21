@@ -2,11 +2,11 @@
 # Configure HDMI testing audio settings for Wayland
 # Note: Packages are installed via 00-packages file by pi-gen
 
-# Verify Wayland packages were installed
+# Verify required packages were installed
 echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
-for pkg in labwc imv mpv pipewire wireplumber; do
+for pkg in labwc fbi mpv pipewire wireplumber; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
         echo "  ✅ $pkg: Installed"
     else
@@ -21,7 +21,7 @@ if [ "$PACKAGES_OK" = false ]; then
     exit 1
 fi
 
-echo "✅ All required Wayland packages verified"
+echo "✅ All required packages verified"
 echo ""
 
 # Clean up apt cache to reduce image size
