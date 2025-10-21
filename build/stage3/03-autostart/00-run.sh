@@ -12,7 +12,7 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     exit 1
 fi
 
-# Install services
+# Install services (keep for manual troubleshooting, but don't enable)
 install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
 install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"
 
@@ -25,11 +25,8 @@ install -m 755 files/audio-test-comprehensive.sh "${ROOTFS_DIR}/opt/hdmi-tester/
 # Install audio verification script
 install -m 755 files/verify-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
 
-# Enable services
-on_chroot << EOF
-systemctl enable hdmi-display.service
-systemctl enable hdmi-audio.service
-EOF
+# NOTE: Services are NOT enabled - apps launch from labwc autostart instead
+# This ensures they run within the correct Wayland session context
 
 # Configure auto-login for user pi
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d"
@@ -111,11 +108,23 @@ fi
 # Create autostart for labwc
 cat > "${ROOTFS_DIR}/home/pi/.config/labwc/autostart" << 'EOF'
 #!/bin/sh
+# Wait for compositor to be fully ready
+sleep 2
+
 # Disable screen blanking
-wlr-randr --output HDMI-A-1 --on
+wlr-randr --output HDMI-A-1 --on 2>/dev/null || true
+
+# Start image display in background
+imv -f -n /opt/hdmi-tester/image.png &
+
+# Wait a moment for display to start
+sleep 1
+
+# Start audio playback in background
+mpv --loop=inf --no-video --ao=pipewire --volume=100 /opt/hdmi-tester/audio.mp3 &
 
 # Keep compositor running
-sleep infinity &
+wait
 EOF
 
 # Validate autostart was created
