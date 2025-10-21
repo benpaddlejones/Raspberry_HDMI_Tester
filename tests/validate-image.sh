@@ -159,7 +159,7 @@ AUTOLOGIN_FOUND=false
 
 if [ -f "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]; then
     echo "  ✅ Auto-login config: /etc/systemd/system/getty@tty1.service.d/autologin.conf found"
-    
+
     # Validate it contains autologin for pi user
     if grep -q "autologin pi" "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null; then
         echo "      ✅ Auto-login configured for user 'pi'"
