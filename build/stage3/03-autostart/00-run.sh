@@ -60,16 +60,34 @@ systemctl enable hdmi-display.service
 systemctl enable hdmi-audio.service
 EOF
 
-# Verify services were enabled successfully
-if ! on_chroot systemctl is-enabled hdmi-display.service >/dev/null 2>&1; then
-    echo "❌ Error: Failed to enable hdmi-display.service"
+# Verify services were enabled successfully by checking for symlinks
+# NOTE: We check for symlink existence instead of using `systemctl is-enabled`
+# because systemd/D-Bus are not running in the chroot environment during build.
+# The symlinks are what actually enable the services; if systemctl enable succeeded
+# and the symlinks exist, the services are properly enabled.
+if [ ! -L "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants/hdmi-display.service" ]; then
+    echo "❌ Error: Failed to enable hdmi-display.service (symlink not created)"
     exit 1
 fi
 
-if ! on_chroot systemctl is-enabled hdmi-audio.service >/dev/null 2>&1; then
-    echo "❌ Error: Failed to enable hdmi-audio.service"
+if [ ! -L "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants/hdmi-audio.service" ]; then
+    echo "❌ Error: Failed to enable hdmi-audio.service (symlink not created)"
     exit 1
 fi
+
+echo "✅ Services enabled successfully (verified symlinks)"
+
+# NOTE: Alternative verification using systemctl is-enabled (disabled for chroot):
+# The following check would work on a running system but fails in chroot because
+# systemd is not running and D-Bus socket is not available:
+#
+# if ! on_chroot systemctl is-enabled hdmi-display.service >/dev/null 2>&1; then
+#     echo "❌ Error: Failed to enable hdmi-display.service"
+#     exit 1
+# fi
+#
+# This is a known limitation of systemd in chroot environments. Checking for
+# symlink existence is the robust approach for build-time verification.
 
 # Configure auto-login for user pi on tty1
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d"
