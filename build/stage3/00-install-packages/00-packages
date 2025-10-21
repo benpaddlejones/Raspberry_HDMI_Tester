@@ -1,29 +1,8 @@
-# Wayland compositor and dependencies
-labwc
-
-# Mesa drivers for vc4-kms-v3d (GPU acceleration)
-mesa-utils
-mesa-utils-bin
-libgl1-mesa-dri
-libgles2
-
-# Wayland utilities
-wl-clipboard
-wlr-randr
-wayland-protocols
-
-# Framebuffer image viewer (works without X11/Wayland)
+# Framebuffer image viewer (no X11/Wayland needed)
 fbi
 
-# Audio/Video playback
+# Audio/Video playback (console mode)
 mpv
 
-# Audio system (ALSA + PipeWire for Wayland)
+# Audio system (ALSA for direct hardware access)
 alsa-utils
-pipewire
-pipewire-alsa
-wireplumber
-
-# Session management
-dbus-user-session
-systemd

@@ -1,25 +1,10 @@
 [Unit]
-Description=HDMI Test Pattern Display (Wayland)
-After=graphical.target user@1000.service
-Wants=graphical.target user@1000.service
-# Wait for Wayland compositor to be ready
-Requires=user@1000.service
+Description=HDMI Test Pattern Display (Framebuffer)
+After=local-fs.target
 
 [Service]
 Type=simple
-User=pi
-Group=video
-# Ensure XDG_RUNTIME_DIR exists and is correct
-RuntimeDirectory=user/1000
-Environment=XDG_RUNTIME_DIR=/run/user/1000
-Environment=WAYLAND_DISPLAY=wayland-0
-Environment=WLR_BACKENDS=drm
-Environment=WLR_RENDERER=gles2
-Environment=WLR_DRM_NO_MODIFIERS=1
-# Wait for Wayland socket to be available (max 30 seconds)
-ExecStartPre=/bin/bash -c 'for i in {1..60}; do [ -S /run/user/1000/wayland-0 ] && exit 0; sleep 0.5; done; exit 1'
-# Additional delay to ensure compositor is fully initialized
-ExecStartPre=/bin/sleep 2
+User=root
 # Use fbi with -T 1 for HDMI output, -a for auto-zoom, --noverbose to suppress output
 ExecStart=/usr/bin/fbi -T 1 -a --noverbose /opt/hdmi-tester/image.png
 Restart=always
@@ -28,4 +13,4 @@ StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target

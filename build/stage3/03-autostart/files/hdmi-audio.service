@@ -1,26 +1,13 @@
 [Unit]
-Description=HDMI Audio Test - PipeWire Output (HDMI + 3.5mm Jack)
-After=sound.target graphical.target user@1000.service
-Wants=sound.target user@1000.service
-Requires=user@1000.service
-StartLimitIntervalSec=300
-StartLimitBurst=5
+Description=HDMI Audio Test - ALSA Output
+After=sound.target
 
 [Service]
 Type=simple
 User=pi
 Group=audio
-# Ensure XDG_RUNTIME_DIR exists
-RuntimeDirectory=user/1000
-Environment=XDG_RUNTIME_DIR=/run/user/1000
-# Run comprehensive audio test and setup
-ExecStartPre=/opt/hdmi-tester/audio-test-comprehensive.sh
-# Wait for PipeWire socket to be available (max 30 seconds)
-ExecStartPre=/bin/bash -c 'for i in {1..60}; do [ -S /run/user/1000/pipewire-0 ] && exit 0; sleep 0.5; done; exit 1'
-# Additional delay to ensure PipeWire is ready
-ExecStartPre=/bin/sleep 2
-# Use PipeWire for audio output (automatic device selection)
-ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=pipewire --volume=100 /opt/hdmi-tester/audio.mp3
+# Use ALSA for direct audio output to HDMI
+ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0 --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=15
 StandardOutput=journal
@@ -29,4 +16,4 @@ KillMode=mixed
 TimeoutStopSec=10
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target

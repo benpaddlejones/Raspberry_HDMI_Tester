@@ -1,6 +1,6 @@
 #!/bin/bash
-# Quick fix to apply to a running Raspberry Pi
-# This updates the labwc autostart to launch the display and audio apps
+# Quick fix to patch a running Raspberry Pi to use console mode (no Wayland)
+# This removes Wayland/labwc and uses systemd services directly
 #
 # Usage on Pi:
 #   ssh pi@<IP_ADDRESS> 'bash -s' < quick-fix-for-running-pi.sh
@@ -9,75 +9,93 @@
 #   scp quick-fix-for-running-pi.sh pi@<IP_ADDRESS>:~/
 #   ssh pi@<IP_ADDRESS>
 #   chmod +x quick-fix-for-running-pi.sh
-#   ./quick-fix-for-running-pi.sh
+#   sudo ./quick-fix-for-running-pi.sh
 #   sudo reboot
 
 set -e
 
-echo "=== Applying Quick Fix to Raspberry Pi HDMI Tester ==="
+echo "=== Applying Console Mode Fix to Raspberry Pi HDMI Tester ==="
 echo ""
 
-# Check we're running on the Pi
-if [ ! -d /opt/hdmi-tester ]; then
-    echo "❌ Error: /opt/hdmi-tester not found. Are you on the Pi?"
+# Check we're running as root
+if [ "$EUID" -ne 0 ]; then
+    echo "❌ Error: This script must be run as root (use sudo)"
     exit 1
 fi
 
-# Backup existing autostart
-if [ -f ~/.config/labwc/autostart ]; then
-    echo "📦 Backing up existing autostart..."
-    cp ~/.config/labwc/autostart ~/.config/labwc/autostart.backup.$(date +%Y%m%d_%H%M%S)
+# Check required files exist
+if [ ! -f /opt/hdmi-tester/image.png ] || [ ! -f /opt/hdmi-tester/audio.mp3 ]; then
+    echo "❌ Error: HDMI tester files not found. Are you on the Pi?"
+    exit 1
 fi
 
-# Create updated autostart
-echo "✏️  Creating new autostart script..."
-cat > ~/.config/labwc/autostart << 'EOF'
-#!/bin/sh
-# Wait for compositor to be fully ready
-sleep 2
+echo "📦 Installing required packages (fbi and mpv)..."
+apt-get update
+apt-get install -y fbi mpv alsa-utils
 
-# Disable screen blanking
-wlr-randr --output HDMI-A-1 --on 2>/dev/null || true
+echo "🔧 Stopping Wayland services..."
+systemctl stop labwc 2>/dev/null || true
+killall labwc 2>/dev/null || true
 
-# Start image display using fbi (framebuffer image viewer)
-# -T 1 outputs to HDMI, -a auto-zooms to fit screen
-fbi -T 1 -a --noverbose /opt/hdmi-tester/image.png &
+echo "🗑️  Removing Wayland packages..."
+apt-get remove -y labwc pipewire wireplumber 2>/dev/null || true
 
-# Wait a moment for display to start
-sleep 1
+echo "✅ Creating systemd services..."
 
-# Start audio playback in background
-mpv --loop=inf --no-video --ao=pipewire --volume=100 /opt/hdmi-tester/audio.mp3 &
+# Create display service
+cat > /etc/systemd/system/hdmi-display.service << 'EOF'
+[Unit]
+Description=HDMI Test Pattern Display (Framebuffer)
+After=local-fs.target
 
-# Keep compositor running
-wait
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/fbi -T 1 -a --noverbose /opt/hdmi-tester/image.png
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-chmod +x ~/.config/labwc/autostart
+# Create audio service
+cat > /etc/systemd/system/hdmi-audio.service << 'EOF'
+[Unit]
+Description=HDMI Audio Test - ALSA Output
+After=sound.target
 
-echo "✅ Autostart updated successfully"
-echo ""
+[Service]
+Type=simple
+User=pi
+Group=audio
+ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0 --volume=100 /opt/hdmi-tester/audio.mp3
+Restart=always
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+TimeoutStopSec=10
 
-# Disable the systemd services if they're enabled
-echo "🔧 Disabling systemd services (apps launch from autostart instead)..."
-if systemctl is-enabled hdmi-display.service 2>/dev/null; then
-    sudo systemctl disable hdmi-display.service
-    echo "   Disabled hdmi-display.service"
-fi
-if systemctl is-enabled hdmi-audio.service 2>/dev/null; then
-    sudo systemctl disable hdmi-audio.service
-    echo "   Disabled hdmi-audio.service"
-fi
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🔄 Enabling and starting services..."
+systemctl daemon-reload
+systemctl enable hdmi-display.service
+systemctl enable hdmi-audio.service
 
 echo ""
-echo "=== Fix Applied Successfully ==="
+echo "✅ Fix applied successfully!"
 echo ""
-echo "Next steps:"
-echo "  1. Reboot the Pi: sudo reboot"
-echo "  2. After reboot, you should see:"
-echo "     - Test pattern image displayed fullscreen"
-echo "     - Audio playing through HDMI"
+echo "📝 Next steps:"
+echo "   1. Reboot the Pi: sudo reboot"
+echo "   2. After reboot, image and audio should start automatically"
 echo ""
-echo "To verify without rebooting, you can manually run:"
-echo "  pkill labwc"
-echo "  (it will restart automatically via systemd)"
+echo "🔍 Troubleshooting:"
+echo "   - Check display: sudo systemctl status hdmi-display.service"
+echo "   - Check audio: sudo systemctl status hdmi-audio.service"
+echo "   - View logs: sudo journalctl -u hdmi-display -u hdmi-audio"

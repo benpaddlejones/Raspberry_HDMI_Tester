@@ -1,12 +1,12 @@
 #!/bin/bash -e
-# Configure HDMI testing audio settings for Wayland
+# Configure HDMI testing - console mode (no X11/Wayland)
 # Note: Packages are installed via 00-packages file by pi-gen
 
 # Verify required packages were installed
 echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
-for pkg in labwc fbi mpv pipewire wireplumber; do
+for pkg in fbi mpv alsa-utils; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
         echo "  ✅ $pkg: Installed"
     else
@@ -27,11 +27,8 @@ echo ""
 # Clean up apt cache to reduce image size
 apt-get clean
 
-# PipeWire will handle audio routing automatically for Wayland
-# No need for manual ALSA configuration like in X11
-
-# Ensure pi user is in necessary groups for Wayland/audio
+# Ensure pi user is in necessary groups for audio/video/framebuffer access
 usermod -a -G audio pi || true
 usermod -a -G video pi || true
 
-echo "✅ Wayland packages installed and user groups configured"
+echo "✅ Console-mode packages installed and user groups configured"
