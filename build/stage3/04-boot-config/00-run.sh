@@ -46,7 +46,7 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     # Append configuration
     cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Force 1920x1080 @ 60Hz with Wayland
+# HDMI Tester Configuration - Force 1920x1080 @ 60Hz (Console Mode)
 # Force HDMI output even if no display detected
 hdmi_force_hotplug=1
 
@@ -59,8 +59,8 @@ hdmi_group=1
 # 1920x1080 @ 60Hz (CEA mode 16)
 hdmi_mode=16
 
-# GPU memory allocation (increased for Wayland compositing)
-gpu_mem=256
+# Minimal GPU memory for framebuffer (console mode doesn't need GPU acceleration)
+gpu_mem=64
 
 # Disable rainbow splash screen
 disable_splash=1
@@ -70,9 +70,6 @@ boot_delay=0
 
 # Enable both HDMI and 3.5mm audio
 dtparam=audio=on
-
-# Enable vc4-kms-v3d for Wayland (Mesa GPU driver)
-dtoverlay=vc4-kms-v3d
 
 # Audio configuration for both outputs
 dtparam=audio_pwm_mode=2

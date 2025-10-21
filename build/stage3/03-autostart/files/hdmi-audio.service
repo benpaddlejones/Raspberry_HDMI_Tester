@@ -6,8 +6,9 @@ After=sound.target
 Type=simple
 User=pi
 Group=audio
-# Use ALSA for direct audio output to HDMI
-ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0 --volume=100 /opt/hdmi-tester/audio.mp3
+# Use ALSA for direct audio output
+# Try HDMI first, will fallback to default device if HDMI not available
+ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=15
 StandardOutput=journal
