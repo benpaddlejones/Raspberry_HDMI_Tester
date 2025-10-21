@@ -151,61 +151,28 @@ done
 echo ""
 
 # Check for auto-start configuration
-echo "🔍 Checking auto-start configuration (Wayland)..."
+echo "🔍 Checking auto-start configuration (Console Mode)..."
 echo ""
 
-# Check for labwc config or .bash_profile that starts Wayland
-AUTOSTART_FOUND=false
+# Check for auto-login on tty1
+AUTOLOGIN_FOUND=false
 
-if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" ]; then
-    echo "  ✅ Wayland compositor config: /home/pi/.config/labwc/rc.xml found"
-
-    # Validate XML syntax
-    if command -v xmllint &> /dev/null; then
-        if xmllint --noout "${MOUNT_POINT}/home/pi/.config/labwc/rc.xml" 2>/dev/null; then
-            echo "      ✅ XML syntax valid"
-        else
-            echo "      ⚠️  XML syntax may be invalid"
-            VALIDATION_ERRORS+=("labwc rc.xml may have syntax errors")
-            ALL_OK=false
-        fi
-    fi
-
-    AUTOSTART_FOUND=true
-fi
-
-if [ -f "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
-    echo "  ✅ Wayland autostart: /home/pi/.config/labwc/autostart found"
-
-    # Validate it's executable
-    if [ ! -x "${MOUNT_POINT}/home/pi/.config/labwc/autostart" ]; then
-        echo "      ⚠️  autostart script is not executable"
-        VALIDATION_ERRORS+=("labwc autostart not executable")
-        ALL_OK=false
-    fi
-
-    # Validate shell script syntax (basic check)
-    if bash -n "${MOUNT_POINT}/home/pi/.config/labwc/autostart" 2>/dev/null; then
-        echo "      ✅ Shell syntax valid"
+if [ -f "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]; then
+    echo "  ✅ Auto-login config: /etc/systemd/system/getty@tty1.service.d/autologin.conf found"
+    
+    # Validate it contains autologin for pi user
+    if grep -q "autologin pi" "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null; then
+        echo "      ✅ Auto-login configured for user 'pi'"
+        AUTOLOGIN_FOUND=true
     else
-        echo "      ⚠️  Shell syntax may be invalid"
-        VALIDATION_ERRORS+=("labwc autostart may have syntax errors")
+        echo "      ⚠️  Auto-login config exists but may not be configured correctly"
+        VALIDATION_ERRORS+=("Auto-login not configured for pi user")
         ALL_OK=false
     fi
-
-    AUTOSTART_FOUND=true
-fi
-
-# Check if .bashrc starts labwc
-if [ -f "${MOUNT_POINT}/home/pi/.bashrc" ]; then
-    if grep -q "labwc" "${MOUNT_POINT}/home/pi/.bashrc" 2>/dev/null; then
-        echo "  ✅ Wayland auto-start: labwc in .bashrc"
-        AUTOSTART_FOUND=true
-    fi
-fi
-
-if [ "${AUTOSTART_FOUND}" = false ]; then
-    echo "  ⚠️  Wayland auto-start configuration not found"
+else
+    echo "  ❌ Auto-login configuration not found"
+    VALIDATION_ERRORS+=("Auto-login not configured")
+    ALL_OK=false
 fi
 
 echo ""
@@ -267,7 +234,7 @@ echo "🔍 Checking systemd service enablement..."
 echo ""
 
 SERVICES_TO_CHECK=(
-    "hdmi-display.service|HDMI Display Service|graphical.target"
+    "hdmi-display.service|HDMI Display Service|multi-user.target"
     "hdmi-audio.service|HDMI Audio Service|multi-user.target"
 )
 
@@ -328,11 +295,9 @@ else
 fi
 
 REQUIRED_PACKAGES=(
-    "labwc|Wayland Compositor (labwc)"
-    "imv|Image Viewer (imv)"
+    "fbi|Framebuffer Image Viewer (fbi)"
     "mpv|Media Player (mpv)"
-    "pipewire|PipeWire Audio Server"
-    "wireplumber|WirePlumber Session Manager"
+    "alsa-utils|ALSA Utilities"
 )
 
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
@@ -349,8 +314,8 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     # Fallback: Check for key binaries directly
     if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
-            imv)
-                if [ -f "${MOUNT_POINT}/usr/bin/imv" ] && [ -x "${MOUNT_POINT}/usr/bin/imv" ]; then
+            fbi)
+                if [ -f "${MOUNT_POINT}/usr/bin/fbi" ] && [ -x "${MOUNT_POINT}/usr/bin/fbi" ]; then
                     PKG_INSTALLED=true
                 fi
                 ;;
@@ -359,18 +324,8 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
                     PKG_INSTALLED=true
                 fi
                 ;;
-            labwc)
-                if [ -f "${MOUNT_POINT}/usr/bin/labwc" ] && [ -x "${MOUNT_POINT}/usr/bin/labwc" ]; then
-                    PKG_INSTALLED=true
-                fi
-                ;;
-            pipewire)
-                if [ -f "${MOUNT_POINT}/usr/bin/pipewire" ] && [ -x "${MOUNT_POINT}/usr/bin/pipewire" ]; then
-                    PKG_INSTALLED=true
-                fi
-                ;;
-            wireplumber)
-                if [ -f "${MOUNT_POINT}/usr/bin/wireplumber" ] && [ -x "${MOUNT_POINT}/usr/bin/wireplumber" ]; then
+            alsa-utils)
+                if [ -f "${MOUNT_POINT}/usr/bin/aplay" ] && [ -x "${MOUNT_POINT}/usr/bin/aplay" ]; then
                     PKG_INSTALLED=true
                 fi
                 ;;

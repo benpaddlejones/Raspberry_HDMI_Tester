@@ -355,7 +355,7 @@ validate_file "${ROOT_MOUNT}/opt/hdmi-tester/audio.mp3" "Test audio file"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
-validate_service "hdmi-display.service" "HDMI Display Service" "graphical.target"
+validate_service "hdmi-display.service" "HDMI Display Service" "multi-user.target"
 validate_service "hdmi-audio.service" "HDMI Audio Service" "multi-user.target"
 
 echo ""
@@ -378,11 +378,9 @@ check_package() {
     fi
 }
 
-check_package "labwc" "Wayland Compositor (labwc)"
-check_package "imv" "imv (image viewer)"
-check_package "mpv" "mpv (media player)"
-check_package "pipewire" "PipeWire (audio server)"
-check_package "wireplumber" "WirePlumber (session manager)"
+check_package "fbi" "fbi (framebuffer image viewer)"
+check_package "mpv" "mpv (audio player)"
+check_package "alsa-utils" "ALSA utilities"
 
 echo ""
 echo "👤 User Configuration:" | tee -a "${REPORT_FILE}"
