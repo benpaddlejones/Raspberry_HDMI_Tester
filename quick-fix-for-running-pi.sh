@@ -1,101 +1,92 @@
 #!/bin/bash
-# Quick fix to patch a running Raspberry Pi to use console mode (no Wayland)
-# This removes Wayland/labwc and uses systemd services directly
-#
-# Usage on Pi:
-#   ssh pi@<IP_ADDRESS> 'bash -s' < quick-fix-for-running-pi.sh
-#
-# Or copy and run directly on Pi:
-#   scp quick-fix-for-running-pi.sh pi@<IP_ADDRESS>:~/
-#   ssh pi@<IP_ADDRESS>
-#   chmod +x quick-fix-for-running-pi.sh
-#   sudo ./quick-fix-for-running-pi.sh
-#   sudo reboot
+# Quick fix script to be run on a booted Raspberry Pi
+# This script fixes the HDMI display service and audio without requiring a full rebuild
 
 set -e
 
-echo "=== Applying Console Mode Fix to Raspberry Pi HDMI Tester ==="
-echo ""
+echo "🔧 Applying HDMI Tester fixes on running Raspberry Pi..."
 
-# Check we're running as root
+# Check if running as root
 if [ "$EUID" -ne 0 ]; then
-    echo "❌ Error: This script must be run as root (use sudo)"
+    echo "❌ This script must be run as root (use sudo)"
     exit 1
 fi
 
-# Check required files exist
-if [ ! -f /opt/hdmi-tester/image.png ] || [ ! -f /opt/hdmi-tester/audio.mp3 ]; then
-    echo "❌ Error: HDMI tester files not found. Are you on the Pi?"
-    exit 1
+# Stop services
+echo "⏸️  Stopping services..."
+systemctl stop hdmi-display.service || true
+systemctl stop hdmi-audio.service || true
+
+# Fix cmdline.txt for audio support
+echo "� Fixing audio configuration in cmdline.txt..."
+CMDLINE_FILES=()
+
+if [ -f "/boot/firmware/cmdline.txt" ]; then
+    CMDLINE_FILES+=("/boot/firmware/cmdline.txt")
 fi
 
-echo "📦 Installing required packages (fbi and mpv)..."
-apt-get update
-apt-get install -y fbi mpv alsa-utils
+if [ -f "/boot/cmdline.txt" ]; then
+    CMDLINE_FILES+=("/boot/cmdline.txt")
+fi
 
-echo "🔧 Stopping Wayland services..."
-systemctl stop labwc 2>/dev/null || true
-killall labwc 2>/dev/null || true
+for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
+    echo "  Updating: ${CMDLINE_FILE}"
+    # Remove conflicting audio parameters
+    sed -i 's/snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
+    # Clean up extra spaces
+    sed -i 's/  */ /g' "${CMDLINE_FILE}"
+    # Add correct audio parameters
+    sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1/' "${CMDLINE_FILE}"
+done
 
-echo "🗑️  Removing Wayland packages..."
-apt-get remove -y labwc pipewire wireplumber 2>/dev/null || true
+echo "✅ Audio parameters updated in cmdline.txt"
+echo "⚠️  NOTE: Audio fix requires reboot to take effect!"
 
-echo "✅ Creating systemd services..."
-
-# Create display service
+# Fix the display service to use fbi
+echo "🔧 Updating display service..."
 cat > /etc/systemd/system/hdmi-display.service << 'EOF'
 [Unit]
-Description=HDMI Test Pattern Display (Framebuffer)
-After=local-fs.target
-
-[Service]
-Type=simple
-User=root
-ExecStart=/usr/bin/fbi -T 1 -a --noverbose /opt/hdmi-tester/image.png
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Create audio service
-cat > /etc/systemd/system/hdmi-audio.service << 'EOF'
-[Unit]
-Description=HDMI Audio Test - ALSA Output
-After=sound.target
+Description=HDMI Test Pattern Display
+After=multi-user.target
 
 [Service]
 Type=simple
 User=pi
-Group=audio
-ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0 --volume=100 /opt/hdmi-tester/audio.mp3
+Group=video
+ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
 Restart=always
-RestartSec=15
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
 KillMode=mixed
-TimeoutStopSec=10
+TimeoutStopSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-echo "🔄 Enabling and starting services..."
+# Reload systemd
+echo "🔄 Reloading systemd..."
 systemctl daemon-reload
+
+# Enable services
+echo "✅ Enabling services..."
 systemctl enable hdmi-display.service
 systemctl enable hdmi-audio.service
 
+# Start display service (audio will work after reboot)
+echo "▶️  Starting display service..."
+systemctl start hdmi-display.service
+
+# Check status
 echo ""
-echo "✅ Fix applied successfully!"
+echo "� Service Status:"
+systemctl status hdmi-display.service --no-pager -l || true
 echo ""
-echo "📝 Next steps:"
-echo "   1. Reboot the Pi: sudo reboot"
-echo "   2. After reboot, image and audio should start automatically"
+echo "Audio service status (will work after reboot):"
+systemctl status hdmi-audio.service --no-pager -l || true
+
 echo ""
-echo "🔍 Troubleshooting:"
-echo "   - Check display: sudo systemctl status hdmi-display.service"
-echo "   - Check audio: sudo systemctl status hdmi-audio.service"
-echo "   - View logs: sudo journalctl -u hdmi-display -u hdmi-audio"
+echo "✅ Fix applied! Display should work now."
+echo "⚠️  AUDIO REQUIRES REBOOT - Run: sudo reboot"
