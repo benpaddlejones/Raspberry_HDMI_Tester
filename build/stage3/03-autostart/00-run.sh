@@ -25,34 +25,12 @@ if [ ! -f "files/hdmi-audio.service" ]; then
     exit 1
 fi
 
-if [ ! -f "files/troubleshoot-audio.sh" ]; then
-    echo "❌ Error: troubleshoot-audio.sh not found"
-    exit 1
-fi
-
-if [ ! -f "files/audio-test-comprehensive.sh" ]; then
-    echo "❌ Error: audio-test-comprehensive.sh not found"
-    exit 1
-fi
-
-if [ ! -f "files/verify-audio.sh" ]; then
-    echo "❌ Error: verify-audio.sh not found"
-    exit 1
-fi
-
 # Ensure target directories exist
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
-mkdir -p "${ROOTFS_DIR}/usr/local/bin"
-mkdir -p "${ROOTFS_DIR}/opt/hdmi-tester"
 
 # Install systemd services
 install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
 install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"
-
-# Install troubleshooting scripts (keep for diagnostics)
-install -m 755 files/troubleshoot-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
-install -m 755 files/audio-test-comprehensive.sh "${ROOTFS_DIR}/opt/hdmi-tester/"
-install -m 755 files/verify-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
 
 # Enable services to start on boot
 on_chroot << 'EOF'
