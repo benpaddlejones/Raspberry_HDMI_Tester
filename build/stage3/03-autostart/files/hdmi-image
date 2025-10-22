@@ -68,6 +68,5 @@ echo ""
 # Run fbi with:
 # -T 1 = Use framebuffer device 1 (fb0)
 # -a = Auto-zoom to fit screen
-# -d = Don't wait after displaying
-# --noverbose = Suppress verbose output
-exec fbi -T 1 -a -d --noverbose "${IMAGE_FILE}"
+# Redirect stderr to suppress "no exif" messages
+exec fbi -T 1 -a "${IMAGE_FILE}" 2>/dev/null

@@ -29,9 +29,9 @@ ExecStartPre=/bin/bash -c 'echo "=== HDMI Display Service Starting ===" && \
     fbi --version 2>&1 || echo "fbi version check failed" && \
     echo "All pre-flight checks passed, launching fbi..."'
 
-# Use fbi with -T 1 for HDMI output, -a for auto-zoom, -d to keep displayed
-# Remove --noverbose to see error messages
-ExecStart=/usr/bin/fbi -T 1 -a -d /opt/hdmi-tester/image.png
+# Use fbi with -T 1 for HDMI output, -a for auto-zoom
+# Redirect stderr to suppress "no exif" messages
+ExecStart=/bin/sh -c '/usr/bin/fbi -T 1 -a /opt/hdmi-tester/image.png 2>/dev/null'
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== HDMI Display Service Stopped ===" && \
