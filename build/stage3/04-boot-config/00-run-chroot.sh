@@ -63,8 +63,8 @@ fi
 # Reduce filesystem check frequency
 echo "  📝 Reducing filesystem check frequency..."
 
-# Find root partition device
-ROOT_DEV=$(findmnt -n -o SOURCE /)
+# Find root partition device (allow failure in chroot)
+ROOT_DEV=$(findmnt -n -o SOURCE / 2>/dev/null || true)
 
 if [ -n "${ROOT_DEV}" ]; then
     # Set filesystem check to every 100 mounts (instead of default 20-30)
@@ -75,7 +75,7 @@ if [ -n "${ROOT_DEV}" ]; then
 
     echo "  ✅ Filesystem check frequency reduced"
 else
-    echo "  ⚠️  Could not determine root device"
+    echo "  ℹ️  Could not determine root device (this is normal in chroot - will be configured at first boot)"
 fi
 
 echo "✅ Filesystem optimizations complete"
