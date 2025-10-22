@@ -152,10 +152,12 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 ## Technical Details
 
 - **Base OS**: Raspberry Pi OS Lite (Debian 12 Bookworm)
+- **Display**: Framebuffer mode with fbi (no desktop environment)
 - **Resolution**: 1920x1080 @ 60Hz (configurable)
-- **Audio**: Continuous playback via mpv with infinite loop
+- **Audio**: ALSA direct output via mpv with infinite loop
 - **Boot Time**: ~20-30 seconds
 - **Image Size**: ~1.5-2GB (compressed)
+- **GPU Memory**: 64MB (minimal, console mode)
 - **SSH**: Enabled by default for troubleshooting (default password: `raspberry`)
   - ⚠️ **Change password if exposing to network!**
 - **Network**: WiFi not configured by default (optional)
@@ -264,7 +266,7 @@ This project is licensed under the MIT License with additional GPL components:
 
 - **Project Code**: MIT License - Free to use, modify, and distribute
 - **Pi-gen Components**: GPL (from Raspberry Pi Foundation)
-- **System Packages**: Various open-source licenses (Wayland, Mesa, PipeWire, labwc, imv, mpv, etc.)
+- **System Packages**: Various open-source licenses (fbi, mpv, ALSA, etc.)
 
 See the [LICENSE](LICENSE) file for full details.
 
@@ -281,10 +283,9 @@ and/or sell copies, subject to the conditions in the LICENSE file.
 
 - Built with [pi-gen](https://github.com/RPi-Distro/pi-gen) - Official Raspberry Pi OS image builder
 - Powered by [Raspberry Pi OS](https://www.raspberrypi.com/software/)
-- Uses [labwc](https://labwc.github.io/) Wayland compositor
-- Uses [imv](https://sr.ht/~exec64/imv/) for image display (Wayland-native)
+- Uses [fbi](https://www.kraxel.org/blog/linux/fbida/) for framebuffer image display
 - Uses [mpv](https://mpv.io/) for audio playback
-- Uses [PipeWire](https://pipewire.org/) for modern audio handling
+- Uses [ALSA](https://www.alsa-project.org/) for audio output
 
 ## Resources
 
