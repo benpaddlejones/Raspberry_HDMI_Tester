@@ -68,6 +68,9 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 
+# Conservative overclock for faster boot and better performance
+arm_freq=1000
+
 # Enable both HDMI and 3.5mm audio
 dtparam=audio=on
 
