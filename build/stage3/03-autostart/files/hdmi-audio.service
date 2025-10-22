@@ -15,7 +15,7 @@ Group=audio
 # Output will be logged to journal for debugging
 ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
-RestartSec=15
+RestartSec=8
 StandardOutput=journal
 StandardError=journal
 KillMode=mixed

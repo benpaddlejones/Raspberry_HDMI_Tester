@@ -29,7 +29,7 @@ ExecStopPost=/bin/bash -c 'echo "=== HDMI Display Service Stopped ===" && \
     fi'
 
 Restart=always
-RestartSec=10
+RestartSec=5
 StandardOutput=journal
 StandardError=journal
 
