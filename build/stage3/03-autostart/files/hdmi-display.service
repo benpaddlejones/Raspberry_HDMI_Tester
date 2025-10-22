@@ -5,8 +5,43 @@ After=local-fs.target
 [Service]
 Type=simple
 User=root
-# Use fbi with -T 1 for HDMI output, -a for auto-zoom, --noverbose to suppress output, -d to keep displayed
-ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
+# Pre-flight checks before attempting to display
+ExecStartPre=/bin/bash -c 'echo "=== HDMI Display Service Starting ===" && \
+    echo "Timestamp: $(date)" && \
+    echo "Checking test pattern file..." && \
+    if [ ! -f /opt/hdmi-tester/image.png ]; then \
+        echo "ERROR: Test pattern not found at /opt/hdmi-tester/image.png" && \
+        exit 1; \
+    fi && \
+    echo "✓ Test pattern exists ($(stat -c%%s /opt/hdmi-tester/image.png) bytes)" && \
+    echo "Checking framebuffer device..." && \
+    if [ ! -c /dev/fb0 ]; then \
+        echo "ERROR: Framebuffer device /dev/fb0 not found" && \
+        echo "Available devices in /dev:" && \
+        ls -la /dev/fb* 2>&1 || echo "No fb* devices found" && \
+        exit 1; \
+    fi && \
+    echo "✓ Framebuffer /dev/fb0 exists" && \
+    echo "Framebuffer info:" && \
+    fbset -s 2>&1 || echo "WARNING: fbset command failed" && \
+    echo "Checking fbi binary..." && \
+    which fbi && \
+    fbi --version 2>&1 || echo "fbi version check failed" && \
+    echo "All pre-flight checks passed, launching fbi..."'
+
+# Use fbi with -T 1 for HDMI output, -a for auto-zoom, -d to keep displayed
+# Remove --noverbose to see error messages
+ExecStart=/usr/bin/fbi -T 1 -a -d /opt/hdmi-tester/image.png
+
+# Log exit status
+ExecStopPost=/bin/bash -c 'echo "=== HDMI Display Service Stopped ===" && \
+    echo "Exit code: $EXIT_CODE" && \
+    echo "Exit status: $EXIT_STATUS" && \
+    echo "Service result: $SERVICE_RESULT" && \
+    if [ "$SERVICE_RESULT" != "success" ]; then \
+        echo "ERROR: Service failed - see logs above for details"; \
+    fi'
+
 Restart=always
 RestartSec=10
 StandardOutput=journal

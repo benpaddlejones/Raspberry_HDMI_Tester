@@ -80,7 +80,7 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 # - RestartSec=10 (can be reduced)
 # - After=local-fs.target (minimal dependency)
 
-# hdmi-audio.service  
+# hdmi-audio.service
 # - Runs as user pi with audio group
 # - RestartSec=15 (can be reduced)
 # - After=sound.target, multi-user.target
