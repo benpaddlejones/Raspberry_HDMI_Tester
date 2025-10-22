@@ -8,7 +8,8 @@ disable_service() {
     local service="$1"
     local description="$2"
 
-    if systemctl list-unit-files | grep -q "^${service}"; then
+    # Check if systemctl is available and service exists (allow list-unit-files to fail)
+    if systemctl list-unit-files 2>/dev/null | grep -q "^${service}"; then
         systemctl disable "${service}" 2>/dev/null || true
         systemctl mask "${service}" 2>/dev/null || true
         echo "  ✅ Disabled: ${description}"
@@ -50,10 +51,11 @@ if [ -f /etc/fstab ]; then
     # Backup original fstab
     cp /etc/fstab /etc/fstab.backup
 
-    # Add noatime to root filesystem (/) and boot partition (/boot)
+    # Add noatime to root filesystem (/) and boot partitions (/boot, /boot/firmware)
     # This sed command adds noatime to the options column if not already present
     sed -i 's/\(.*\s\+\/\s\+\w\+\s\+\)\(defaults\)\(\s\+.*\)/\1defaults,noatime\3/' /etc/fstab
     sed -i 's/\(.*\s\+\/boot\s\+\w\+\s\+\)\(defaults\)\(\s\+.*\)/\1defaults,noatime\3/' /etc/fstab
+    sed -i 's/\(.*\s\+\/boot\/firmware\s\+\w\+\s\+\)\(defaults\)\(\s\+.*\)/\1defaults,noatime\3/' /etc/fstab
 
     echo "  ✅ noatime mount option added"
 else
