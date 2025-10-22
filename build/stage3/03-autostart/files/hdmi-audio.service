@@ -12,8 +12,8 @@ User=pi
 Group=audio
 # Use ALSA for direct audio output with fallback options
 # --audio-device=auto will try multiple devices
-# --really-quiet reduces error spam
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 --really-quiet /opt/hdmi-tester/audio.mp3
+# Output will be logged to journal for debugging
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=15
 StandardOutput=journal
