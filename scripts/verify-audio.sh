@@ -78,11 +78,9 @@ if [ "$MPV_PROCESSES" -gt 0 ]; then
     echo "   1. Check HDMI cable connection"
     echo "   2. Verify display supports audio"
     echo "   3. Check 3.5mm output with headphones"
-    echo "   4. Try running: troubleshoot-audio.sh"
+    echo "   4. Check service logs: journalctl -u hdmi-audio.service"
 else
     echo "🔇 Audio is not currently playing"
     echo "   Try restarting the service: sudo systemctl restart hdmi-audio.service"
+    echo "   Check logs: journalctl -u hdmi-audio.service"
 fi
-
-echo ""
-echo "For detailed troubleshooting, run: troubleshoot-audio.sh"

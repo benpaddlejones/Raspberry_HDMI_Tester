@@ -54,7 +54,7 @@ show_usage() {
     echo "  - Boot log: build/qemu-testing/boot.log"
     echo ""
     echo "⚠️  Note: QEMU has significant limitations for Raspberry Pi:"
-    echo "  - No VideoCore GPU emulation (HDMI services will fail)"
+    echo "  - No framebuffer emulation (HDMI services will fail)"
     echo "  - Limited hardware emulation"
     echo "  - Boot test only verifies kernel/init system"
     echo ""
@@ -200,7 +200,7 @@ echo "Image: ${IMAGE_FILE}"
 echo "Report: ${REPORT_FILE}"
 echo ""
 echo "⚠️  Note: QEMU limitations:"
-echo "   - HDMI output won't be visible (no VideoCore GPU)"
+echo "   - HDMI output won't be visible (no framebuffer emulation)"
 echo "   - Audio won't play"
 echo "   - This only tests if the system boots"
 echo ""
@@ -272,7 +272,25 @@ for kernel_name in kernel8.img kernel7l.img kernel7.img kernel.img; do
             exit 1
         fi
         sudo chmod 644 "${KERNEL_FILE}"
-        echo "✅ Extracted ${kernel_name}"
+
+        # Validate kernel was copied successfully and is readable
+        if [ ! -f "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file not found after copy" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+
+        if [ ! -r "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file not readable" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+
+        if [ ! -s "${KERNEL_FILE}" ]; then
+            echo "❌ Kernel file is empty" | tee -a "${REPORT_FILE}"
+            exit 1
+        fi
+
+        KERNEL_SIZE=$(du -h "${KERNEL_FILE}" | cut -f1)
+        echo "✅ Extracted ${kernel_name} (${KERNEL_SIZE})"
         KERNEL_FOUND=true
         break
     fi
@@ -318,7 +336,7 @@ track_temp_file "${BOOT_LOG}"
 echo "🚀 Starting QEMU emulation (timeout: ${TIMEOUT_SECONDS}s)..."
 echo "   Boot log: ${BOOT_LOG}"
 echo ""
-echo "⚠️  Important: QEMU will likely show errors for HDMI/GPU services"
+echo "⚠️  Important: QEMU will likely show errors for HDMI/framebuffer services"
 echo "   This is expected - we're only testing boot to login prompt"
 echo ""
 
@@ -422,7 +440,7 @@ echo "=================================================="
         echo "  - System reaches login prompt"
         echo ""
         echo "QEMU cannot test:"
-        echo "  - HDMI output (no VideoCore GPU emulation)"
+        echo "  - HDMI output (no framebuffer emulation)"
         echo "  - Audio functionality"
         echo "  - Pi-specific hardware features"
         echo ""

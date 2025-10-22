@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Install and enable systemd services
+# Configure auto-start for HDMI tester (console mode, no X11/Wayland)
 
 # Validate ROOTFS_DIR is set and exists
 if [ -z "${ROOTFS_DIR}" ]; then
@@ -12,56 +12,76 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     exit 1
 fi
 
-# Install services
+echo "🔧 Installing HDMI tester services (console mode)..."
+
+# Validate source files exist before attempting to install
+if [ ! -f "files/hdmi-display.service" ]; then
+    echo "❌ Error: hdmi-display.service not found"
+    exit 1
+fi
+
+if [ ! -f "files/hdmi-audio.service" ]; then
+    echo "❌ Error: hdmi-audio.service not found"
+    exit 1
+fi
+
+# Ensure target directories exist
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
+
+# Install systemd services
 install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
 install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"
 
-# Install troubleshooting script
-install -m 755 files/troubleshoot-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
-
-# Install comprehensive audio test script
-install -m 755 files/audio-test-comprehensive.sh "${ROOTFS_DIR}/opt/hdmi-tester/"
-
-# Install audio verification script
-install -m 755 files/verify-audio.sh "${ROOTFS_DIR}/usr/local/bin/"
-
-# Enable services
-on_chroot << EOF
+# Enable services to start on boot
+on_chroot << 'EOF'
 systemctl enable hdmi-display.service
 systemctl enable hdmi-audio.service
 EOF
 
-# Configure auto-login for user pi
+# Verify services were enabled successfully by checking for symlinks
+# NOTE: We check for symlink existence instead of using `systemctl is-enabled`
+# because systemd/D-Bus are not running in the chroot environment during build.
+# The symlinks are what actually enable the services; if systemctl enable succeeded
+# and the symlinks exist, the services are properly enabled.
+if [ ! -L "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants/hdmi-display.service" ]; then
+    echo "❌ Error: Failed to enable hdmi-display.service (symlink not created)"
+    exit 1
+fi
+
+if [ ! -L "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants/hdmi-audio.service" ]; then
+    echo "❌ Error: Failed to enable hdmi-audio.service (symlink not created)"
+    exit 1
+fi
+
+echo "✅ Services enabled successfully (verified symlinks)"
+
+# NOTE: Alternative verification using systemctl is-enabled (disabled for chroot):
+# The following check would work on a running system but fails in chroot because
+# systemd is not running and D-Bus socket is not available:
+#
+# if ! on_chroot systemctl is-enabled hdmi-display.service >/dev/null 2>&1; then
+#     echo "❌ Error: Failed to enable hdmi-display.service"
+#     exit 1
+# fi
+#
+# This is a known limitation of systemd in chroot environments. Checking for
+# symlink existence is the robust approach for build-time verification.
+
+# Configure auto-login for user pi on tty1
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d"
-cat > "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << EOF
+cat > "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << 'AUTOLOGIN_EOF'
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin pi --noclear %I \$TERM
-EOF
+ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
+AUTOLOGIN_EOF
 
-# Auto-start X on login
-cat >> "${ROOTFS_DIR}/home/pi/.bashrc" << 'EOF'
-
-# Auto-start X server on login (tty1 only)
-if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
-    exec startx
+# Verify autologin was configured
+if [ ! -f "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]; then
+    echo "❌ Error: Failed to create autologin configuration"
+    exit 1
 fi
-EOF
 
-# Create minimal .xinitrc
-cat > "${ROOTFS_DIR}/home/pi/.xinitrc" << 'EOF'
-#!/bin/sh
-# Disable screen blanking
-xset s off
-xset -dpms
-xset s noblank
+# Set correct ownership
+chown -R 1000:1000 "${ROOTFS_DIR}/home/pi"
 
-# Set background to black
-xsetroot -solid black
-
-# Window manager not needed - services handle display
-exec sleep infinity
-EOF
-
-chmod +x "${ROOTFS_DIR}/home/pi/.xinitrc"
-chown 1000:1000 "${ROOTFS_DIR}/home/pi/.xinitrc"
+echo "✅ HDMI tester services installed and enabled (console mode)"

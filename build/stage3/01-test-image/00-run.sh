@@ -12,6 +12,26 @@ if [ ! -d "${ROOTFS_DIR}" ]; then
     exit 1
 fi
 
+# Validate ROOTFS_DIR is writable
+if [ ! -w "${ROOTFS_DIR}" ]; then
+    echo "❌ Error: ROOTFS_DIR is not writable: ${ROOTFS_DIR}"
+    exit 1
+fi
+
+# Validate source file exists
+if [ ! -f "files/image.png" ]; then
+    echo "❌ Error: Source file not found: files/image.png"
+    exit 1
+fi
+
+# Create directory and install file
 install -d "${ROOTFS_DIR}/opt/hdmi-tester"
-install -m 644 files/image.png "${ROOTFS_DIR}/opt/hdmi-tester/"
-chown -R 1000:1000 "${ROOTFS_DIR}/opt/hdmi-tester"
+install -m 644 -o 1000 -g 1000 files/image.png "${ROOTFS_DIR}/opt/hdmi-tester/"
+
+# Verify file was copied successfully
+if [ ! -f "${ROOTFS_DIR}/opt/hdmi-tester/image.png" ]; then
+    echo "❌ Error: Failed to copy image.png to target"
+    exit 1
+fi
+
+echo "✅ Test pattern image deployed successfully"

@@ -1,11 +1,8 @@
-# Display packages
-xserver-xorg
-xinit
-feh
+# Framebuffer image viewer (no X11/Wayland needed)
+fbi
 
-# Audio/Video playback
+# Audio/Video playback (console mode)
 mpv
 
-# Audio system (ALSA-only, no PulseAudio)
-# Using direct ALSA with custom /etc/asound.conf for dual output
+# Audio system (ALSA for direct hardware access)
 alsa-utils

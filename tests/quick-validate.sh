@@ -180,8 +180,8 @@ echo "🔍 Partition table:" | tee -a "${REPORT_FILE}"
 # Check if we have sudo
 if check_root_or_sudo; then
     if sudo fdisk -l "${IMG_FILE}" 2>/dev/null | tee -a "${REPORT_FILE}"; then
-        # Count partitions more reliably
-        PARTITION_COUNT=$(sudo fdisk -l "${IMG_FILE}" 2>/dev/null | grep -c "^${IMG_FILE}" || echo "0")
+        # Count partitions more reliably - match lines starting with device name followed by digit
+        PARTITION_COUNT=$(sudo fdisk -l "${IMG_FILE}" 2>/dev/null | grep -E "^${IMG_FILE}[0-9]|^/dev/loop[0-9]+p[0-9]" | wc -l)
         echo "✅ Found ${PARTITION_COUNT} partition(s)" | tee -a "${REPORT_FILE}"
 
         if [ "${PARTITION_COUNT}" -ge 2 ]; then

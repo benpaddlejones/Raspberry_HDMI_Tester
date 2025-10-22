@@ -362,9 +362,10 @@ If display supports HDMI audio but you still hear nothing:
 
 3. **Login**: username `pi`, password `raspberry`
 
-4. **Run troubleshooting**:
+4. **Check audio service status**:
    ```bash
-   troubleshoot-audio.sh
+   sudo systemctl status hdmi-audio.service
+   journalctl -u hdmi-audio.service -n 50
    ```
 
 5. **Look for errors in output**
@@ -463,9 +464,10 @@ SSH is enabled by default for troubleshooting.
    ssh pi@192.168.1.xxx
    ```
 
-4. **Run troubleshooting script**:
+4. **Check service status**:
    ```bash
-   troubleshoot-audio.sh
+   sudo systemctl status hdmi-audio.service
+   sudo systemctl status hdmi-display.service
    ```
 
 5. **Save logs**:
@@ -669,11 +671,15 @@ systemctl status hdmi-display.service
 # Check audio service
 systemctl status hdmi-audio.service
 
-# View logs
-journalctl -u hdmi-audio.service
+# View audio logs
+journalctl -u hdmi-audio.service -n 50
 
-# Run audio troubleshooting
-troubleshoot-audio.sh
+# View display logs
+journalctl -u hdmi-display.service -n 50
+
+# Restart services
+sudo systemctl restart hdmi-audio.service
+sudo systemctl restart hdmi-display.service
 
 # Reboot
 sudo reboot

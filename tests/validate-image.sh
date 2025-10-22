@@ -109,7 +109,7 @@ if [ ${MOUNT_EXIT} -ne 0 ] || [ -z "${MOUNT_POINT}" ]; then
 fi
 
 echo "📂 Mounting root partition..."
-if ! mount_partition "${ROOT_PARTITION}" "${MOUNT_POINT}" "ext4"; then
+if ! mount_partition "${ROOT_PARTITION}" "${MOUNT_POINT}" "ext4" "rw"; then
     echo "❌ Failed to mount root partition"
     exit 1
 fi
@@ -151,34 +151,28 @@ done
 echo ""
 
 # Check for auto-start configuration
-echo "🔍 Checking auto-start configuration..."
+echo "🔍 Checking auto-start configuration (Console Mode)..."
 echo ""
 
-# Check for .xinitrc or .bash_profile that starts X
-AUTOSTART_FOUND=false
+# Check for auto-login on tty1
+AUTOLOGIN_FOUND=false
 
-if [ -f "${MOUNT_POINT}/home/pi/.xinitrc" ]; then
-    echo "  ✅ X auto-start: /home/pi/.xinitrc found"
-    AUTOSTART_FOUND=true
-fi
+if [ -f "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]; then
+    echo "  ✅ Auto-login config: /etc/systemd/system/getty@tty1.service.d/autologin.conf found"
 
-# Alternative: Check if .bash_profile or .profile starts X
-if [ -f "${MOUNT_POINT}/home/pi/.bash_profile" ]; then
-    if grep -q "startx" "${MOUNT_POINT}/home/pi/.bash_profile" 2>/dev/null; then
-        echo "  ✅ X auto-start: startx in .bash_profile"
-        AUTOSTART_FOUND=true
+    # Validate it contains autologin for pi user
+    if grep -q "autologin pi" "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null; then
+        echo "      ✅ Auto-login configured for user 'pi'"
+        AUTOLOGIN_FOUND=true
+    else
+        echo "      ⚠️  Auto-login config exists but may not be configured correctly"
+        VALIDATION_ERRORS+=("Auto-login not configured for pi user")
+        ALL_OK=false
     fi
-fi
-
-if [ -f "${MOUNT_POINT}/home/pi/.profile" ]; then
-    if grep -q "startx" "${MOUNT_POINT}/home/pi/.profile" 2>/dev/null; then
-        echo "  ✅ X auto-start: startx in .profile"
-        AUTOSTART_FOUND=true
-    fi
-fi
-
-if [ "${AUTOSTART_FOUND}" = false ]; then
-    echo "  ⚠️  Auto-start configuration not found (may use alternative method)"
+else
+    echo "  ❌ Auto-login configuration not found"
+    VALIDATION_ERRORS+=("Auto-login not configured")
+    ALL_OK=false
 fi
 
 echo ""
@@ -240,7 +234,7 @@ echo "🔍 Checking systemd service enablement..."
 echo ""
 
 SERVICES_TO_CHECK=(
-    "hdmi-display.service|HDMI Display Service|graphical.target"
+    "hdmi-display.service|HDMI Display Service|multi-user.target"
     "hdmi-audio.service|HDMI Audio Service|multi-user.target"
 )
 
@@ -280,47 +274,71 @@ else
     echo "  ℹ️  dpkg database found: $(wc -l < "${MOUNT_POINT}/var/lib/dpkg/status") lines"
 fi
 
+# Check if we can use chroot (need qemu-user-static for ARM binaries on x86_64)
+CAN_CHROOT=false
+if [ -f "${MOUNT_POINT}/usr/bin/dpkg-query" ]; then
+    # Check if qemu-arm-static is available and binfmt is configured
+    if [ -f "/usr/bin/qemu-arm-static" ] && [ -f "/proc/sys/fs/binfmt_misc/qemu-arm" ]; then
+        # Ensure qemu-arm-static is available in chroot
+        if [ ! -f "${MOUNT_POINT}/usr/bin/qemu-arm-static" ]; then
+            echo "  ℹ️  Copying qemu-arm-static to chroot..."
+            sudo cp /usr/bin/qemu-arm-static "${MOUNT_POINT}/usr/bin/"
+        fi
+        CAN_CHROOT=true
+        echo "  ✅ ARM binary execution available (qemu-user-static)"
+    else
+        echo "  ⚠️  Cannot execute ARM binaries (qemu-user-static not configured)"
+        echo "      Will use fallback binary checks instead"
+    fi
+else
+    echo "  ⚠️  dpkg-query not found in image"
+fi
+
 REQUIRED_PACKAGES=(
-    "xserver-xorg|X Server"
-    "xinit|X Init"
-    "feh|Image Viewer (feh)"
+    "fbi|Framebuffer Image Viewer (fbi)"
     "mpv|Media Player (mpv)"
+    "alsa-utils|ALSA Utilities"
 )
 
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     IFS='|' read -r package description <<< "${pkg_entry}"
 
-    # Check if package is installed via dpkg using chroot
-    # This is more reliable than parsing status file directly
-    if sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
-        echo "  ✅ ${description}: Installed"
+    # Try chroot method first if available
+    PKG_INSTALLED=false
+    if [ "${CAN_CHROOT}" = true ]; then
+        if timeout 10 sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
+            PKG_INSTALLED=true
+        fi
+    fi
 
-        # Additional verification: check if key binaries exist
+    # Fallback: Check for key binaries directly
+    if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
-            feh)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/feh" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/feh binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/feh")
-                    ALL_OK=false
+            fbi)
+                if [ -f "${MOUNT_POINT}/usr/bin/fbi" ] && [ -x "${MOUNT_POINT}/usr/bin/fbi" ]; then
+                    PKG_INSTALLED=true
                 fi
                 ;;
             mpv)
-                if [ ! -f "${MOUNT_POINT}/usr/bin/mpv" ]; then
-                    echo "      ⚠️  Warning: /usr/bin/mpv binary not found"
-                    VALIDATION_ERRORS+=("Binary missing: /usr/bin/mpv")
-                    ALL_OK=false
+                if [ -f "${MOUNT_POINT}/usr/bin/mpv" ] && [ -x "${MOUNT_POINT}/usr/bin/mpv" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            alsa-utils)
+                if [ -f "${MOUNT_POINT}/usr/bin/aplay" ] && [ -x "${MOUNT_POINT}/usr/bin/aplay" ]; then
+                    PKG_INSTALLED=true
                 fi
                 ;;
         esac
+    fi
+
+    # Report results
+    if [ "${PKG_INSTALLED}" = true ]; then
+        echo "  ✅ ${description}: Installed"
     else
         echo "  ❌ ${description}: NOT INSTALLED"
         VALIDATION_ERRORS+=("Package not installed: ${package}")
         ALL_OK=false
-
-        # Debug information
-        if [ -f "${MOUNT_POINT}/var/lib/dpkg/info/${package}.list" ]; then
-            echo "      ℹ️  Package files exist but dpkg reports not installed"
-        fi
     fi
 done
 

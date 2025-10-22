@@ -53,6 +53,7 @@ fi
 BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
 BUILD_LOG_DIR="${PROJECT_ROOT}/logs"
 BUILD_LOG_FILE="${WORK_DIR}/build-detailed.log"
+BUILD_ARCHIVED_LOG="${BUILD_LOG_DIR}/build-${BUILD_TIMESTAMP}.log"
 
 # Source logging utilities
 source "${SCRIPT_DIR}/logging-utils.sh"
@@ -220,11 +221,27 @@ log_info "✓ Asset directories created"
 log_subsection "Copying Test Pattern Image"
 cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/image.png"
 log_checksum "${WORK_DIR}/stage3/01-test-image/files/image.png" "Test Pattern Image (Deployed)"
+
+# Verify copy succeeded
+if [ ! -f "${WORK_DIR}/stage3/01-test-image/files/image.png" ]; then
+    log_event "❌" "Failed to copy test pattern image"
+    end_stage_timer "Asset Deployment" 1
+    finalize_log "failure" "Failed to copy test pattern image"
+    exit 1
+fi
 log_info "✓ Test pattern copied"
 
 log_subsection "Copying Test Audio"
 cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3"
 log_checksum "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" "Test Audio File (Deployed)"
+
+# Verify copy succeeded
+if [ ! -f "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" ]; then
+    log_event "❌" "Failed to copy test audio file"
+    end_stage_timer "Asset Deployment" 1
+    finalize_log "failure" "Failed to copy test audio file"
+    exit 1
+fi
 log_info "✓ Test audio copied"
 
 end_stage_timer "Asset Deployment" 0
@@ -248,12 +265,32 @@ log_info "Command: sudo ./build.sh"
 PIGEN_OUTPUT_FILE="${WORK_DIR}/pigen-output.log"
 BUILD_EXIT_CODE=0
 
+# Start progress monitor in background
+# This will print periodic updates to show build is progressing
+(
+    sleep 60  # Wait 1 minute before first update
+    while true; do
+        if [ -f "${BUILD_LOG_FILE}" ]; then
+            LAST_LINE=$(tail -n 1 "${BUILD_LOG_FILE}" 2>/dev/null | cut -c1-80)
+            if [ -n "${LAST_LINE}" ]; then
+                echo "[$(date '+%H:%M:%S')] Build in progress: ${LAST_LINE}..."
+            fi
+        fi
+        sleep 120  # Update every 2 minutes
+    done
+) &
+PROGRESS_PID=$!
+
 # Optimized: Single tee writes to detailed log, redirect stdout to output file
 if sudo ./build.sh 2>&1 | tee -a "${BUILD_LOG_FILE}" > "${PIGEN_OUTPUT_FILE}"; then
     SHELL_EXIT_CODE=0
 else
     SHELL_EXIT_CODE=$?
 fi
+
+# Stop progress monitor
+kill ${PROGRESS_PID} 2>/dev/null || true
+wait ${PROGRESS_PID} 2>/dev/null || true
 
 # Check for failure indicators in pi-gen output
 # pi-gen sometimes returns exit code 0 even when build fails internally
@@ -354,31 +391,27 @@ start_stage_timer "Build Cleanup"
 log_event "🧹" "Cleaning up intermediate build artifacts..."
 log_info "This will free up 3-5GB of disk space"
 
-# Clean apt cache from all stage rootfs directories
-log_subsection "Cleaning apt cache"
-if sudo rm -rf "${WORK_DIR}"/work/*/stage*-*/rootfs/var/cache/apt/* 2>/dev/null; then
-    log_info "✓ Apt cache cleaned"
-else
-    log_info "⚠️  No apt cache found to clean"
-fi
+# Optimized cleanup: Single find command for efficiency
+log_subsection "Cleaning build artifacts"
+if [ -d "${WORK_DIR}/work" ]; then
+    # Count items before deletion for reporting
+    APT_COUNT=$(find "${WORK_DIR}/work" -path "*/rootfs/var/cache/apt/*" -type f 2>/dev/null | wc -l)
+    TMP_COUNT=$(find "${WORK_DIR}/work" -path "*/rootfs/tmp/*" -type f 2>/dev/null | wc -l)
+    DEB_COUNT=$(find "${WORK_DIR}/work" -name "*.deb" -type f 2>/dev/null | wc -l)
 
-# Clean temporary files from all stage rootfs directories
-log_subsection "Cleaning temporary files"
-if sudo rm -rf "${WORK_DIR}"/work/*/stage*-*/rootfs/tmp/* 2>/dev/null; then
-    log_info "✓ Temporary files cleaned"
-else
-    log_info "⚠️  No temporary files found to clean"
-fi
+    log_info "Found ${APT_COUNT} apt cache files, ${TMP_COUNT} temp files, ${DEB_COUNT} .deb packages"
 
-# Remove downloaded .deb packages (no longer needed after installation)
-log_subsection "Cleaning downloaded packages"
-DEB_COUNT=$(find "${WORK_DIR}/work" -name "*.deb" -type f 2>/dev/null | wc -l)
-if [ ${DEB_COUNT} -gt 0 ]; then
-    log_info "Found ${DEB_COUNT} .deb files to remove"
-    find "${WORK_DIR}/work" -name "*.deb" -type f -delete 2>/dev/null || true
-    log_info "✓ Downloaded packages removed"
+    # Single find with multiple conditions for efficiency
+    # Removes: apt cache, tmp files, and .deb packages in one pass
+    find "${WORK_DIR}/work" \( \
+        -path "*/rootfs/var/cache/apt/*" -o \
+        -path "*/rootfs/tmp/*" -o \
+        -name "*.deb" \
+    \) -type f -delete 2>/dev/null || true
+
+    log_info "✓ Build artifacts cleaned (${APT_COUNT} + ${TMP_COUNT} + ${DEB_COUNT} files)"
 else
-    log_info "⚠️  No .deb files found to clean"
+    log_info "⚠️  No work directory found to clean"
 fi
 
 # Monitor disk space savings
@@ -391,6 +424,12 @@ end_stage_timer "Build Cleanup" 0
 # Success!
 finalize_log "success"
 
+# Archive the detailed log with timestamp for future reference
+if [ -f "${BUILD_LOG_FILE}" ]; then
+    cp "${BUILD_LOG_FILE}" "${BUILD_ARCHIVED_LOG}"
+    log_info "Build log archived to: ${BUILD_ARCHIVED_LOG}"
+fi
+
 log_event "✅" "Build Complete!"
 echo ""
 echo "=================================================="
@@ -400,6 +439,7 @@ echo "Location: ${IMAGE_FILE}"
 echo "Size: $(ls -lh "${IMAGE_FILE}" | awk '{print $5}')"
 echo ""
 echo "📝 Detailed log: ${BUILD_LOG_FILE}"
+echo "📝 Archived log: ${BUILD_ARCHIVED_LOG}"
 echo ""
 echo "Next steps:"
 echo "  1. Test the image: ./tests/qemu-test.sh"

@@ -1,18 +1,16 @@
 [Unit]
-Description=HDMI Test Pattern Display
-After=graphical.target
-Wants=graphical.target
+Description=HDMI Test Pattern Display (Framebuffer)
+After=local-fs.target
 
 [Service]
 Type=simple
-User=pi
-Environment=DISPLAY=:0
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/feh --fullscreen --hide-pointer --auto-zoom --verbose /opt/hdmi-tester/image.png
+User=root
+# Use fbi with -T 1 for HDMI output, -a for auto-zoom, --noverbose to suppress output, -d to keep displayed
+ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target

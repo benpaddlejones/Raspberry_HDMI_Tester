@@ -22,8 +22,10 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with submodules
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
       - name: Read release configuration
         id: config
@@ -51,20 +53,67 @@ jobs:
           echo "📥 Installing build tools..."
           sudo apt-get update
           sudo apt-get install -y \
+            quilt \
+            parted \
+            coreutils \
             qemu-user-static \
             debootstrap \
-            kpartx \
-            parted \
-            git \
+            zerofree \
             zip \
-            coreutils \
-            quilt \
+            dosfstools \
+            e2fsprogs \
+            libcap2-bin \
             libarchive-tools \
+            grep \
+            rsync \
+            xz-utils \
+            curl \
+            xxd \
+            file \
+            git \
+            kmod \
+            bc \
+            gpg \
+            pigz \
             arch-test \
             binfmt-support \
+            kpartx \
             qemu-utils
 
           echo "✅ Dependencies installed"
+
+      - name: Enable binfmt_misc for ARM emulation
+        run: |
+          echo "🔧 Enabling binfmt_misc kernel module for ARM emulation..."
+
+          # Check if binfmt_misc is available as a module
+          if [ -f /proc/sys/fs/binfmt_misc/status ]; then
+            echo "✅ binfmt_misc already enabled via filesystem"
+          else
+            # Try to mount binfmt_misc filesystem
+            sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null || true
+
+            if [ -f /proc/sys/fs/binfmt_misc/status ]; then
+              echo "✅ binfmt_misc mounted successfully"
+            else
+              echo "⚠️  binfmt_misc not available via mount, checking systemd service..."
+            fi
+          fi
+
+          # Ensure qemu-user-static registers ARM emulation
+          echo "🔧 Registering QEMU ARM handlers..."
+          sudo systemctl restart systemd-binfmt.service || true
+
+          # Verify registration
+          if [ -f /proc/sys/fs/binfmt_misc/qemu-arm ]; then
+            echo "✅ QEMU ARM handler registered"
+            cat /proc/sys/fs/binfmt_misc/qemu-arm
+          else
+            echo "⚠️  QEMU ARM handler not found, manually registering..."
+            sudo update-binfmts --enable qemu-arm || true
+          fi
+
+          echo "✅ ARM emulation configured"
 
       - name: Install pi-gen
         run: |
@@ -387,9 +436,9 @@ jobs:
             # Push (only if build succeeded - for failed builds we'll push at the end)
             if [ "${BUILD_EXIT_CODE}" = "0" ]; then
               # Pull latest changes to avoid conflicts
-              git pull --rebase origin main || {
+              git pull --rebase origin ${GITHUB_REF_NAME} || {
                 echo "⚠️ Rebase failed, trying merge..."
-                git pull origin main
+                git pull origin ${GITHUB_REF_NAME}
               }
 
               git push || {
@@ -1060,6 +1109,7 @@ jobs:
           tag_name: ${{ steps.config.outputs.tag }}
           name: "v${{ steps.config.outputs.version }} - ${{ steps.config.outputs.name }}"
           body_path: release_notes.md
+          target_commitish: ${{ github.ref_name }}
           files: |
             ${{ steps.assets.outputs.zip_path }}
             ${{ steps.assets.outputs.checksum_path }}
@@ -1136,9 +1186,9 @@ jobs:
             git commit -m "docs: Update README with release v${{ steps.config.outputs.version }} links [skip ci]"
 
             # Pull latest changes before pushing (in case logs were committed)
-            git pull --rebase origin main || {
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
               echo "⚠️ Rebase failed, trying merge..."
-              git pull origin main
+              git pull origin ${GITHUB_REF_NAME}
             }
 
             git push || {
@@ -1159,12 +1209,12 @@ jobs:
           git config --local user.name "github-actions[bot]"
 
           # Check if there are commits to push
-          if git log origin/main..HEAD --oneline | grep -q .; then
+          if git log origin/${GITHUB_REF_NAME}..HEAD --oneline | grep -q .; then
             echo "Found commits to push..."
 
-            git pull --rebase origin main || {
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
               echo "⚠️ Rebase failed, trying merge..."
-              git pull origin main
+              git pull origin ${GITHUB_REF_NAME}
             }
 
             git push || {

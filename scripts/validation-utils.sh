@@ -260,11 +260,12 @@ setup_loop_device() {
 }
 
 # Mount partition with verification
-# Usage: mount_partition <device> <mount_point> [filesystem_type]
+# Usage: mount_partition <device> <mount_point> [filesystem_type] [mount_options]
 mount_partition() {
     local device="$1"
     local mount_point="$2"
     local fs_type="${3:-auto}"
+    local mount_opts="${4:-ro}"  # Default to read-only for safety
 
     # Verify device exists
     if [ ! -e "${device}" ]; then
@@ -297,12 +298,12 @@ mount_partition() {
 
     # Mount the device
     if [ "${fs_type}" = "auto" ]; then
-        if ! sudo mount "${device}" "${mount_point}"; then
+        if ! sudo mount -o "${mount_opts}" "${device}" "${mount_point}"; then
             echo "❌ Error: Failed to mount ${device} at ${mount_point}" >&2
             return 1
         fi
     else
-        if ! sudo mount -t "${fs_type}" "${device}" "${mount_point}"; then
+        if ! sudo mount -t "${fs_type}" -o "${mount_opts}" "${device}" "${mount_point}"; then
             echo "❌ Error: Failed to mount ${device} at ${mount_point} as ${fs_type}" >&2
             return 1
         fi
@@ -469,15 +470,46 @@ verify_partition() {
     local loop_device="$1"
     local partition_num="$2"
 
-    # Try direct device naming
+    # Try direct device naming (newer kernels)
     if [ -e "${loop_device}p${partition_num}" ]; then
         echo "${loop_device}p${partition_num}"
         return 0
     fi
 
-    # Try mapper naming
+    # Try mapper naming with loop device basename
     local mapper_path
     mapper_path="/dev/mapper/$(basename "${loop_device}")p${partition_num}"
+    if [ -e "${mapper_path}" ]; then
+        echo "${mapper_path}"
+        return 0
+    fi
+
+    # Try kpartx naming (kpartx may use different patterns)
+    # Pattern 1: /dev/mapper/loopXpY (X=number, Y=partition)
+    local loop_num
+    loop_num=$(basename "${loop_device}" | sed 's/loop//')
+    mapper_path="/dev/mapper/loop${loop_num}p${partition_num}"
+    if [ -e "${mapper_path}" ]; then
+        echo "${mapper_path}"
+        return 0
+    fi
+
+    # Wait a moment for udev to create devices
+    sleep 1
+
+    # Try all patterns again after wait
+    if [ -e "${loop_device}p${partition_num}" ]; then
+        echo "${loop_device}p${partition_num}"
+        return 0
+    fi
+
+    mapper_path="/dev/mapper/$(basename "${loop_device}")p${partition_num}"
+    if [ -e "${mapper_path}" ]; then
+        echo "${mapper_path}"
+        return 0
+    fi
+
+    mapper_path="/dev/mapper/loop${loop_num}p${partition_num}"
     if [ -e "${mapper_path}" ]; then
         echo "${mapper_path}"
         return 0

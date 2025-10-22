@@ -264,7 +264,7 @@ This project is licensed under the MIT License with additional GPL components:
 
 - **Project Code**: MIT License - Free to use, modify, and distribute
 - **Pi-gen Components**: GPL (from Raspberry Pi Foundation)
-- **System Packages**: Various open-source licenses (X11, mpv, feh, etc.)
+- **System Packages**: Various open-source licenses (Wayland, Mesa, PipeWire, labwc, imv, mpv, etc.)
 
 See the [LICENSE](LICENSE) file for full details.
 
@@ -281,8 +281,10 @@ and/or sell copies, subject to the conditions in the LICENSE file.
 
 - Built with [pi-gen](https://github.com/RPi-Distro/pi-gen) - Official Raspberry Pi OS image builder
 - Powered by [Raspberry Pi OS](https://www.raspberrypi.com/software/)
-- Uses [feh](https://feh.finalrewind.org/) for image display
+- Uses [labwc](https://labwc.github.io/) Wayland compositor
+- Uses [imv](https://sr.ht/~exec64/imv/) for image display (Wayland-native)
 - Uses [mpv](https://mpv.io/) for audio playback
+- Uses [PipeWire](https://pipewire.org/) for modern audio handling
 
 ## Resources
 

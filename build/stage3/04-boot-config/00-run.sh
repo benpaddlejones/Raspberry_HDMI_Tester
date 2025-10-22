@@ -36,9 +36,17 @@ echo "Writing HDMI configuration to ${#CONFIG_FILES[@]} config file(s)..."
 # Append HDMI configuration to ALL config.txt files found
 for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     echo "  Writing to: ${CONFIG_FILE}"
+
+    # Validate file is writable
+    if [ ! -w "${CONFIG_FILE}" ]; then
+        echo "❌ Error: Config file not writable: ${CONFIG_FILE}"
+        exit 1
+    fi
+
+    # Append configuration
     cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Force 1920x1080 @ 60Hz
+# HDMI Tester Configuration - Force 1920x1080 @ 60Hz (Console Mode)
 # Force HDMI output even if no display detected
 hdmi_force_hotplug=1
 
@@ -51,8 +59,8 @@ hdmi_group=1
 # 1920x1080 @ 60Hz (CEA mode 16)
 hdmi_mode=16
 
-# GPU memory allocation (sufficient for display)
-gpu_mem=128
+# Minimal GPU memory for framebuffer (console mode doesn't need GPU acceleration)
+gpu_mem=64
 
 # Disable rainbow splash screen
 disable_splash=1
@@ -63,12 +71,61 @@ boot_delay=0
 # Enable both HDMI and 3.5mm audio
 dtparam=audio=on
 
-# Ensure HDMI audio is enabled
-hdmi_drive=2
-
 # Audio configuration for both outputs
 dtparam=audio_pwm_mode=2
 EOF
+
+    # Verify configuration was added
+    if ! grep -q "HDMI Tester Configuration" "${CONFIG_FILE}"; then
+        echo "❌ Error: Failed to write HDMI configuration to ${CONFIG_FILE}"
+        exit 1
+    fi
 done
 
 echo "✅ HDMI configuration added to all config.txt files"
+
+# Configure cmdline.txt for audio support
+CMDLINE_FILES=()
+
+if [ -f "${ROOTFS_DIR}/boot/firmware/cmdline.txt" ]; then
+    CMDLINE_FILES+=("${ROOTFS_DIR}/boot/firmware/cmdline.txt")
+    echo "Found: /boot/firmware/cmdline.txt"
+fi
+
+if [ -f "${ROOTFS_DIR}/boot/cmdline.txt" ]; then
+    CMDLINE_FILES+=("${ROOTFS_DIR}/boot/cmdline.txt")
+    echo "Found: /boot/cmdline.txt"
+fi
+
+if [ ${#CMDLINE_FILES[@]} -eq 0 ]; then
+    echo "❌ Error: No cmdline.txt found in /boot or /boot/firmware"
+    exit 1
+fi
+
+echo "Adding audio parameters to ${#CMDLINE_FILES[@]} cmdline.txt file(s)..."
+
+for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
+    echo "  Configuring: ${CMDLINE_FILE}"
+
+    # Validate file is writable
+    if [ ! -w "${CMDLINE_FILE}" ]; then
+        echo "❌ Error: cmdline.txt not writable: ${CMDLINE_FILE}"
+        exit 1
+    fi
+
+    # Remove any existing audio parameters to avoid conflicts
+    sed -i 's/snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
+
+    # Append audio parameters (on same line, space-separated)
+    sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1/' "${CMDLINE_FILE}"
+
+    # Verify parameters were added
+    if ! grep -q "snd_bcm2835.enable_hdmi=1" "${CMDLINE_FILE}"; then
+        echo "❌ Error: Failed to add audio parameters to ${CMDLINE_FILE}"
+        exit 1
+    fi
+done
+
+echo "✅ Audio parameters added to all cmdline.txt files"
+
