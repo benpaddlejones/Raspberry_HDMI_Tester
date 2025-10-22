@@ -94,11 +94,11 @@ See `logs/README.md` for detailed documentation on the logging system.
 ### Build Stages
 The build process uses these custom stages:
 
-1. **00-install-packages** - Installs Wayland (labwc), imv, mpv, PipeWire audio
+1. **00-install-packages** - Installs fbi (framebuffer viewer), mpv (audio player), ALSA audio
 2. **01-test-image** - Deploys test pattern from `assets/image.png`
 3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
-4. **03-autostart** - Configures systemd services and Wayland compositor
-5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables vc4-kms-v3d, SSH
+4. **03-autostart** - Configures systemd services (framebuffer display + audio)
+5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables audio, minimal GPU memory
 
 ### Build Time
 - **First build**: 45-60 minutes (downloads packages)
@@ -244,7 +244,7 @@ Key settings in `build/config`:
 | `TARGET_HOSTNAME` | `hdmi-tester` | System hostname |
 | `FIRST_USER_NAME` | `pi` | Default username |
 | `FIRST_USER_PASS` | `raspberry` | Default password |
-| `ENABLE_SSH` | `0` | SSH disabled (not needed) |
+| `ENABLE_SSH` | `1` | SSH enabled for troubleshooting |
 | `ENABLE_REDUCE_DISK_USAGE` | `1` | Minimize image size |
 
 ## Clean Build

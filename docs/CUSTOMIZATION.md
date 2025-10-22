@@ -166,26 +166,23 @@ boot_delay=0
 boot_delay=1
 ```
 
-### Disable Auto-Login
+### Disable Auto-Start Display
 
-Edit `build/stage-custom/03-autostart/00-run.sh` and remove or comment out:
-
-```bash
-# Configure auto-login for user pi
-# mkdir -p "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d"
-# cat > "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << EOF
-# ...
-```
-
-### Disable Auto-Start Wayland
-
-Edit `build/stage3/03-autostart/00-run.sh` and remove:
+Edit `build/stage3/03-autostart/00-run.sh` and comment out:
 
 ```bash
-# Auto-start Wayland compositor on login
-# cat >> "${ROOTFS_DIR}/home/pi/.bashrc" << 'EOF'
-# ...
+# systemctl enable hdmi-display.service
 ```
+
+### Disable Auto-Start Audio
+
+Edit `build/stage3/03-autostart/00-run.sh` and comment out:
+
+```bash
+# systemctl enable hdmi-audio.service
+```
+
+**Note**: This setup uses console/framebuffer mode with no desktop environment or auto-login configuration needed. Services start automatically via systemd.
 
 ## Adding Additional Packages
 
@@ -194,11 +191,9 @@ Edit `build/stage3/03-autostart/00-run.sh` and remove:
 Edit `build/stage3/00-install-packages/00-packages`:
 
 ```
-labwc
-imv
+fbi
 mpv
-pipewire
-wireplumber
+alsa-utils
 your-package-here
 another-package
 ```
@@ -232,11 +227,12 @@ Edit `build/stage3/03-autostart/files/hdmi-display.service`:
 # Change delay before starting
 ExecStartPre=/bin/sleep 5    # Change this number
 
-# Use different Wayland image viewer
-ExecStart=/usr/bin/imv -f -n /opt/hdmi-tester/image.png
+# Change fbi parameters (framebuffer display)
+# -T 1 = Use framebuffer 1 (HDMI), -a = auto-zoom, -d = keep displayed
+ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
 
-# Or use swayimg for slideshow
-ExecStart=/usr/bin/swayimg -f -s 5 /path/to/images/
+# Adjust restart delay
+RestartSec=10    # Change this number
 ```
 
 ### Modify Audio Service
@@ -245,14 +241,17 @@ Edit `build/stage3/03-autostart/files/hdmi-audio.service`:
 
 ```ini
 [Service]
-# Change audio via PipeWire
-ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=pipewire /opt/hdmi-tester/audio.mp3
+# Change audio via ALSA
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 /opt/hdmi-tester/audio.mp3
 
-# Adjust volume (PipeWire)
-ExecStartPre=/usr/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 80%
+# Adjust volume (0-100)
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=80 /opt/hdmi-tester/audio.mp3
 
 # Play once (no loop)
-ExecStart=/usr/bin/mpv --no-video /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/mpv --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
+
+# Use specific ALSA device
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa/hdmi:CARD=vc4hdmi /opt/hdmi-tester/audio.mp3
 ```
 
 ### Add New Service
@@ -332,18 +331,17 @@ chmod 600 "${ROOTFS_DIR}/etc/wpa_supplicant/wpa_supplicant.conf"
 
 ### GPU Memory Allocation
 
-Edit `build/stage-custom/04-boot-config/00-run.sh`:
+Edit `build/stage3/04-boot-config/00-run.sh`:
 
 ```bash
-# Default (sufficient for 1080p)
-gpu_mem=128
-
-# For 4K or heavy graphics
-gpu_mem=256
-
-# Minimal (if not using display)
+# Default for console/framebuffer mode (minimal)
 gpu_mem=64
+
+# Only increase if you need more framebuffer memory
+gpu_mem=128
 ```
+
+**Note**: Console/framebuffer mode doesn't need GPU acceleration, so 64MB is sufficient.
 
 ### Overscan/Underscan
 

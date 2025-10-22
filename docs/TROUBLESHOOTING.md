@@ -625,21 +625,22 @@ overscan_bottom=-20
    ```bash
    # On Pi (connect keyboard, Ctrl+Alt+F2)
    systemctl status hdmi-audio.service
+   journalctl -u hdmi-audio.service -n 50
    ```
 
-3. **Test audio manually**:
-   ```bash
-   # On Pi
-   mpv --no-video /opt/hdmi-tester/test-audio.mp3
-   ```
-
-4. **Check ALSA**:
+3. **Check ALSA audio devices**:
    ```bash
    # List audio devices
    aplay -l
 
-   # Test audio
-   speaker-test -c 2
+   # Test audio output
+   speaker-test -c 2 -t wav
+   ```
+
+4. **Test audio manually**:
+   ```bash
+   # On Pi - test with mpv directly
+   mpv --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
    ```
 
 ### Audio Plays But Choppy/Stuttering
@@ -652,12 +653,10 @@ overscan_bottom=-20
 **Solutions**:
 1. **Use faster SD card** (Class 10 or UHS-I)
 2. **Use official power supply**
-3. **Adjust audio buffer**:
-   - Edit `hdmi-audio.service`
-   - Add mpv options:
-     ```
-     ExecStart=/usr/bin/mpv --loop=inf --no-video --cache=yes --audio-buffer=1 /opt/hdmi-tester/test-audio.mp3
-     ```
+3. **Adjust audio buffer** (edit `hdmi-audio.service`):
+   ```
+   ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --cache=yes --audio-buffer=1 /opt/hdmi-tester/audio.mp3
+   ```
 
 ### Audio Doesn't Loop
 
@@ -666,8 +665,8 @@ overscan_bottom=-20
 **Solution**:
 Check `hdmi-audio.service`:
 ```bash
-# Must have --loop=inf
-ExecStart=/usr/bin/mpv --loop=inf --no-video /opt/hdmi-tester/test-audio.mp3
+# Must have --loop=inf and --audio-device=auto
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
 ```
 
 ### Wrong Audio Output (3.5mm instead of HDMI)

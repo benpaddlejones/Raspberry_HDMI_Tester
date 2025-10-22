@@ -366,6 +366,9 @@ If display supports HDMI audio but you still hear nothing:
    ```bash
    sudo systemctl status hdmi-audio.service
    journalctl -u hdmi-audio.service -n 50
+   
+   # Also check ALSA audio devices
+   aplay -l
    ```
 
 5. **Look for errors in output**
@@ -665,10 +668,10 @@ ssh pi@hdmi-tester.local
 
 ### Useful Commands (via SSH or keyboard)
 ```bash
-# Check display service
+# Check display service (framebuffer)
 systemctl status hdmi-display.service
 
-# Check audio service
+# Check audio service (ALSA)
 systemctl status hdmi-audio.service
 
 # View audio logs
@@ -676,6 +679,10 @@ journalctl -u hdmi-audio.service -n 50
 
 # View display logs
 journalctl -u hdmi-display.service -n 50
+
+# Check ALSA audio devices
+aplay -l
+amixer
 
 # Restart services
 sudo systemctl restart hdmi-audio.service

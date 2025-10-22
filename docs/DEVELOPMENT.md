@@ -242,13 +242,9 @@ The project uses 5 custom stages:
 - `00-run-chroot.sh`: Runs inside chroot, installs packages
 
 **Packages installed**:
-- `labwc` - Lightweight Wayland compositor
-- `imv` - Wayland-native image viewer
+- `fbi` - Framebuffer image viewer (console mode, no X11/Wayland)
 - `mpv` - Media player with loop support
-- `pipewire` - Modern audio server
-- `wireplumber` - PipeWire session manager
-- `wlroots` - Wayland compositor library
-- `wl-clipboard` - Wayland clipboard utilities
+- `alsa-utils` - ALSA audio utilities for direct hardware access
 
 #### Stage 01: Test Image
 
@@ -285,13 +281,13 @@ The project uses 5 custom stages:
 - `files/hdmi-audio.service`: Audio service
 
 **Services created**:
-- `hdmi-display.service`: Launches imv with test pattern (Wayland)
-- `hdmi-audio.service`: Plays audio with mpv via PipeWire
+- `hdmi-display.service`: Displays test pattern using fbi (framebuffer, console mode)
+- `hdmi-audio.service`: Plays audio with mpv via ALSA
 
 **What it does**:
 - Copies service files to `/etc/systemd/system/`
 - Enables services with systemctl
-- Configures auto-start on boot
+- Configures auto-start on boot (no desktop environment required)
 
 #### Stage 04: Boot Configuration
 
@@ -301,10 +297,10 @@ The project uses 5 custom stages:
 - `00-run.sh`: Configuration script
 
 **Modifications**:
-- `/boot/config.txt`: HDMI settings (1920x1080@60Hz, audio enabled, vc4-kms-v3d)
-- `/etc/systemd/system/getty@tty1.service.d/autologin.conf`: Auto-login
-- `/home/pi/.bashrc`: Auto-start Wayland compositor (labwc)
-- `/home/pi/.config/labwc/`: Wayland compositor configuration
+- `/boot/config.txt` or `/boot/firmware/config.txt`: HDMI settings (1920x1080@60Hz, audio enabled)
+- `/boot/cmdline.txt` or `/boot/firmware/cmdline.txt`: Audio kernel parameters
+- GPU memory set to 64MB (minimal, console mode doesn't need GPU acceleration)
+- No desktop environment or compositor - pure framebuffer mode
 
 ## Technical Architecture
 
@@ -312,8 +308,8 @@ The project uses 5 custom stages:
 
 **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
 - Minimal footprint (~1.5-2GB image)
-- No desktop environment by default
-- Wayland compositor (labwc) added in custom stage
+- No desktop environment (console/framebuffer mode only)
+- Direct framebuffer access via fbi, no compositor needed
 
 **Builder**: pi-gen
 - Official Raspberry Pi image builder
@@ -328,16 +324,14 @@ The project uses 5 custom stages:
 ### Boot Flow
 
 1. **Raspberry Pi boots** from SD card
-2. **Kernel loads** with optimized parameters (vc4-kms-v3d driver)
-3. **systemd starts** system services (including PipeWire)
-4. **Auto-login** on tty1 (user: `pi`)
-5. **.bashrc executes** → Starts Wayland compositor (labwc)
-6. **Wayland compositor launches** with Mesa/vc4 GPU acceleration
-7. **systemd services start**:
-   - `hdmi-display.service` → Displays test pattern (imv)
-   - `hdmi-audio.service` → Plays audio (mpv via PipeWire)
-8. **Display shows** test pattern at 1920x1080@60Hz
-9. **Audio plays** continuously through HDMI via PipeWire
+2. **Kernel loads** with audio parameters (ALSA HDMI enabled)
+3. **systemd starts** system services (including ALSA)
+4. **Console mode** - no desktop environment or compositor
+5. **systemd services start automatically**:
+   - `hdmi-display.service` → Displays test pattern via fbi (framebuffer)
+   - `hdmi-audio.service` → Plays audio via mpv (ALSA direct output)
+6. **Display shows** test pattern at 1920x1080@60Hz on framebuffer
+7. **Audio plays** continuously through HDMI via ALSA
 
 ### HDMI Configuration
 
@@ -354,11 +348,11 @@ hdmi_drive=2
 hdmi_group=1
 hdmi_mode=16
 
-# GPU memory allocation (increased for Wayland)
-gpu_mem=256
+# GPU memory allocation (minimal for console/framebuffer mode)
+gpu_mem=64
 
-# Enable vc4-kms-v3d for Wayland/Mesa
-dtoverlay=vc4-kms-v3d
+# Enable audio on both HDMI and 3.5mm
+dtparam=audio=on
 ```
 
 ### systemd Services
@@ -366,37 +360,41 @@ dtoverlay=vc4-kms-v3d
 **hdmi-display.service**:
 ```ini
 [Unit]
-Description=HDMI Test Pattern Display (Wayland)
-After=graphical.target pipewire.service
-Wants=graphical.target
+Description=HDMI Test Pattern Display (Framebuffer)
+After=local-fs.target
 
 [Service]
 Type=simple
-User=pi
-Environment=XDG_RUNTIME_DIR=/run/user/1000
-Environment=WLR_BACKENDS=drm
-ExecStart=/usr/bin/imv -f -n /opt/hdmi-tester/image.png
+User=root
+# Use fbi with -T 1 for HDMI output, -a for auto-zoom, --noverbose, -d to keep displayed
+ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
 Restart=always
-RestartSec=5
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target
 ```
 
 **hdmi-audio.service**:
 ```ini
 [Unit]
-Description=HDMI Audio Test (PipeWire)
-After=sound.target pipewire.service wireplumber.service
-Wants=sound.target pipewire.service
+Description=HDMI Audio Test - ALSA Output
+After=sound.target
+Wants=sound.target
+After=multi-user.target
 
 [Service]
 Type=simple
 User=pi
-Environment=XDG_RUNTIME_DIR=/run/user/1000
-ExecStart=/usr/bin/mpv --no-video --loop=inf --ao=pipewire /opt/hdmi-tester/audio.mp3
+Group=audio
+# Use ALSA for direct audio output with auto device selection
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 --really-quiet /opt/hdmi-tester/audio.mp3
 Restart=always
-RestartSec=5
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -650,7 +648,7 @@ We welcome contributions! Here's how to get involved:
 - [kpartx](https://linux.die.net/man/8/kpartx)
 
 ### Media Tools
-- [feh Image Viewer](https://feh.finalrewind.org/)
+- [fbi Framebuffer Viewer](https://www.kraxel.org/blog/linux/fbida/)
 - [mpv Media Player](https://mpv.io/)
 - [ALSA Documentation](https://www.alsa-project.org/wiki/Main_Page)
 
