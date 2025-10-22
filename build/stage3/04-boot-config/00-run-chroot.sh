@@ -46,15 +46,15 @@ echo "🔧 Applying filesystem optimizations..."
 # This prevents updating access times on file reads, improving performance
 if [ -f /etc/fstab ]; then
     echo "  📝 Adding noatime mount option to /etc/fstab..."
-    
+
     # Backup original fstab
     cp /etc/fstab /etc/fstab.backup
-    
+
     # Add noatime to root filesystem (/) and boot partition (/boot)
     # This sed command adds noatime to the options column if not already present
     sed -i 's/\(.*\s\+\/\s\+\w\+\s\+\)\(defaults\)\(\s\+.*\)/\1defaults,noatime\3/' /etc/fstab
     sed -i 's/\(.*\s\+\/boot\s\+\w\+\s\+\)\(defaults\)\(\s\+.*\)/\1defaults,noatime\3/' /etc/fstab
-    
+
     echo "  ✅ noatime mount option added"
 else
     echo "  ⚠️  /etc/fstab not found"
@@ -69,10 +69,10 @@ ROOT_DEV=$(findmnt -n -o SOURCE /)
 if [ -n "${ROOT_DEV}" ]; then
     # Set filesystem check to every 100 mounts (instead of default 20-30)
     tune2fs -c 100 "${ROOT_DEV}" 2>/dev/null || echo "  ℹ️  Could not set mount count check (may not be ext filesystem)"
-    
+
     # Set filesystem check interval to 6 months (instead of default ~1 month)
     tune2fs -i 6m "${ROOT_DEV}" 2>/dev/null || echo "  ℹ️  Could not set time interval check"
-    
+
     echo "  ✅ Filesystem check frequency reduced"
 else
     echo "  ⚠️  Could not determine root device"

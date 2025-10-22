@@ -129,7 +129,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         echo "❌ Error: Failed to add audio parameters to ${CMDLINE_FILE}"
         exit 1
     fi
-    
+
     if ! grep -q "noswap" "${CMDLINE_FILE}"; then
         echo "❌ Error: Failed to add noswap parameter to ${CMDLINE_FILE}"
         exit 1
