@@ -1,5 +1,5 @@
 [Unit]
-Description=HDMI Test Pattern Display (Framebuffer)
+Description=HDMI Test Pattern Display
 After=local-fs.target
 
 [Service]
@@ -14,24 +14,10 @@ ExecStartPre=/bin/bash -c 'echo "=== HDMI Display Service Starting ===" && \
         exit 1; \
     fi && \
     echo "✓ Test pattern exists ($(stat -c%%s /opt/hdmi-tester/image.png) bytes)" && \
-    echo "Checking framebuffer device..." && \
-    if [ ! -c /dev/fb0 ]; then \
-        echo "ERROR: Framebuffer device /dev/fb0 not found" && \
-        echo "Available devices in /dev:" && \
-        ls -la /dev/fb* 2>&1 || echo "No fb* devices found" && \
-        exit 1; \
-    fi && \
-    echo "✓ Framebuffer /dev/fb0 exists" && \
-    echo "Framebuffer info:" && \
-    fbset -s 2>&1 || echo "WARNING: fbset command failed" && \
-    echo "Checking fbi binary..." && \
-    which fbi && \
-    fbi --version 2>&1 || echo "fbi version check failed" && \
-    echo "All pre-flight checks passed, launching fbi..."'
+    echo "All pre-flight checks passed, launching mpv..."'
 
-# Use fbi with -T 1 for HDMI output, -a for auto-zoom
-# Redirect stderr to suppress "no exif" messages
-ExecStart=/bin/sh -c '/usr/bin/fbi -T 1 -a /opt/hdmi-tester/image.png 2>/dev/null'
+# Use mpv to display image
+ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== HDMI Display Service Stopped ===" && \

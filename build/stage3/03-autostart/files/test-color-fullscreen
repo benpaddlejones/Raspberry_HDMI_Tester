@@ -1,0 +1,25 @@
+#!/bin/bash
+# Test Script 2: Play color_test.mp4 fullscreen (stretched to fill all pixels)
+
+VIDEO_FILE="/opt/hdmi-tester/color_test.mp4"
+
+echo "========================================="
+echo "Color Test (Fullscreen Stretched)"
+echo "========================================="
+echo "File: ${VIDEO_FILE}"
+echo "Press Ctrl+C to stop"
+echo ""
+
+# Check if video file exists
+if [ ! -f "${VIDEO_FILE}" ]; then
+    echo "❌ ERROR: Video file not found at ${VIDEO_FILE}"
+    exit 1
+fi
+
+# Run mpv with:
+# --loop=inf - Loop forever
+# --fs - Fullscreen
+# --no-keepaspect - Stretch to fill screen (no letterbox/pillarbox)
+# --no-osd-bar - No on-screen display
+# --osd-level=0 - Disable all OSD
+exec mpv --loop=inf --fs --no-keepaspect --no-osd-bar --osd-level=0 "${VIDEO_FILE}"

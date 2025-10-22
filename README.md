@@ -152,7 +152,7 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 ## Technical Details
 
 - **Base OS**: Raspberry Pi OS Lite (Debian 12 Bookworm)
-- **Display**: Framebuffer mode with fbi (no desktop environment)
+- **Display**: mpv (no desktop environment)
 - **Resolution**: 1920x1080 @ 60Hz (configurable)
 - **Audio**: ALSA direct output via mpv with infinite loop
 - **Boot Time**: ~20-30 seconds
@@ -266,7 +266,7 @@ This project is licensed under the MIT License with additional GPL components:
 
 - **Project Code**: MIT License - Free to use, modify, and distribute
 - **Pi-gen Components**: GPL (from Raspberry Pi Foundation)
-- **System Packages**: Various open-source licenses (fbi, mpv, ALSA, etc.)
+- **System Packages**: Various open-source licenses (mpv, ALSA, etc.)
 
 See the [LICENSE](LICENSE) file for full details.
 
@@ -283,8 +283,7 @@ and/or sell copies, subject to the conditions in the LICENSE file.
 
 - Built with [pi-gen](https://github.com/RPi-Distro/pi-gen) - Official Raspberry Pi OS image builder
 - Powered by [Raspberry Pi OS](https://www.raspberrypi.com/software/)
-- Uses [fbi](https://www.kraxel.org/blog/linux/fbida/) for framebuffer image display
-- Uses [mpv](https://mpv.io/) for audio playback
+- Uses [mpv](https://mpv.io/) for video and audio playback
 - Uses [ALSA](https://www.alsa-project.org/) for audio output
 
 ## Resources

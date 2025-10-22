@@ -242,8 +242,7 @@ The project uses 5 custom stages:
 - `00-run-chroot.sh`: Runs inside chroot, installs packages
 
 **Packages installed**:
-- `fbi` - Framebuffer image viewer (console mode, no X11/Wayland)
-- `mpv` - Media player with loop support
+- `mpv` - Audio/video player (ALSA backend, console mode)
 - `alsa-utils` - ALSA audio utilities for direct hardware access
 
 #### Stage 01: Test Image
@@ -281,8 +280,8 @@ The project uses 5 custom stages:
 - `files/hdmi-audio.service`: Audio service
 
 **Services created**:
-- `hdmi-display.service`: Displays test pattern using fbi (framebuffer, console mode)
-- `hdmi-audio.service`: Plays audio with mpv via ALSA
+- `hdmi-display.service`: Displays test pattern using mpv (console mode)
+- `hdmi-audio.service`: Plays audio using mpv (ALSA, console mode)
 
 **What it does**:
 - Copies service files to `/etc/systemd/system/`
@@ -308,8 +307,8 @@ The project uses 5 custom stages:
 
 **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
 - Minimal footprint (~1.5-2GB image)
-- No desktop environment (console/framebuffer mode only)
-- Direct framebuffer access via fbi, no compositor needed
+- No desktop environment (console mode only)
+- Direct display access via mpv, no compositor needed
 
 **Builder**: pi-gen
 - Official Raspberry Pi image builder
@@ -328,9 +327,9 @@ The project uses 5 custom stages:
 3. **systemd starts** system services (including ALSA)
 4. **Console mode** - no desktop environment or compositor
 5. **systemd services start automatically**:
-   - `hdmi-display.service` → Displays test pattern via fbi (framebuffer)
+   - `hdmi-display.service` → Displays test pattern via mpv
    - `hdmi-audio.service` → Plays audio via mpv (ALSA direct output)
-6. **Display shows** test pattern at 1920x1080@60Hz on framebuffer
+6. **Display shows** test pattern at 1920x1080@60Hz
 7. **Audio plays** continuously through HDMI via ALSA
 
 ### HDMI Configuration
@@ -366,8 +365,8 @@ After=local-fs.target
 [Service]
 Type=simple
 User=root
-# Use fbi with -T 1 for HDMI output, -a for auto-zoom, --noverbose, -d to keep displayed
-ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
+# Use mpv to display image
+ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -648,8 +647,7 @@ We welcome contributions! Here's how to get involved:
 - [kpartx](https://linux.die.net/man/8/kpartx)
 
 ### Media Tools
-- [fbi Framebuffer Viewer](https://www.kraxel.org/blog/linux/fbida/)
-- [mpv Media Player](https://mpv.io/)
+- [MPV Media Player](https://mpv.io/)
 - [ALSA Documentation](https://www.alsa-project.org/wiki/Main_Page)
 
 ### Community

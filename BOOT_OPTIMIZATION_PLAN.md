@@ -65,8 +65,8 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 ### Key Findings
 
 - **Architecture**: Console/framebuffer mode (no X11/Wayland/compositor overhead)
-- **Display**: fbi runs directly on framebuffer (minimal startup time)
-- **Audio**: mpv with ALSA direct output (no PipeWire/PulseAudio overhead)
+- **Display**: mpv displays image (minimal startup time)
+- **Audio**: mpv with ALSA backend (direct hardware access)
 - **Services**: Simple systemd services with minimal dependencies
 - **Missing optimization**: No cmdline.txt boot parameters configured
 - **Unused services**: `avahi-daemon`, `bluetooth` enabled but not needed
@@ -113,7 +113,7 @@ RestartSec=5
 RestartSec=8
 ```
 
-**Rationale**: These delays only affect restart after failure, not initial boot. Framebuffer (fbi) starts instantly, no pre-delay needed. ALSA audio initializes quickly with modern kernels.
+**Rationale**: These delays only affect restart after failure, not initial boot. Display service starts instantly, no pre-delay needed. ALSA audio initializes quickly with modern kernels.
 
 ### 2. Kernel Boot Parameters
 
@@ -256,8 +256,8 @@ Alias=default.target
 - Consider SD card speed impact (Class 10 U3 recommended)
 - Some optimizations may vary by Raspberry Pi model (3B+, 4B, 5)
 - Monitor system logs for any service failures after optimization
-- **Architecture advantage**: Framebuffer mode (fbi) is significantly faster than X11/Wayland systems
-- **No compositor overhead**: Direct framebuffer access eliminates display server startup time
+- **Architecture advantage**: Direct display mode is significantly faster than X11/Wayland systems
+- **No compositor overhead**: Direct display access eliminates display server startup time
 - **ALSA direct**: No PipeWire/PulseAudio initialization delay
 
 ---

@@ -5,11 +5,12 @@
 echo "=== Raspberry Pi HDMI Tester Diagnostics (Console Mode) ==="
 echo ""
 
-echo "1. Checking framebuffer image viewer (fbi)..."
-if pgrep -x fbi > /dev/null; then
-    echo "   ✅ fbi is running (PID: $(pgrep -x fbi))"
+echo ""
+echo "1. Checking display service (mpv for image)..."
+if pgrep -x mpv > /dev/null; then
+    echo "   ✅ mpv is running (PID: $(pgrep -x mpv))"
 else
-    echo "   ❌ fbi is NOT running"
+    echo "   ❌ mpv is NOT running"
 fi
 echo ""
 
@@ -58,7 +59,7 @@ fi
 echo ""
 
 echo "7. Recent journal logs (last 50 lines)..."
-journalctl -n 50 --no-pager | grep -E "(fbi|mpv|alsa|hdmi)" || echo "   No relevant logs found"
+journalctl -n 50 --no-pager | grep -E "(mpv|alsa|hdmi)" || echo "   No relevant logs found"
 echo ""
 
 echo "=== End Diagnostics ==="

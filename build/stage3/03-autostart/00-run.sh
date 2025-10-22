@@ -15,42 +15,24 @@ fi
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-if [ ! -f "files/hdmi-image" ]; then
-    echo "❌ Error: hdmi-image script not found"
-    exit 1
-fi
-
-if [ ! -f "files/hdmi-audio" ]; then
-    echo "❌ Error: hdmi-audio script not found"
-    exit 1
-fi
-
-if [ ! -f "files/hdmi-test" ]; then
-    echo "❌ Error: hdmi-test script not found"
-    exit 1
-fi
+SCRIPTS=("test-image-loop" "test-color-fullscreen" "test-both-loop")
+for script in "${SCRIPTS[@]}"; do
+    if [ ! -f "files/${script}" ]; then
+        echo "❌ Error: ${script} script not found"
+        exit 1
+    fi
+done
 
 # Install test scripts to /usr/local/bin (in PATH)
 echo "Installing test scripts..."
-install -m 755 files/hdmi-image "${ROOTFS_DIR}/usr/local/bin/"
-install -m 755 files/hdmi-audio "${ROOTFS_DIR}/usr/local/bin/"
-install -m 755 files/hdmi-test "${ROOTFS_DIR}/usr/local/bin/"
-
-# Verify scripts were installed
-if [ ! -f "${ROOTFS_DIR}/usr/local/bin/hdmi-image" ]; then
-    echo "❌ Error: Failed to install hdmi-image"
-    exit 1
-fi
-
-if [ ! -f "${ROOTFS_DIR}/usr/local/bin/hdmi-audio" ]; then
-    echo "❌ Error: Failed to install hdmi-audio"
-    exit 1
-fi
-
-if [ ! -f "${ROOTFS_DIR}/usr/local/bin/hdmi-test" ]; then
-    echo "❌ Error: Failed to install hdmi-test"
-    exit 1
-fi
+for script in "${SCRIPTS[@]}"; do
+    install -m 755 "files/${script}" "${ROOTFS_DIR}/usr/local/bin/"
+    if [ ! -f "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
+        echo "❌ Error: Failed to install ${script}"
+        exit 1
+    fi
+    echo "  • ${script} installed"
+done
 
 echo "✅ Test scripts installed successfully"
 
@@ -103,14 +85,14 @@ echo "========================================="
 echo ""
 echo "Available test commands:"
 echo ""
-echo "  hdmi-image     - Display test pattern"
-echo "  hdmi-audio     - Play audio test (with debugging)"
-echo "  hdmi-test      - Run full integration test"
+echo "  test-image-loop        - Loop image-test.mp4 (optimized resolution)"
+echo "  test-color-fullscreen  - Play color_test.mp4 (fullscreen stretched)"
+echo "  test-both-loop         - Play both videos in sequence (loop forever)"
 echo ""
 echo "Examples:"
-echo "  sudo hdmi-image          # Display test pattern"
-echo "  hdmi-audio               # Test audio with debug info"
-echo "  sudo hdmi-test           # Run both tests together"
+echo "  test-image-loop          # Loop image test video"
+echo "  test-color-fullscreen    # Fullscreen color test (no aspect ratio)"
+echo "  test-both-loop           # Play both videos in sequence, loop"
 echo ""
 echo "Press Ctrl+C to stop any test"
 echo "========================================="

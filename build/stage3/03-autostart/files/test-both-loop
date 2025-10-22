@@ -1,0 +1,38 @@
+#!/bin/bash
+# Test Script 3: Play both videos in sequence and loop
+
+IMAGE_VIDEO="/opt/hdmi-tester/image-test.mp4"
+COLOR_VIDEO="/opt/hdmi-tester/color_test.mp4"
+
+echo "========================================="
+echo "Combined Test Loop"
+echo "========================================="
+echo "Sequence:"
+echo "  1. Image test (optimized resolution)"
+echo "  2. Color test (fullscreen stretched)"
+echo "  3. Loop forever"
+echo ""
+echo "Press Ctrl+C to stop"
+echo ""
+
+# Check if video files exist
+if [ ! -f "${IMAGE_VIDEO}" ]; then
+    echo "❌ ERROR: Image video not found at ${IMAGE_VIDEO}"
+    exit 1
+fi
+
+if [ ! -f "${COLOR_VIDEO}" ]; then
+    echo "❌ ERROR: Color video not found at ${COLOR_VIDEO}"
+    exit 1
+fi
+
+# Loop forever
+while true; do
+    echo "Playing: image-test.mp4 (optimized resolution)..."
+    mpv --no-osd-bar --osd-level=0 "${IMAGE_VIDEO}" 2>/dev/null
+
+    echo "Playing: color_test.mp4 (fullscreen stretched)..."
+    mpv --fs --no-keepaspect --no-osd-bar --osd-level=0 "${COLOR_VIDEO}" 2>/dev/null
+
+    echo "Restarting loop..."
+done

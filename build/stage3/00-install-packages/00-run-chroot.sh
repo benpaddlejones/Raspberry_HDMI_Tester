@@ -6,7 +6,7 @@
 echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
-for pkg in fbi mpv alsa-utils; do
+for pkg in mpv alsa-utils; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
         echo "  ✅ $pkg: Installed"
     else

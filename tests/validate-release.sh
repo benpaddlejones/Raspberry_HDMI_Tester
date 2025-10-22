@@ -378,8 +378,7 @@ check_package() {
     fi
 }
 
-check_package "fbi" "fbi (framebuffer image viewer)"
-check_package "mpv" "mpv (audio player)"
+check_package "mpv" "mpv (audio/video player)"
 check_package "alsa-utils" "ALSA utilities"
 
 echo ""

@@ -145,7 +145,7 @@ cd /workspaces/Raspberry_HDMI_Tester
 ```
 
 The build will:
-1. Install packages (fbi, mpv, alsa-utils)
+1. Install packages (mpv, alsa-utils)
 2. Copy test assets to /opt/hdmi-tester/
 3. Install test scripts to /usr/local/bin/
 4. Configure auto-login

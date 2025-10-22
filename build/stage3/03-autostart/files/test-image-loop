@@ -1,0 +1,25 @@
+#!/bin/bash
+# Test Script 1: Loop image-test.mp4 with optimized resolution (no OSD)
+
+VIDEO_FILE="/opt/hdmi-tester/image-test.mp4"
+
+echo "========================================="
+echo "Image Test Loop (Optimized Resolution)"
+echo "========================================="
+echo "File: ${VIDEO_FILE}"
+echo "Press Ctrl+C to stop"
+echo ""
+
+# Check if video file exists
+if [ ! -f "${VIDEO_FILE}" ]; then
+    echo "❌ ERROR: Video file not found at ${VIDEO_FILE}"
+    exit 1
+fi
+
+# Run mpv with:
+# --loop=inf - Loop forever
+# --no-osd-bar - No on-screen display
+# --osd-level=0 - Disable all OSD
+# --no-input-default-bindings - Disable default key bindings for clean display
+# --really-quiet - Suppress terminal output
+exec mpv --loop=inf --no-osd-bar --osd-level=0 --no-input-default-bindings "${VIDEO_FILE}"

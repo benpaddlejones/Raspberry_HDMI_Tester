@@ -191,7 +191,6 @@ Edit `build/stage3/03-autostart/00-run.sh` and comment out:
 Edit `build/stage3/00-install-packages/00-packages`:
 
 ```
-fbi
 mpv
 alsa-utils
 your-package-here
@@ -227,9 +226,8 @@ Edit `build/stage3/03-autostart/files/hdmi-display.service`:
 # Change delay before starting
 ExecStartPre=/bin/sleep 5    # Change this number
 
-# Change fbi parameters (framebuffer display)
-# -T 1 = Use framebuffer 1 (HDMI), -a = auto-zoom, -d = keep displayed
-ExecStart=/usr/bin/fbi -T 1 -a --noverbose -d /opt/hdmi-tester/image.png
+# Change mpv parameters (display)
+ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
 
 # Adjust restart delay
 RestartSec=10    # Change this number

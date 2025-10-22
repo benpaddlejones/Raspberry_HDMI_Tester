@@ -159,9 +159,9 @@ alsa-utils
 
 **Risk:** Low - mpv works well with ALSA directly
 
-#### 2.3 Use Framebuffer Instead of X11
+#### 2.3 Use mpv for Display
 **Most Aggressive Option:**
-Replace `feh` + X11 with `fbi` (framebuffer imageviewer)
+Use mpv for display (no X11 needed)
 
 ```bash
 # stage3/00-install-packages/00-packages
@@ -170,8 +170,8 @@ Replace `feh` + X11 with `fbi` (framebuffer imageviewer)
 # xinit
 # feh
 
-# Add framebuffer tools:
-fbi
+# mpv handles both display and audio
+mpv
 ```
 
 **Expected Benefit:**
@@ -230,7 +230,7 @@ export PIGEN_TIMING=1
 **Expected Results:** Reduce image by 50-100MB, faster boot
 
 ### Phase 3: Major Refactoring (2 days effort + extensive testing)
-1. 🔬 Evaluate framebuffer (fbi) instead of X11
+1. 🔬 Evaluate display alternatives
 2. 🔬 Test Wayland alternative
 3. 🔬 Hardware validation on multiple Pi models
 

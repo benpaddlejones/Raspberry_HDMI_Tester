@@ -1,6 +1,3 @@
-# Framebuffer image viewer (no X11/Wayland needed)
-fbi
-
 # Audio/Video playback (console mode)
 mpv
 

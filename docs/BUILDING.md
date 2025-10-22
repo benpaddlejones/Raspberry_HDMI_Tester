@@ -94,8 +94,8 @@ See `logs/README.md` for detailed documentation on the logging system.
 ### Build Stages
 The build process uses these custom stages:
 
-1. **00-install-packages** - Installs fbi (framebuffer viewer), mpv (audio player), ALSA audio
-2. **01-test-image** - Deploys test pattern from `assets/image.png`
+1. **00-install-packages** - Installs mpv (audio/video player), ALSA audio
+2. **01-test-image** - Deploys test pattern to `/opt/hdmi-tester/image.png`
 3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
 4. **03-autostart** - Configures systemd services (framebuffer display + audio)
 5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables audio, minimal GPU memory

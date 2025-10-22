@@ -295,7 +295,6 @@ else
 fi
 
 REQUIRED_PACKAGES=(
-    "fbi|Framebuffer Image Viewer (fbi)"
     "mpv|Media Player (mpv)"
     "alsa-utils|ALSA Utilities"
 )
@@ -314,11 +313,6 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     # Fallback: Check for key binaries directly
     if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
-            fbi)
-                if [ -f "${MOUNT_POINT}/usr/bin/fbi" ] && [ -x "${MOUNT_POINT}/usr/bin/fbi" ]; then
-                    PKG_INSTALLED=true
-                fi
-                ;;
             mpv)
                 if [ -f "${MOUNT_POINT}/usr/bin/mpv" ] && [ -x "${MOUNT_POINT}/usr/bin/mpv" ]; then
                     PKG_INSTALLED=true
