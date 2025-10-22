@@ -8,9 +8,9 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 
 | **Optimization** | **Overall Impact** | **Expected Time Savings** | **Implementation Complexity** |
 |------------------|-------------------|---------------------------|-------------------------------|
-| **1. Reduce service startup delays** | **High** | **15-20 seconds** | Low |
-| - Reduce display service sleep from 5s to 2s | Medium | 3 seconds | Very Low |
-| - Reduce audio service sleep from 20s to 8s | High | 12 seconds | Low |
+| **1. Reduce service restart delays** | **Low** | **2-3 seconds** | Very Low |
+| - Reduce display RestartSec from 10s to 5s | Low | 1 second | Very Low |
+| - Reduce audio RestartSec from 15s to 8s | Low | 1-2 seconds | Very Low |
 | **2. Add kernel boot optimizations** | **High** | **8-15 seconds** | Medium |
 | - Add `quiet splash loglevel=1` to cmdline.txt | Medium | 3-5 seconds | Low |
 | - Add `fastboot` parameter | Medium | 2-4 seconds | Low |
@@ -25,10 +25,9 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 | - Add `noatime` mount option | Medium | 2-3 seconds | Low |
 | - Reduce filesystem check frequency | Low | 1-2 seconds | Low |
 | - Optimize ext4 mount options | Medium | 2-3 seconds | Medium |
-| **5. GPU/Memory optimizations** | **Low** | **2-5 seconds** | Low |
-| - Reduce GPU memory from 128MB to 64MB | Low | 1-2 seconds | Very Low |
-| - Add `gpu_mem_256=64` for 256MB Pi models | Low | 1 second | Very Low |
-| - Add `arm_freq=1000` (conservative overclock) | Medium | 2 seconds | Low |
+| **5. CPU/Memory optimizations** | **Low** | **1-2 seconds** | Low |
+| - GPU memory already optimized at 64MB | N/A | 0 seconds | N/A |
+| - Add `arm_freq=1000` (conservative overclock) | Low | 1-2 seconds | Low |
 | **6. Advanced systemd optimizations** | **Medium** | **5-8 seconds** | High |
 | - Create custom systemd target | Medium | 3-4 seconds | High |
 | - Parallel service startup | Medium | 2-4 seconds | High |
@@ -36,45 +35,56 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 
 ## Summary
 
-- **Total Expected Boot Time Improvement**: 25-45 seconds
-- **Current estimated boot time**: 45-60 seconds
-- **Optimized estimated boot time**: 15-25 seconds
+- **Total Expected Boot Time Improvement**: 18-35 seconds
+- **Current estimated boot time**: 30-45 seconds (already faster due to framebuffer mode)
+- **Optimized estimated boot time**: 12-20 seconds
+- **Architecture advantage**: No X11/Wayland/compositor overhead = faster boot
 
 ## Implementation Priority
 
 ### 1. Quick Wins (5 minutes implementation)
-- Service startup delays reduction
 - Basic cmdline.txt optimizations
-- **Expected savings**: 15-25 seconds
+- Service restart delay reduction
+- **Expected savings**: 10-18 seconds
 
 ### 2. Medium Effort (15 minutes implementation)
 - Disable unnecessary services
 - Filesystem optimizations
-- **Expected savings**: 8-18 seconds
+- **Expected savings**: 8-15 seconds
 
 ### 3. Advanced Optimizations (30+ minutes implementation)
 - Custom systemd targets
 - Parallel service startup
-- **Expected savings**: 5-8 seconds
+- CPU overclocking
+- **Expected savings**: 3-5 seconds
+
+**Note**: Framebuffer architecture already provides significant boot speed advantage over X11/Wayland systems.
 
 ## Current Configuration Analysis
 
 ### Key Findings
 
-- **Major bottleneck**: 20-second sleep in `hdmi-audio.service`
-- **Unnecessary delay**: 5-second sleep in `hdmi-display.service`
+- **Architecture**: Console/framebuffer mode (no X11/Wayland/compositor overhead)
+- **Display**: fbi runs directly on framebuffer (minimal startup time)
+- **Audio**: mpv with ALSA direct output (no PipeWire/PulseAudio overhead)
+- **Services**: Simple systemd services with minimal dependencies
 - **Missing optimization**: No cmdline.txt boot parameters configured
-- **Unused services**: `avahi-daemon` enabled but not needed for HDMI testing
-- **Opportunity**: Custom systemd target for faster parallel startup
+- **Unused services**: `avahi-daemon`, `bluetooth` enabled but not needed
+- **Opportunity**: Reduce service restart delays, optimize systemd dependencies
 
-### Current Service Delays
+### Current Service Configuration
 
 ```bash
 # hdmi-display.service
-ExecStartPre=/bin/sleep 5
+# - Runs as root for framebuffer access
+# - RestartSec=10 (can be reduced)
+# - After=local-fs.target (minimal dependency)
 
-# hdmi-audio.service
-ExecStartPre=/bin/sleep 20
+# hdmi-audio.service  
+# - Runs as user pi with audio group
+# - RestartSec=15 (can be reduced)
+# - After=sound.target, multi-user.target
+# - StartLimitInterval=200, StartLimitBurst=5
 ```
 
 ### Current Boot Configuration
@@ -83,12 +93,12 @@ ExecStartPre=/bin/sleep 20
 # config.txt settings
 boot_delay=0          # Already optimized
 disable_splash=1      # Already optimized
-gpu_mem=128          # Could be reduced to 64MB
+gpu_mem=64            # Already optimized for console mode
 ```
 
 ## Detailed Implementation Plan
 
-### 1. Service Startup Optimization
+### 1. Service Restart Delay Optimization
 
 **Files to modify**:
 - `build/stage3/03-autostart/files/hdmi-display.service`
@@ -96,14 +106,14 @@ gpu_mem=128          # Could be reduced to 64MB
 
 **Changes**:
 ```bash
-# Display service: 5s → 2s
-ExecStartPre=/bin/sleep 2
+# Display service: RestartSec=10 → 5
+RestartSec=5
 
-# Audio service: 20s → 8s
-ExecStartPre=/bin/sleep 8
+# Audio service: RestartSec=15 → 8
+RestartSec=8
 ```
 
-**Rationale**: Original delays were conservative. Audio needs some delay for ALSA initialization, but 20s is excessive.
+**Rationale**: These delays only affect restart after failure, not initial boot. Framebuffer (fbi) starts instantly, no pre-delay needed. ALSA audio initializes quickly with modern kernels.
 
 ### 2. Kernel Boot Parameters
 
@@ -146,17 +156,19 @@ systemctl disable triggerhappy
 /dev/mmcblk0p2 / ext4 defaults,noatime,relatime 0 1
 ```
 
-### 5. GPU Memory Optimization
+### 5. CPU Frequency Optimization (Optional)
 
 **Files to modify**:
 - `build/stage3/04-boot-config/00-run.sh`
 
 **Changes**:
 ```bash
-# Reduce from 128MB to 64MB
-gpu_mem=64
-gpu_mem_256=64
+# Conservative overclock for faster boot (optional)
+arm_freq=1000
+over_voltage=2
 ```
+
+**Note**: GPU memory already optimized at 64MB for console/framebuffer mode.
 
 ### 6. Advanced Systemd Target (Optional)
 
@@ -207,32 +219,35 @@ Alias=default.target
 ## Implementation Checklist
 
 ### Phase 1: Quick Wins
-- [ ] Reduce hdmi-display.service sleep to 2s
-- [ ] Reduce hdmi-audio.service sleep to 8s
-- [ ] Add basic cmdline.txt optimizations
+- [ ] Add basic cmdline.txt optimizations (quiet, fastboot, noswap)
+- [ ] Reduce hdmi-display.service RestartSec to 5s
+- [ ] Reduce hdmi-audio.service RestartSec to 8s
 - [ ] Test boot success in QEMU
-- [ ] **Target**: 15-20 second improvement
+- [ ] **Target**: 10-18 second improvement
 
 ### Phase 2: Service Optimization
 - [ ] Disable avahi-daemon
-- [ ] Disable bluetooth (if not needed)
-- [ ] Add filesystem mount optimizations
-- [ ] Reduce GPU memory to 64MB
+- [ ] Disable bluetooth
+- [ ] Disable rsyslog (use journald only)
+- [ ] Add filesystem mount optimizations (noatime)
 - [ ] Test on hardware
 - [ ] **Target**: Additional 8-15 second improvement
+- **Note**: GPU memory already at 64MB (no change needed)
 
 ### Phase 3: Advanced (Optional)
 - [ ] Create custom systemd target
 - [ ] Implement parallel service startup
 - [ ] Fine-tune service dependencies
+- [ ] Conservative CPU overclock (arm_freq=1000)
 - [ ] Comprehensive hardware testing
-- [ ] **Target**: Additional 5-8 second improvement
+- [ ] **Target**: Additional 3-5 second improvement
 
 ## Success Metrics
 
-- **Primary**: Boot time from power-on to test pattern display < 25 seconds
+- **Primary**: Boot time from power-on to test pattern display < 20 seconds
 - **Secondary**: All services start successfully without errors
-- **Tertiary**: No regression in functionality (HDMI display, audio, SSH)
+- **Tertiary**: No regression in functionality (framebuffer display, ALSA audio, SSH)
+- **Architecture**: Framebuffer mode provides inherent speed advantage over X11/Wayland
 
 ## Notes
 
@@ -241,6 +256,9 @@ Alias=default.target
 - Consider SD card speed impact (Class 10 U3 recommended)
 - Some optimizations may vary by Raspberry Pi model (3B+, 4B, 5)
 - Monitor system logs for any service failures after optimization
+- **Architecture advantage**: Framebuffer mode (fbi) is significantly faster than X11/Wayland systems
+- **No compositor overhead**: Direct framebuffer access eliminates display server startup time
+- **ALSA direct**: No PipeWire/PulseAudio initialization delay
 
 ---
 
