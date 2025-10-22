@@ -14,7 +14,7 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 | **2. Add kernel boot optimizations** | **High** | **8-15 seconds** | Medium | **⏳ Partial** |
 | - Add `quiet splash loglevel=1` to cmdline.txt | Medium | 3-5 seconds | Low | ⏳ TODO |
 | - Add `fastboot` parameter | Medium | 2-4 seconds | Low | ⏳ TODO |
-| - Add `noswap` parameter | Low | 1-2 seconds | Low | ⏳ TODO |
+| - Add `noswap` parameter | Low | 1-2 seconds | Low | ✅ DONE |
 | - Optimize systemd targets | Medium | 3-5 seconds | Medium | ⏳ TODO |
 | **3. Disable unnecessary services** | **Medium** | **5-10 seconds** | Medium | **✅ DONE** |
 | - Disable `avahi-daemon` (mDNS discovery) | Medium | 2-3 seconds | Low | ✅ DONE |
@@ -49,7 +49,8 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 - ✅ 6 unnecessary services disabled (avahi, bluetooth, rsyslog, triggerhappy, ModemManager, wpa_supplicant)
 - ✅ Filesystem optimizations (noatime mount, reduced fsck frequency)
 - ✅ Conservative CPU overclock (arm_freq=1000)
-- **Estimated savings**: 12-18 seconds
+- ✅ Kernel boot optimization (noswap parameter)
+- **Estimated savings**: 13-20 seconds
 
 ## Implementation Priority
 
@@ -230,11 +231,12 @@ Alias=default.target
 ## Implementation Checklist
 
 ### Phase 1: Quick Wins ✅ COMPLETED (Oct 22, 2025)
-- [ ] Add basic cmdline.txt optimizations (quiet, fastboot, noswap) - **TODO**
+- [ ] Add basic cmdline.txt optimizations (quiet, fastboot) - **Partial: noswap DONE**
 - [x] Reduce hdmi-display.service RestartSec to 5s - **DONE**
 - [x] Reduce hdmi-audio.service RestartSec to 8s - **DONE**
+- [x] Add noswap parameter to cmdline.txt - **DONE**
 - [ ] Test boot success in QEMU - **TODO**
-- [x] **Target**: 10-18 second improvement - **DONE: ~2-3 seconds**
+- [x] **Target**: 10-18 second improvement - **DONE: ~3-4 seconds**
 
 ### Phase 2: Service Optimization ✅ COMPLETED (Oct 22, 2025)
 - [x] Disable avahi-daemon - **DONE**
@@ -251,12 +253,13 @@ Alias=default.target
 - **Note**: GPU memory already at 64MB (no change needed)
 
 ### Phase 3: Advanced (Optional) ⏳ TODO
-- [ ] Add cmdline.txt kernel parameters (quiet, fastboot, noswap)
+- [x] Add noswap kernel parameter - **DONE**
+- [ ] Add quiet, splash, loglevel=1, fastboot kernel parameters
 - [ ] Create custom systemd target
 - [ ] Implement parallel service startup
 - [ ] Fine-tune service dependencies
 - [ ] Comprehensive hardware testing
-- [ ] **Target**: Additional 6-12 second improvement
+- [ ] **Target**: Additional 5-10 second improvement
 
 ## Success Metrics
 

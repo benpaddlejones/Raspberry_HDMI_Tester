@@ -119,16 +119,22 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # Remove any existing audio parameters to avoid conflicts
     sed -i 's/snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
     sed -i 's/snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/noswap//g' "${CMDLINE_FILE}"
 
-    # Append audio parameters (on same line, space-separated)
-    sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1/' "${CMDLINE_FILE}"
+    # Append audio parameters and boot optimizations (on same line, space-separated)
+    sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap/' "${CMDLINE_FILE}"
 
     # Verify parameters were added
     if ! grep -q "snd_bcm2835.enable_hdmi=1" "${CMDLINE_FILE}"; then
         echo "❌ Error: Failed to add audio parameters to ${CMDLINE_FILE}"
         exit 1
     fi
+    
+    if ! grep -q "noswap" "${CMDLINE_FILE}"; then
+        echo "❌ Error: Failed to add noswap parameter to ${CMDLINE_FILE}"
+        exit 1
+    fi
 done
 
-echo "✅ Audio parameters added to all cmdline.txt files"
+echo "✅ Audio parameters and boot optimizations added to all cmdline.txt files"
 
