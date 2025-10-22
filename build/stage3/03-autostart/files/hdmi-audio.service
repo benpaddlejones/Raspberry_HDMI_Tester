@@ -1,20 +1,28 @@
 [Unit]
 Description=HDMI Audio Test - ALSA Output
 After=sound.target
+# Wait for sound devices to be ready
+Wants=sound.target
+# Start after multi-user target to ensure audio is fully initialized
+After=multi-user.target
 
 [Service]
 Type=simple
 User=pi
 Group=audio
-# Use ALSA for direct audio output
-# Try HDMI first, will fallback to default device if HDMI not available
-ExecStart=/usr/bin/mpv --loop=inf --no-video --ao=alsa --volume=100 /opt/hdmi-tester/audio.mp3
+# Use ALSA for direct audio output with fallback options
+# --audio-device=auto will try multiple devices
+# --really-quiet reduces error spam
+ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 --really-quiet /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=15
 StandardOutput=journal
 StandardError=journal
 KillMode=mixed
 TimeoutStopSec=10
+# Give the service time to initialize audio
+StartLimitInterval=200
+StartLimitBurst=5
 
 [Install]
 WantedBy=multi-user.target
