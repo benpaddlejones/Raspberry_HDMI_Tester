@@ -176,47 +176,47 @@ if [ ! -d "${PI_GEN_DIR}" ]; then
 fi
 log_info "✓ pi-gen directory found"
 
-# HIGH PRIORITY FIX: Validate asset files for codec compatibility
+# HIGH PRIORITY FIX: Validate asset files (WebM videos with embedded audio)
 log_subsection "Validating Asset Files"
-IMAGE_ASSET="${PROJECT_ROOT}/assets/image.png"
-AUDIO_ASSET="${PROJECT_ROOT}/assets/audio.mp3"
+IMAGE_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
+COLOR_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm"
 
-log_info "Checking image asset: ${IMAGE_ASSET}"
-if [ ! -f "${IMAGE_ASSET}" ]; then
-    log_event "❌" "Image asset not found: ${IMAGE_ASSET}"
+log_info "Checking image test video: ${IMAGE_TEST_VIDEO}"
+if [ ! -f "${IMAGE_TEST_VIDEO}" ]; then
+    log_event "❌" "Image test video not found: ${IMAGE_TEST_VIDEO}"
     end_stage_timer "Prerequisites Check" 1
-    finalize_log "failure" "Missing image asset"
+    finalize_log "failure" "Missing image-test.webm"
     exit 1
 fi
-log_info "✓ Image asset exists ($(stat -c%s "${IMAGE_ASSET}" | numfmt --to=iec-i --suffix=B))"
+log_info "✓ Image test video exists ($(stat -c%s "${IMAGE_TEST_VIDEO}" | numfmt --to=iec-i --suffix=B))"
 
-log_info "Checking audio asset: ${AUDIO_ASSET}"
-if [ ! -f "${AUDIO_ASSET}" ]; then
-    log_event "❌" "Audio asset not found: ${AUDIO_ASSET}"
+log_info "Checking color test video: ${COLOR_TEST_VIDEO}"
+if [ ! -f "${COLOR_TEST_VIDEO}" ]; then
+    log_event "❌" "Color test video not found: ${COLOR_TEST_VIDEO}"
     end_stage_timer "Prerequisites Check" 1
-    finalize_log "failure" "Missing audio asset"
+    finalize_log "failure" "Missing color_test.webm"
     exit 1
 fi
-log_info "✓ Audio asset exists ($(stat -c%s "${AUDIO_ASSET}" | numfmt --to=iec-i --suffix=B))"
+log_info "✓ Color test video exists ($(stat -c%s "${COLOR_TEST_VIDEO}" | numfmt --to=iec-i --suffix=B))"
 
 # Validate codecs if ffprobe is available
 if command -v ffprobe &>/dev/null; then
-    log_info "Validating audio codec compatibility..."
-    if ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${AUDIO_ASSET}" >> "${BUILD_LOG_FILE}" 2>&1; then
-        AUDIO_CODEC=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${AUDIO_ASSET}" 2>/dev/null)
-        log_info "✓ Audio codec detected: ${AUDIO_CODEC}"
+    log_info "Validating image-test.webm..."
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_VIDEO}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_VIDEO}" 2>/dev/null | tr '\n' ' ')
+        log_info "✓ Video validated: ${VIDEO_INFO}"
     else
-        log_event "⚠️" "Warning: Could not validate audio codec (file may be corrupted)"
+        log_event "⚠️" "Warning: Could not validate image-test.webm (file may be corrupted)"
         log_info "Build will continue, but runtime playback may fail"
     fi
 
-    log_info "Validating image file..."
-    if ffprobe -v error "${IMAGE_ASSET}" >> "${BUILD_LOG_FILE}" 2>&1; then
-        IMAGE_INFO=$(ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 "${IMAGE_ASSET}" 2>/dev/null | grep -E "width|height" | tr '\n' ' ')
-        log_info "✓ Image validated: ${IMAGE_INFO}"
+    log_info "Validating color_test.webm..."
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_VIDEO}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_VIDEO}" 2>/dev/null | tr '\n' ' ')
+        log_info "✓ Video validated: ${VIDEO_INFO}"
     else
-        log_event "⚠️" "Warning: Could not validate image file (may be corrupted)"
-        log_info "Build will continue, but runtime display may fail"
+        log_event "⚠️" "Warning: Could not validate color_test.webm (file may be corrupted)"
+        log_info "Build will continue, but runtime playback may fail"
     fi
 else
     log_info "ℹ️  ffprobe not available, skipping codec validation"
@@ -258,13 +258,16 @@ STAGE3_SOURCE="${PROJECT_ROOT}/build/stage3"
 declare -a REQUIRED_STAGE_FILES=(
     "00-install-packages/00-packages"
     "01-test-image/00-run.sh"
-    "01-test-image/files/image.png"
+    "01-test-image/files/image-test.webm"
+    "01-test-image/files/color_test.webm"
     "02-audio-test/00-run.sh"
-    "02-audio-test/files/audio.mp3"
     "03-autostart/00-run.sh"
     "03-autostart/files/test-image-loop"
+    "03-autostart/files/test-image-loop-vlc"
     "03-autostart/files/test-color-fullscreen"
+    "03-autostart/files/test-color-fullscreen-vlc"
     "03-autostart/files/test-both-loop"
+    "03-autostart/files/test-both-loop-vlc"
     "03-autostart/files/hdmi-diagnostics"
     "04-boot-config/00-run.sh"
 )
