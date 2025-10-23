@@ -256,7 +256,6 @@ check_package() {
 check_package "xserver-xorg" "X Server"
 check_package "xinit" "X Init"
 check_package "feh" "feh (image viewer)"
-check_package "mpv" "mpv (media player)"
 
 echo ""
 echo "👤 User Configuration:" | tee -a "${REPORT_FILE}"

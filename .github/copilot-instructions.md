@@ -40,7 +40,7 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 
 4. **Media Components** (Target Image)
    - **Display**: X11 + feh image viewer (fullscreen, no window manager)
-   - **Audio**: mpv media player with `--loop=inf` for infinite playback
+   - **Audio**: VLC media player with `--loop` for infinite playback
    - **Services**: systemd for auto-start (hdmi-display.service, hdmi-audio.service)
 
 ### Development Environment
@@ -78,7 +78,7 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 ### Key Technical Details
 - **Test Pattern**: `assets/image.png` - 1920x1080 PNG
 - **Test Audio**: `assets/audio.mp3` - MP3, 96kbps, 32kHz stereo
-- **Audio Looping**: `mpv --loop=inf` ensures infinite playback
+- **Audio Looping**: `vlc --loop` ensures infinite playback
 - **HDMI Resolution**: Forced to 1920x1080@60Hz via `hdmi_mode=16`
 - **SSH**: Enabled by default (username: `pi`, password: `raspberry`)
 - **Auto-start**: X server launches on login, systemd services start display + audio
@@ -509,7 +509,7 @@ docker system prune -a
 - debootstrap usage
 - kpartx for partition management
 - feh image viewer
-- mpv media player
+- VLC media player
 
 ### Community Resources
 

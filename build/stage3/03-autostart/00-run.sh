@@ -32,7 +32,7 @@ echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("test-image-loop" "test-color-fullscreen" "test-both-loop" "test-image-loop-vlc" "test-color-fullscreen-vlc" "test-both-loop-vlc" "hdmi-diagnostics")
+SCRIPTS=("test-image-loop-vlc" "test-color-fullscreen-vlc" "test-both-loop-vlc" "hdmi-diagnostics")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -57,8 +57,8 @@ echo "✅ Test scripts installed successfully"
 echo "Installing systemd service files (disabled)..."
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
 
-# Install test services based on test commands
-SERVICES=("hd-audio-test.service" "pixel-audio-test.service" "full-test.service" "hd-audio-test-vlc.service" "pixel-audio-test-vlc.service" "full-test-vlc.service")
+# Install test services based on test commands (VLC only)
+SERVICES=("hd-audio-test-vlc.service" "pixel-audio-test-vlc.service" "full-test-vlc.service")
 for service in "${SERVICES[@]}"; do
     if [ -f "files/${service}" ]; then
         install -m 644 "files/${service}" "${ROOTFS_DIR}/etc/systemd/system/"
@@ -73,9 +73,9 @@ echo "   (Services are available for future enablement)"
 
 # NOTE: Services are intentionally NOT enabled for manual testing phase
 # To enable services later, run on the Pi:
-#   sudo systemctl enable hd-audio-test.service       # Image loop test
-#   sudo systemctl enable pixel-audio-test.service    # Color fullscreen test
-#   sudo systemctl enable full-test.service           # Both videos in sequence
+#   sudo systemctl enable hd-audio-test-vlc.service       # Image loop test (VLC)
+#   sudo systemctl enable pixel-audio-test-vlc.service    # Color fullscreen test (VLC)
+#   sudo systemctl enable full-test-vlc.service           # Both videos in sequence (VLC)
 
 # Configure auto-login for user pi on tty1
 echo "Configuring auto-login..."
@@ -102,17 +102,11 @@ echo "========================================="
 echo "   Raspberry Pi HDMI Tester"
 echo "========================================="
 echo ""
-echo "Available test commands (MPV):"
+echo "Available test commands:"
 echo ""
-echo "  test-image-loop        - Loop image-test.webm (optimized resolution)"
-echo "  test-color-fullscreen  - Play color_test.webm (fullscreen stretched)"
-echo "  test-both-loop         - Play both videos in sequence (loop forever)"
-echo ""
-echo "Available test commands (VLC):"
-echo ""
-echo "  test-image-loop-vlc        - Loop image-test.webm (VLC)"
-echo "  test-color-fullscreen-vlc  - Play color_test.webm fullscreen (VLC)"
-echo "  test-both-loop-vlc         - Play both videos in sequence (VLC)"
+echo "  test-image-loop-vlc        - Loop image-test.webm"
+echo "  test-color-fullscreen-vlc  - Play color_test.webm fullscreen"
+echo "  test-both-loop-vlc         - Play both videos in sequence"
 echo ""
 echo "Diagnostic tools:"
 echo ""
@@ -121,29 +115,18 @@ echo "                               (Creates timestamped .tar.gz bundle)"
 echo ""
 echo "Available systemd services (not enabled by default):"
 echo ""
-echo "  MPV Services:"
-echo "    hd-audio-test.service      - Auto-run test-image-loop on boot"
-echo "    pixel-audio-test.service   - Auto-run test-color-fullscreen on boot"
-echo "    full-test.service          - Auto-run test-both-loop on boot"
-echo ""
-echo "  VLC Services:"
-echo "    hd-audio-test-vlc.service      - Auto-run test-image-loop-vlc on boot"
-echo "    pixel-audio-test-vlc.service   - Auto-run test-color-fullscreen-vlc on boot"
-echo "    full-test-vlc.service          - Auto-run test-both-loop-vlc on boot"
+echo "  hd-audio-test-vlc.service      - Auto-run test-image-loop-vlc on boot"
+echo "  pixel-audio-test-vlc.service   - Auto-run test-color-fullscreen-vlc on boot"
+echo "  full-test-vlc.service          - Auto-run test-both-loop-vlc on boot"
 echo ""
 echo "To enable auto-start:"
-echo "  sudo systemctl enable hd-audio-test.service"
-echo "  sudo systemctl start hd-audio-test.service"
+echo "  sudo systemctl enable hd-audio-test-vlc.service"
+echo "  sudo systemctl start hd-audio-test-vlc.service"
 echo ""
-echo "Examples (MPV):"
-echo "  test-image-loop          # Loop image test video"
-echo "  test-color-fullscreen    # Fullscreen color test (no aspect ratio)"
-echo "  test-both-loop           # Play both videos in sequence, loop"
-echo ""
-echo "Examples (VLC):"
-echo "  test-image-loop-vlc          # Loop image test video (VLC)"
-echo "  test-color-fullscreen-vlc    # Fullscreen color test (VLC)"
-echo "  test-both-loop-vlc           # Play both videos in sequence (VLC)"
+echo "Examples:"
+echo "  test-image-loop-vlc          # Loop image test video"
+echo "  test-color-fullscreen-vlc    # Fullscreen color test"
+echo "  test-both-loop-vlc           # Play both videos in sequence"
 echo ""
 echo "Troubleshooting:"
 echo "  hdmi-diagnostics             # Collect all logs and system info"

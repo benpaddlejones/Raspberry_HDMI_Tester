@@ -6,19 +6,19 @@ echo "=== Raspberry Pi HDMI Tester Diagnostics (Console Mode) ==="
 echo ""
 
 echo ""
-echo "1. Checking display service (mpv for image)..."
-if pgrep -x mpv > /dev/null; then
-    echo "   ✅ mpv is running (PID: $(pgrep -x mpv))"
+echo "1. Checking display service (VLC for image)..."
+if pgrep -x vlc > /dev/null; then
+    echo "   ✅ VLC is running (PID: $(pgrep -x vlc))"
 else
-    echo "   ❌ mpv is NOT running"
+    echo "   ❌ VLC is NOT running"
 fi
 echo ""
 
-echo "2. Checking audio player (mpv)..."
-if pgrep -x mpv > /dev/null; then
-    echo "   ✅ mpv is running (PID: $(pgrep -x mpv))"
+echo "2. Checking audio player (VLC)..."
+if pgrep -x vlc > /dev/null; then
+    echo "   ✅ VLC is running (PID: $(pgrep -x vlc))"
 else
-    echo "   ❌ mpv is NOT running"
+    echo "   ❌ VLC is NOT running"
 fi
 echo ""
 
@@ -59,7 +59,7 @@ fi
 echo ""
 
 echo "7. Recent journal logs (last 50 lines)..."
-journalctl -n 50 --no-pager | grep -E "(mpv|alsa|hdmi)" || echo "   No relevant logs found"
+journalctl -n 50 --no-pager | grep -E "(vlc|alsa|hdmi)" || echo "   No relevant logs found"
 echo ""
 
 echo "=== End Diagnostics ==="

@@ -60,7 +60,13 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
         exit 1
     fi
 
-    # Append configuration
+    # Check if configuration already exists
+    if grep -q "HDMI Tester Configuration" "${CONFIG_FILE}"; then
+        echo "  ⚠️  Configuration already exists in ${CONFIG_FILE}, skipping..."
+        continue
+    fi
+
+    # Append configuration (dtparam=audio=on is already in base image, so we skip it)
     cat >> "${CONFIG_FILE}" << 'EOF'
 
 # HDMI Tester Configuration - Force 1920x1080 @ 60Hz (Console Mode)
@@ -88,10 +94,7 @@ boot_delay=0
 # Conservative overclock for faster boot and better performance
 arm_freq=1000
 
-# Enable both HDMI and 3.5mm audio
-dtparam=audio=on
-
-# Audio configuration for both outputs
+# Audio configuration for both outputs (dtparam=audio=on already set in base image)
 dtparam=audio_pwm_mode=2
 EOF
 
@@ -133,14 +136,20 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         exit 1
     fi
 
-    # Remove any existing audio parameters to avoid conflicts
-    sed -i 's/snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
-    sed -i 's/snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
-    sed -i 's/noswap//g' "${CMDLINE_FILE}"
-    sed -i 's/quiet//g' "${CMDLINE_FILE}"
-    sed -i 's/splash//g' "${CMDLINE_FILE}"
-    sed -i 's/loglevel=[0-9]//g' "${CMDLINE_FILE}"
-    sed -i 's/fastboot//g' "${CMDLINE_FILE}"
+    # Remove any existing audio parameters to avoid conflicts (including spaces around them)
+    sed -i 's/ snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/ snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/ noswap//g' "${CMDLINE_FILE}"
+    sed -i 's/ quiet//g' "${CMDLINE_FILE}"
+    sed -i 's/ splash//g' "${CMDLINE_FILE}"
+    sed -i 's/ loglevel=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/ fastboot//g' "${CMDLINE_FILE}"
+
+    # Remove cgroup_disable=memory (causes issues with modern kernels)
+    sed -i 's/ cgroup_disable=memory//g' "${CMDLINE_FILE}"
+
+    # Remove duplicate spaces that might have been created
+    sed -i 's/  */ /g' "${CMDLINE_FILE}"
 
     # Append audio parameters and boot optimizations (on same line, space-separated)
     sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"

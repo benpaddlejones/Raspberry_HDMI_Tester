@@ -152,9 +152,9 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 ## Technical Details
 
 - **Base OS**: Raspberry Pi OS Lite (Debian 12 Bookworm)
-- **Display**: mpv (no desktop environment)
+- **Display**: VLC (no desktop environment)
 - **Resolution**: 1920x1080 @ 60Hz (configurable)
-- **Audio**: ALSA direct output via mpv with infinite loop
+- **Audio**: ALSA direct output via VLC with infinite loop
 - **Boot Time**: ~20-30 seconds
 - **Image Size**: ~1.5-2GB (compressed)
 - **GPU Memory**: 64MB (minimal, console mode)
@@ -199,7 +199,7 @@ For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md
 - Test audio asset (MP3, infinite loop)
 - pi-gen build system (5 custom stages)
 - Auto-start services (systemd)
-- Audio playback integration (mpv with --loop=inf)
+- Audio playback integration (VLC with --loop)
 - HDMI configuration (1920x1080@60Hz forced)
 - Build and testing scripts
 - QEMU testing validation
@@ -290,7 +290,7 @@ This project is licensed under the MIT License with additional GPL components:
 
 - **Project Code**: MIT License - Free to use, modify, and distribute
 - **Pi-gen Components**: GPL (from Raspberry Pi Foundation)
-- **System Packages**: Various open-source licenses (mpv, ALSA, etc.)
+- **System Packages**: Various open-source licenses (VLC, ALSA, etc.)
 
 See the [LICENSE](LICENSE) file for full details.
 
@@ -307,7 +307,7 @@ and/or sell copies, subject to the conditions in the LICENSE file.
 
 - Built with [pi-gen](https://github.com/RPi-Distro/pi-gen) - Official Raspberry Pi OS image builder
 - Powered by [Raspberry Pi OS](https://www.raspberrypi.com/software/)
-- Uses [mpv](https://mpv.io/) for video and audio playback
+- Uses [VLC](https://www.videolan.org/vlc/) for video and audio playback
 - Uses [ALSA](https://www.alsa-project.org/) for audio output
 
 ## Resources

@@ -355,9 +355,9 @@ validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color_test.webm" "Color test video"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
-validate_service "hd-audio-test.service" "HD Audio Test Service" "multi-user.target"
-validate_service "pixel-audio-test.service" "Pixel Audio Test Service" "multi-user.target"
-validate_service "full-test.service" "Full Test Service" "multi-user.target"
+validate_service "hd-audio-test-vlc.service" "HD Audio Test Service (VLC)" "multi-user.target"
+validate_service "pixel-audio-test-vlc.service" "Pixel Audio Test Service (VLC)" "multi-user.target"
+validate_service "full-test-vlc.service" "Full Test Service (VLC)" "multi-user.target"
 
 echo ""
 echo "📦 Required Packages:" | tee -a "${REPORT_FILE}"
@@ -379,7 +379,6 @@ check_package() {
     fi
 }
 
-check_package "mpv" "mpv (audio/video player)"
 check_package "alsa-utils" "ALSA utilities"
 check_package "ffmpeg" "ffmpeg (media framework)"
 check_package "libavcodec-extra" "libavcodec-extra (codec support)"

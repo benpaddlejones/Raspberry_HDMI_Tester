@@ -285,10 +285,6 @@ mkdir -p "${DIAG_DIR}"
     echo "==========================================="
     echo ""
 
-    echo "=== MPV Version ==="
-    mpv --version 2>&1 || echo "MPV not installed"
-    echo ""
-
     echo "=== VLC Version ==="
     cvlc --version 2>&1 || echo "VLC not installed"
     echo ""
@@ -339,7 +335,7 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     echo "=== Video Processes ==="
-    ps aux | grep -E "mpv|vlc|ffmpeg|ffplay" | grep -v grep || echo "No video processes running"
+    ps aux | grep -E "vlc|ffmpeg|ffplay" | grep -v grep || echo "No video processes running"
     echo ""
 
     echo "=== All Processes ==="

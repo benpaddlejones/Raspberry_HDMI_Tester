@@ -33,17 +33,17 @@ for service in hd-audio-test.service pixel-audio-test.service full-test.service;
 done
 echo ""
 
-# Check if mpv process is actually running
-echo "🔍 Checking for active mpv processes:"
-MPV_PROCESSES=$(pgrep -f "mpv.*webm" | wc -l)
-if [ "$MPV_PROCESSES" -gt 0 ]; then
-    echo "✅ Found $MPV_PROCESSES mpv process(es) playing video/audio"
+# Check if VLC process is actually running
+echo "🔍 Checking for active VLC processes:"
+VLC_PROCESSES=$(pgrep -f "vlc.*webm" | wc -l)
+if [ "$VLC_PROCESSES" -gt 0 ]; then
+    echo "✅ Found $VLC_PROCESSES VLC process(es) playing video/audio"
     echo "   Process details:"
-    pgrep -f "mpv.*webm" | while read pid; do
+    pgrep -f "vlc.*webm" | while read pid; do
         echo "   PID $pid: $(ps -p $pid -o args --no-headers)"
     done
 else
-    echo "❌ No mpv processes found playing video"
+    echo "❌ No VLC processes found playing video"
 fi
 echo ""
 
@@ -86,7 +86,7 @@ echo ""
 
 # Summary
 echo "=== Summary ==="
-if [ "$MPV_PROCESSES" -gt 0 ]; then
+if [ "$VLC_PROCESSES" -gt 0 ]; then
     echo "🎵 Video/Audio should be playing! If you can't hear it:"
     echo "   1. Check HDMI cable connection"
     echo "   2. Verify display supports audio"

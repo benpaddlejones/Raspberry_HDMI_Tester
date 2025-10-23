@@ -43,7 +43,7 @@ done
 echo "✅ Audio parameters updated in cmdline.txt"
 echo "⚠️  NOTE: Audio fix requires reboot to take effect!"
 
-# Fix the display service to use mpv
+# Fix the display service to use VLC
 echo "🔧 Updating display service..."
 cat > /etc/systemd/system/hdmi-display.service << 'EOF'
 [Unit]
@@ -54,7 +54,7 @@ After=multi-user.target
 Type=simple
 User=pi
 Group=video
-ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
+ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal

@@ -74,7 +74,7 @@ End:    65GB used / 7GB free (91%)
 xserver-xorg       ← Core X11 (heavy)
 xinit              ← X11 startup
 feh                ← Image viewer (lightweight)
-mpv                ← Media player
+VLC                ← Media player
 alsa-utils         ← Audio utilities
 pulseaudio         ← Audio server (heavy)
 pulseaudio-utils   ← PulseAudio tools
@@ -157,11 +157,11 @@ alsa-utils
 - Reduce image by 50-100MB
 - Faster audio initialization
 
-**Risk:** Low - mpv works well with ALSA directly
+**Risk:** Low - VLC works well with ALSA directly
 
-#### 2.3 Use mpv for Display
+#### 2.3 Use VLC for Display
 **Most Aggressive Option:**
-Use mpv for display (no X11 needed)
+Use VLC for display (no X11 needed)
 
 ```bash
 # stage3/00-install-packages/00-packages
@@ -170,8 +170,8 @@ Use mpv for display (no X11 needed)
 # xinit
 # feh
 
-# mpv handles both display and audio
-mpv
+# VLC handles both display and audio
+VLC
 ```
 
 **Expected Benefit:**
@@ -224,7 +224,7 @@ export PIGEN_TIMING=1
 
 ### Phase 2: Package Optimization (4 hours effort + testing)
 1. 🔬 Test removal of PulseAudio (use ALSA direct)
-2. 🔬 Validate mpv HDMI audio without PulseAudio
+2. 🔬 Validate VLC HDMI audio without PulseAudio
 3. ✅ Update documentation with findings
 
 **Expected Results:** Reduce image by 50-100MB, faster boot

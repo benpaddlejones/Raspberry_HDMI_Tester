@@ -92,7 +92,7 @@ The built image was mounted and inspected to verify all required components are 
   - Configured for automatic restart on failure
 
 #### Package Validation
-- ✅ **Media Player:** mpv installed with WebM codec support
+- ✅ **Media Player:** VLC installed with WebM codec support
 - ✅ **Video Codecs:** VP8/VP9 (libvpx) installed
 - ✅ **Audio Codecs:** Opus, Vorbis installed
 - ✅ **Audio System:** ALSA utilities configured

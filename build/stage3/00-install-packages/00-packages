@@ -1,9 +1,8 @@
 # Audio/Video playback (console mode)
-mpv
 vlc-bin
 vlc-plugin-base
 
-# Video codecs and FFmpeg libraries (required for mpv/vlc video playback)
+# Video codecs and FFmpeg libraries (required for VLC video playback)
 # NOTE: libavcodec-extra includes codecs, libavformat-extra includes formats
 # DO NOT install both libavformat59 and libavformat-extra (they conflict)
 ffmpeg

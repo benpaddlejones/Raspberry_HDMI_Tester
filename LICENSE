@@ -38,7 +38,7 @@ This project incorporates components from the following sources:
 3. Bundled System Packages:
    - X11 (X.Org Foundation) - MIT License
    - feh (image viewer) - MIT License
-   - mpv (media player) - GPL-2.0+
+   - VLC (media player) - GPL-2.0+
    - ALSA utilities - GPL-2.0+
    - PulseAudio - LGPL-2.1+
 

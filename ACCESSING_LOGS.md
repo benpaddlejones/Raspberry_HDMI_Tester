@@ -8,9 +8,9 @@ All logs are stored in `/tmp/` on the Raspberry Pi:
 
 | Log File | Description | Command to View |
 |----------|-------------|-----------------|
-| `/tmp/test-image-loop.log` | Image loop test (MPV) | `less /tmp/test-image-loop.log` |
-| `/tmp/test-color-fullscreen.log` | Color fullscreen test (MPV) | `less /tmp/test-color-fullscreen.log` |
-| `/tmp/test-both-loop.log` | Combined test loop (MPV) | `less /tmp/test-both-loop.log` |
+| `/tmp/test-image-loop.log` | Image loop test (VLC) | `less /tmp/test-image-loop.log` |
+| `/tmp/test-color-fullscreen.log` | Color fullscreen test (VLC) | `less /tmp/test-color-fullscreen.log` |
+| `/tmp/test-both-loop.log` | Combined test loop (VLC) | `less /tmp/test-both-loop.log` |
 | `/tmp/test-image-loop-vlc.log` | Image loop test (VLC) | `less /tmp/test-image-loop-vlc.log` |
 | `/tmp/test-color-fullscreen-vlc.log` | Color fullscreen test (VLC) | `less /tmp/test-color-fullscreen-vlc.log` |
 | `/tmp/test-both-loop-vlc.log` | Combined test loop (VLC) | `less /tmp/test-both-loop-vlc.log` |
@@ -48,7 +48,7 @@ Each test log contains:
 - ✅ DRM devices and permissions
 - ✅ Audio device configuration
 - ✅ Video file validation and metadata
-- ✅ Player (MPV/VLC) capabilities
+- ✅ Player (VLC) capabilities
 - ✅ System resources before playback
 - ✅ Complete verbose output from video player
 - ✅ Timestamps for all operations
@@ -294,7 +294,7 @@ sudo dmesg | grep -i usb
 ### View Video Player Output
 
 ```bash
-# Filter MPV output from log
+# Filter VLC output from log
 grep "^\[" /tmp/test-image-loop.log
 
 # Check for codec errors
@@ -463,7 +463,7 @@ When reporting issues or requesting help, please include:
 - **Raspberry Pi Documentation**: https://www.raspberrypi.com/documentation/
 - **HDMI Troubleshooting**: https://www.raspberrypi.com/documentation/computers/configuration.html#hdmi-configuration
 - **Systemd Journal**: `man journalctl`
-- **MPV Manual**: `man mpv`
+- **VLC Manual**: `man vlc`
 - **VLC Documentation**: https://wiki.videolan.org/
 
 ---

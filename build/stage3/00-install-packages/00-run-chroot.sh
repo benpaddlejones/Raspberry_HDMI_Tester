@@ -35,7 +35,7 @@ echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
 # Core packages that must be installed
-REQUIRED_PACKAGES="mpv alsa-utils ffmpeg"
+REQUIRED_PACKAGES="alsa-utils ffmpeg"
 
 for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then

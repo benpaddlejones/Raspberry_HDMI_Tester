@@ -17,7 +17,7 @@
   "release_notes": {
     "features": [
       "Auto-boot to 1920x1080@60Hz test pattern",
-      "Infinite audio loop through HDMI (mpv --loop=inf)",
+      "Infinite audio loop through HDMI (VLC --loop)",
       "No user interaction required",
       "Systemd services for automatic startup",
       "Built on Raspberry Pi OS Bookworm (Debian 12)"

@@ -139,9 +139,9 @@ echo ""
 FILES_TO_CHECK=(
     "/opt/hdmi-tester/image-test.webm|Image Test Video"
     "/opt/hdmi-tester/color_test.webm|Color Test Video"
-    "/etc/systemd/system/hd-audio-test.service|HD Audio Test Service"
-    "/etc/systemd/system/pixel-audio-test.service|Pixel Audio Test Service"
-    "/etc/systemd/system/full-test.service|Full Test Service"
+    "/etc/systemd/system/hd-audio-test-vlc.service|HD Audio Test Service (VLC)"
+    "/etc/systemd/system/pixel-audio-test-vlc.service|Pixel Audio Test Service (VLC)"
+    "/etc/systemd/system/full-test-vlc.service|Full Test Service (VLC)"
 )
 
 for file_entry in "${FILES_TO_CHECK[@]}"; do
@@ -245,9 +245,9 @@ echo "🔍 Checking systemd service availability..."
 echo ""
 
 SERVICES_TO_CHECK=(
-    "hd-audio-test.service|HD Audio Test Service|multi-user.target"
-    "pixel-audio-test.service|Pixel Audio Test Service|multi-user.target"
-    "full-test.service|Full Test Service|multi-user.target"
+    "hd-audio-test-vlc.service|HD Audio Test Service (VLC)|multi-user.target"
+    "pixel-audio-test-vlc.service|Pixel Audio Test Service (VLC)|multi-user.target"
+    "full-test-vlc.service|Full Test Service (VLC)|multi-user.target"
 )
 
 for service_entry in "${SERVICES_TO_CHECK[@]}"; do
@@ -342,7 +342,6 @@ else
 fi
 
 REQUIRED_PACKAGES=(
-    "mpv|Media Player (mpv)"
     "alsa-utils|ALSA Utilities"
 )
 
@@ -368,11 +367,6 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     # Fallback: Check for key binaries directly
     if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
-            mpv)
-                if [ -f "${MOUNT_POINT}/usr/bin/mpv" ] && [ -x "${MOUNT_POINT}/usr/bin/mpv" ]; then
-                    PKG_INSTALLED=true
-                fi
-                ;;
             alsa-utils)
                 if [ -f "${MOUNT_POINT}/usr/bin/aplay" ] && [ -x "${MOUNT_POINT}/usr/bin/aplay" ]; then
                     PKG_INSTALLED=true

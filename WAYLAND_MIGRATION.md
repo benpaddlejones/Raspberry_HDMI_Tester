@@ -112,7 +112,7 @@ The Raspberry Pi HDMI Tester has been successfully migrated from X11 to Wayland,
 - [ ] Wayland compositor starts
 - [ ] imv displays test pattern
 - [ ] PipeWire audio system initializes
-- [ ] mpv plays audio through PipeWire
+- [ ] VLC plays audio through PipeWire
 
 ### Hardware Testing (Raspberry Pi)
 - [ ] Test on Pi 4 Model B (4GB)

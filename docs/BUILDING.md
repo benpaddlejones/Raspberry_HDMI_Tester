@@ -94,7 +94,7 @@ See `logs/README.md` for detailed documentation on the logging system.
 ### Build Stages
 The build process uses these custom stages:
 
-1. **00-install-packages** - Installs mpv (audio/video player), ALSA audio
+1. **00-install-packages** - Installs VLC (audio/video player), ALSA audio
 2. **01-test-image** - Deploys test pattern to `/opt/hdmi-tester/image.png`
 3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
 4. **03-autostart** - Configures systemd services (framebuffer display + audio)
@@ -221,7 +221,6 @@ Edit `build/stage3/00-install-packages/00-packages`:
 ```
 labwc
 imv
-mpv
 pipewire
 wireplumber
 your-package-here

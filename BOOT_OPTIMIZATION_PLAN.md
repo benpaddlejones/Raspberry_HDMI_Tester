@@ -77,8 +77,8 @@ This document outlines a comprehensive plan to optimize the boot time of the Ras
 ### Key Findings
 
 - **Architecture**: Console/framebuffer mode (no X11/Wayland/compositor overhead)
-- **Display**: mpv displays image (minimal startup time)
-- **Audio**: mpv with ALSA backend (direct hardware access)
+- **Display**: VLC displays image (minimal startup time)
+- **Audio**: VLC with ALSA backend (direct hardware access)
 - **Services**: Simple systemd services with minimal dependencies
 - **Missing optimization**: No cmdline.txt boot parameters configured
 - **Unused services**: `avahi-daemon`, `bluetooth` enabled but not needed

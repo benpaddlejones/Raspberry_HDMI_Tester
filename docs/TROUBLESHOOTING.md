@@ -621,7 +621,7 @@ overscan_bottom=-20
    hdmi_drive=2    # Must be set
    ```
 
-2. **Check mpv is running**:
+2. **Check VLC is running**:
    ```bash
    # On Pi (connect keyboard, Ctrl+Alt+F2)
    systemctl status hdmi-audio.service
@@ -639,8 +639,8 @@ overscan_bottom=-20
 
 4. **Test audio manually**:
    ```bash
-   # On Pi - test with mpv directly
-   mpv --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
+   # On Pi - test with VLC directly
+   vlc --no-video /opt/hdmi-tester/audio.mp3
    ```
 
 ### Audio Plays But Choppy/Stuttering
@@ -655,7 +655,7 @@ overscan_bottom=-20
 2. **Use official power supply**
 3. **Adjust audio buffer** (edit `hdmi-audio.service`):
    ```
-   ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --cache=yes --audio-buffer=1 /opt/hdmi-tester/audio.mp3
+   ExecStart=/usr/bin/vlc --loop --no-video /opt/hdmi-tester/audio.mp3
    ```
 
 ### Audio Doesn't Loop
@@ -666,7 +666,7 @@ overscan_bottom=-20
 Check `hdmi-audio.service`:
 ```bash
 # Must have --loop=inf and --audio-device=auto
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/vlc --loop --no-video /opt/hdmi-tester/audio.mp3
 ```
 
 ### Wrong Audio Output (3.5mm instead of HDMI)

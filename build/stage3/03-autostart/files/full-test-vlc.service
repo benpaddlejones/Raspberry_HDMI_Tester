@@ -25,15 +25,15 @@ ExecStartPre=/bin/bash -c 'echo "=== Full Test Service (VLC) Starting ===" && \
 
 # Run test-both-loop command (both videos in sequence, infinite loop) using VLC
 ExecStart=/bin/bash -c 'while true; do \
-    echo "Playing: image-test.webm (optimized resolution)..." && \
+    echo "Playing: image-test.webm (optimized resolution with aspect ratio)..." && \
     cvlc --play-and-exit --no-video-title-show --no-osd --quiet \
-        --vout=drm --drm-vout-connector=HDMI-A-1 \
+        --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/image-test.webm 2>/dev/null && \
-    echo "Playing: color_test.webm (fullscreen stretched)..." && \
-    cvlc --play-and-exit --fullscreen --aspect-ratio=16:9 --autoscale \
+    echo "Playing: color_test.webm (fullscreen stretched for pixel testing)..." && \
+    cvlc --play-and-exit --fullscreen --no-autoscale \
         --no-video-title-show --no-osd --quiet \
-        --vout=drm --drm-vout-connector=HDMI-A-1 \
+        --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/color_test.webm 2>/dev/null && \
     echo "Restarting loop..."; \

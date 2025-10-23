@@ -42,7 +42,7 @@ You can replace the static test pattern with a looping video:
 2. **Update the display service** to use video:
    Edit `build/stage3/03-autostart/files/hdmi-display.service`:
    ```ini
-   ExecStart=/usr/bin/mpv --loop=inf --fs /opt/hdmi-tester/test-video.webm
+   ExecStart=/usr/bin/vlc --loop --fullscreen /opt/hdmi-tester/test-video.webm
    ```
 
 3. **Rebuild the image**
@@ -227,7 +227,6 @@ Edit `build/stage3/03-autostart/00-run.sh` and comment out:
 Edit `build/stage3/00-install-packages/00-packages`:
 
 ```
-mpv
 alsa-utils
 your-package-here
 another-package
@@ -262,8 +261,8 @@ Edit `build/stage3/03-autostart/files/hdmi-display.service`:
 # Change delay before starting
 ExecStartPre=/bin/sleep 5    # Change this number
 
-# Change mpv parameters (display)
-ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
+# Change VLC parameters (display)
+ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show /opt/hdmi-tester/image.png
 
 # Adjust restart delay
 RestartSec=10    # Change this number
@@ -276,16 +275,16 @@ Edit `build/stage3/03-autostart/files/hdmi-audio.service`:
 ```ini
 [Service]
 # Change audio via ALSA
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device default /opt/hdmi-tester/audio.mp3
 
-# Adjust volume (0-100)
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=80 /opt/hdmi-tester/audio.mp3
+# Adjust volume (0-100, VLC uses 0-512 scale, so 80% = 410)
+ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device default --volume 410 /opt/hdmi-tester/audio.mp3
 
 # Play once (no loop)
-ExecStart=/usr/bin/mpv --no-video --audio-device=auto /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/vlc --no-video --alsa-audio-device default /opt/hdmi-tester/audio.mp3
 
 # Use specific ALSA device
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=alsa/hdmi:CARD=vc4hdmi /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device hw:CARD=vc4hdmi /opt/hdmi-tester/audio.mp3
 ```
 
 ### Add New Service

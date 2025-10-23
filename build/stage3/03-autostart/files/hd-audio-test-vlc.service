@@ -21,7 +21,7 @@ ExecStartPre=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Starting ===" &
 
 # Run test-image-loop command (optimized resolution with audio) using VLC
 ExecStart=/usr/bin/cvlc --loop --no-video-title-show --no-osd --quiet \
-    --vout=drm --drm-vout-connector=HDMI-A-1 \
+    --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
     /opt/hdmi-tester/image-test.webm
 

@@ -33,7 +33,7 @@ ENABLE_SSH=1
 # stage1: Core Raspberry Pi OS components
 # stage2: Networking and basic utilities (minimal OS)
 # stage3: Our custom HDMI tester functionality (replaces standard desktop stage)
-#   - 00-install-packages: X11, feh, mpv, audio tools
+#   - 00-install-packages: VLC, audio tools, codecs
 #   - 01-test-image: Deploy test pattern (1920x1080)
 #   - 02-audio-test: Deploy audio file
 #   - 03-autostart: systemd services for auto-boot

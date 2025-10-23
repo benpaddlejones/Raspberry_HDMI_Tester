@@ -43,7 +43,7 @@ The build automatically installs:
 - `libvpx7` - VP8/VP9 video decoder
 - `libvorbis0a` - Vorbis audio decoder
 - `libopus0` - Opus audio decoder
-- `mpv` - Video player
+- `vlc` - Video player
 
 ## Why WebM?
 

@@ -242,7 +242,7 @@ The project uses 5 custom stages:
 - `00-run-chroot.sh`: Runs inside chroot, installs packages
 
 **Packages installed**:
-- `mpv` - Audio/video player (ALSA backend, console mode)
+- `vlc` - Audio/video player (ALSA backend, console mode)
 - `alsa-utils` - ALSA audio utilities for direct hardware access
 
 #### Stage 01: Test Image
@@ -280,8 +280,8 @@ The project uses 5 custom stages:
 - `files/hdmi-audio.service`: Audio service
 
 **Services created**:
-- `hdmi-display.service`: Displays test pattern using mpv (console mode)
-- `hdmi-audio.service`: Plays audio using mpv (ALSA, console mode)
+- `hdmi-display.service`: Displays test pattern using VLC (console mode)
+- `hdmi-audio.service`: Plays audio using VLC (ALSA, console mode)
 
 **What it does**:
 - Copies service files to `/etc/systemd/system/`
@@ -308,7 +308,7 @@ The project uses 5 custom stages:
 **Base**: Raspberry Pi OS Lite (Debian 12 Bookworm)
 - Minimal footprint (~1.5-2GB image)
 - No desktop environment (console mode only)
-- Direct display access via mpv, no compositor needed
+- Direct display access via VLC, no compositor needed
 
 **Builder**: pi-gen
 - Official Raspberry Pi image builder
@@ -327,8 +327,8 @@ The project uses 5 custom stages:
 3. **systemd starts** system services (including ALSA)
 4. **Console mode** - no desktop environment or compositor
 5. **systemd services start automatically**:
-   - `hdmi-display.service` → Displays test pattern via mpv
-   - `hdmi-audio.service` → Plays audio via mpv (ALSA direct output)
+   - `hdmi-display.service` → Displays test pattern via VLC
+   - `hdmi-audio.service` → Plays audio via VLC (ALSA direct output)
 6. **Display shows** test pattern at 1920x1080@60Hz
 7. **Audio plays** continuously through HDMI via ALSA
 
@@ -365,8 +365,8 @@ After=local-fs.target
 [Service]
 Type=simple
 User=root
-# Use mpv to display image
-ExecStart=/usr/bin/mpv --loop=inf --no-audio --fs /opt/hdmi-tester/image.png
+# Use VLC to display image
+ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -389,7 +389,7 @@ Type=simple
 User=pi
 Group=audio
 # Use ALSA for direct audio output with auto device selection
-ExecStart=/usr/bin/mpv --loop=inf --no-video --audio-device=auto --volume=100 --really-quiet /opt/hdmi-tester/audio.mp3
+ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device default --volume 512 --quiet /opt/hdmi-tester/audio.mp3
 Restart=always
 RestartSec=15
 StandardOutput=journal
@@ -647,7 +647,7 @@ We welcome contributions! Here's how to get involved:
 - [kpartx](https://linux.die.net/man/8/kpartx)
 
 ### Media Tools
-- [MPV Media Player](https://mpv.io/)
+- [VLC Media Player](https://www.videolan.org/vlc/)
 - [ALSA Documentation](https://www.alsa-project.org/wiki/Main_Page)
 
 ### Community

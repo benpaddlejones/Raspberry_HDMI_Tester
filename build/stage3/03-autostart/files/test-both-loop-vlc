@@ -87,20 +87,20 @@ LOG_FILE="/tmp/test-both-loop-vlc.log"
         echo "Memory Free: $(free -h | awk '/^Mem:/ {print $7}')"
         echo ""
 
-        echo "[${LOOP_COUNT}] Playing: image-test.webm (optimized resolution)..."
+        echo "[${LOOP_COUNT}] Playing: image-test.webm (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            --vout=drm --drm-vout-connector=HDMI-A-1 \
+            --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${IMAGE_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""
 
-        echo "[${LOOP_COUNT}] Playing: color_test.webm (fullscreen stretched)..."
+        echo "[${LOOP_COUNT}] Playing: color_test.webm (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        cvlc --play-and-exit --fullscreen --aspect-ratio=16:9 --autoscale \
+        cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            --vout=drm --drm-vout-connector=HDMI-A-1 \
+            --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${COLOR_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
