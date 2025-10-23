@@ -1,0 +1,667 @@
+#!/bin/bash
+# HDMI Tester Diagnostics Script
+# Captures complete system state, logs, and journals for troubleshooting
+
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+DIAG_DIR="/tmp/hdmi-diagnostics-${TIMESTAMP}"
+REPORT_FILE="${DIAG_DIR}/diagnostic-report.txt"
+ARCHIVE_FILE="/tmp/hdmi-diagnostics-${TIMESTAMP}.tar.gz"
+
+echo "==========================================="
+echo "HDMI Tester Diagnostics"
+echo "==========================================="
+echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "Creating diagnostic bundle..."
+echo ""
+
+# Create diagnostics directory
+mkdir -p "${DIAG_DIR}"
+
+# Start comprehensive report
+{
+    echo "==========================================="
+    echo "HDMI TESTER DIAGNOSTIC REPORT"
+    echo "==========================================="
+    echo "Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Hostname: $(hostname)"
+    echo "Report Directory: ${DIAG_DIR}"
+    echo ""
+
+    # ============================================
+    # SYSTEM IDENTIFICATION
+    # ============================================
+    echo "==========================================="
+    echo "SYSTEM IDENTIFICATION"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Hostname and Network ==="
+    echo "Hostname: $(hostname)"
+    echo "FQDN: $(hostname -f 2>/dev/null || echo 'N/A')"
+    echo "IP Addresses:"
+    ip addr show 2>&1 | grep -E "inet |inet6 " || echo "No network configuration"
+    echo ""
+
+    echo "=== OS Information ==="
+    cat /etc/os-release 2>&1 || echo "OS release info not available"
+    echo ""
+    echo "Kernel: $(uname -a)"
+    echo "Architecture: $(uname -m)"
+    echo ""
+
+    echo "=== Raspberry Pi Model ==="
+    if [ -f /proc/device-tree/model ]; then
+        cat /proc/device-tree/model 2>&1
+        echo ""
+    else
+        echo "Model information not available"
+    fi
+    echo ""
+
+    echo "=== CPU Information ==="
+    cat /proc/cpuinfo 2>&1
+    echo ""
+
+    echo "=== Memory Information ==="
+    free -h
+    echo ""
+    cat /proc/meminfo 2>&1
+    echo ""
+
+    # ============================================
+    # RASPBERRY PI SPECIFIC
+    # ============================================
+    echo "==========================================="
+    echo "RASPBERRY PI HARDWARE"
+    echo "==========================================="
+    echo ""
+
+    echo "=== GPU Memory ==="
+    vcgencmd get_mem arm 2>&1 || echo "vcgencmd not available"
+    vcgencmd get_mem gpu 2>&1 || echo "vcgencmd not available"
+    echo ""
+
+    echo "=== CPU Temperature ==="
+    vcgencmd measure_temp 2>&1 || echo "Temperature not available"
+    echo ""
+
+    echo "=== CPU Frequency ==="
+    vcgencmd measure_clock arm 2>&1 || echo "Clock frequency not available"
+    vcgencmd measure_clock core 2>&1 || echo "Core clock not available"
+    vcgencmd measure_clock h264 2>&1 || echo "H264 clock not available"
+    vcgencmd measure_clock isp 2>&1 || echo "ISP clock not available"
+    vcgencmd measure_clock v3d 2>&1 || echo "V3D clock not available"
+    echo ""
+
+    echo "=== Voltage ==="
+    vcgencmd measure_volts core 2>&1 || echo "Voltage not available"
+    vcgencmd measure_volts sdram_c 2>&1 || echo "SDRAM voltage not available"
+    echo ""
+
+    echo "=== Throttling Status ==="
+    vcgencmd get_throttled 2>&1 || echo "Throttling status not available"
+    echo ""
+    echo "Throttling codes:"
+    echo "  0x0     = No throttling"
+    echo "  0x1     = Under-voltage detected"
+    echo "  0x2     = Arm frequency capped"
+    echo "  0x4     = Currently throttled"
+    echo "  0x8     = Soft temperature limit active"
+    echo "  0x10000 = Under-voltage has occurred"
+    echo "  0x20000 = Arm frequency capping has occurred"
+    echo "  0x40000 = Throttling has occurred"
+    echo "  0x80000 = Soft temperature limit has occurred"
+    echo ""
+
+    # ============================================
+    # BOOT CONFIGURATION
+    # ============================================
+    echo "==========================================="
+    echo "BOOT CONFIGURATION"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Boot Config (config.txt) ==="
+    if [ -f /boot/firmware/config.txt ]; then
+        echo "File: /boot/firmware/config.txt"
+        cat /boot/firmware/config.txt 2>&1
+    elif [ -f /boot/config.txt ]; then
+        echo "File: /boot/config.txt"
+        cat /boot/config.txt 2>&1
+    else
+        echo "Boot config not found"
+    fi
+    echo ""
+
+    echo "=== Kernel Command Line ==="
+    if [ -f /boot/firmware/cmdline.txt ]; then
+        echo "File: /boot/firmware/cmdline.txt"
+        cat /boot/firmware/cmdline.txt 2>&1
+    elif [ -f /boot/cmdline.txt ]; then
+        echo "File: /boot/cmdline.txt"
+        cat /boot/cmdline.txt 2>&1
+    else
+        echo "Cmdline not found"
+    fi
+    echo ""
+    cat /proc/cmdline 2>&1
+    echo ""
+
+    # ============================================
+    # DISPLAY CONFIGURATION
+    # ============================================
+    echo "==========================================="
+    echo "DISPLAY & HDMI CONFIGURATION"
+    echo "==========================================="
+    echo ""
+
+    echo "=== HDMI Status ==="
+    tvservice -s 2>&1 || echo "tvservice not available"
+    tvservice -n 2>&1 || echo "Display name not available"
+    echo ""
+
+    echo "=== Available HDMI Modes (CEA) ==="
+    tvservice -m CEA 2>&1 || echo "CEA modes not available"
+    echo ""
+
+    echo "=== Available HDMI Modes (DMT) ==="
+    tvservice -m DMT 2>&1 || echo "DMT modes not available"
+    echo ""
+
+    echo "=== DRM Devices ==="
+    if [ -d /dev/dri/ ]; then
+        ls -lah /dev/dri/ 2>&1
+        echo ""
+        for device in /dev/dri/*; do
+            if [ -e "$device" ]; then
+                echo "Device: $device"
+                stat "$device" 2>&1
+                echo ""
+            fi
+        done
+    else
+        echo "No /dev/dri/ found"
+    fi
+    echo ""
+
+    echo "=== Connected Displays (DRM) ==="
+    for status_file in /sys/class/drm/card*/status; do
+        if [ -f "$status_file" ]; then
+            card=$(echo "$status_file" | cut -d/ -f5)
+            status=$(cat "$status_file" 2>&1)
+            echo "  $card: $status"
+
+            # Get EDID if available
+            edid_file=$(dirname "$status_file")/edid
+            if [ -f "$edid_file" ] && [ -s "$edid_file" ]; then
+                echo "    EDID available: $(stat -c%s "$edid_file") bytes"
+            fi
+        fi
+    done
+    echo ""
+
+    echo "=== Framebuffer Information ==="
+    fbset 2>&1 || echo "fbset not available"
+    echo ""
+    if [ -e /dev/fb0 ]; then
+        echo "Framebuffer device /dev/fb0:"
+        stat /dev/fb0 2>&1
+        cat /sys/class/graphics/fb0/virtual_size 2>&1 || echo "Virtual size not available"
+        cat /sys/class/graphics/fb0/bits_per_pixel 2>&1 || echo "BPP not available"
+    fi
+    echo ""
+
+    # ============================================
+    # AUDIO CONFIGURATION
+    # ============================================
+    echo "==========================================="
+    echo "AUDIO CONFIGURATION"
+    echo "==========================================="
+    echo ""
+
+    echo "=== ALSA Devices ==="
+    aplay -l 2>&1
+    echo ""
+
+    echo "=== ALSA Card Information ==="
+    cat /proc/asound/cards 2>&1 || echo "No ALSA cards"
+    echo ""
+
+    echo "=== ALSA PCM Information ==="
+    cat /proc/asound/pcm 2>&1 || echo "No PCM info"
+    echo ""
+
+    echo "=== PulseAudio Status ==="
+    pactl info 2>&1 || echo "PulseAudio not available"
+    echo ""
+
+    echo "=== PulseAudio Sinks ==="
+    pactl list sinks 2>&1 || echo "No sinks available"
+    echo ""
+
+    echo "=== PulseAudio Sources ==="
+    pactl list sources 2>&1 || echo "No sources available"
+    echo ""
+
+    echo "=== Audio Mixer Settings ==="
+    amixer 2>&1 || echo "amixer not available"
+    echo ""
+
+    # ============================================
+    # VIDEO FILES
+    # ============================================
+    echo "==========================================="
+    echo "VIDEO TEST FILES"
+    echo "==========================================="
+    echo ""
+
+    for video in /opt/hdmi-tester/*.webm /opt/hdmi-tester/*.mp4 /opt/hdmi-tester/*.mkv; do
+        if [ -f "$video" ]; then
+            echo "=== File: $video ==="
+            ls -lh "$video"
+            file "$video"
+            stat "$video"
+            echo "MD5: $(md5sum "$video" | cut -d' ' -f1)"
+            echo ""
+
+            if command -v ffprobe &> /dev/null; then
+                echo "Video Metadata:"
+                ffprobe -v quiet -print_format json -show_format -show_streams "$video" 2>&1
+                echo ""
+            fi
+        fi
+    done
+
+    if [ ! -f /opt/hdmi-tester/*.webm ] && [ ! -f /opt/hdmi-tester/*.mp4 ]; then
+        echo "No video files found in /opt/hdmi-tester/"
+    fi
+    echo ""
+
+    # ============================================
+    # INSTALLED SOFTWARE
+    # ============================================
+    echo "==========================================="
+    echo "INSTALLED SOFTWARE"
+    echo "==========================================="
+    echo ""
+
+    echo "=== MPV Version ==="
+    mpv --version 2>&1 || echo "MPV not installed"
+    echo ""
+
+    echo "=== VLC Version ==="
+    cvlc --version 2>&1 || echo "VLC not installed"
+    echo ""
+
+    echo "=== FFmpeg Version ==="
+    ffmpeg -version 2>&1 || echo "FFmpeg not installed"
+    echo ""
+
+    echo "=== FFprobe Version ==="
+    ffprobe -version 2>&1 || echo "FFprobe not installed"
+    echo ""
+
+    echo "=== Installed Video Codecs ==="
+    dpkg -l | grep -E "libvpx|libopus|libvorbis|libx264|libx265|libav|ffmpeg" 2>&1 || echo "No codec packages found"
+    echo ""
+
+    # ============================================
+    # SYSTEMD SERVICES
+    # ============================================
+    echo "==========================================="
+    echo "SYSTEMD SERVICES"
+    echo "==========================================="
+    echo ""
+
+    echo "=== HDMI Test Services Status ==="
+    for service in hd-audio-test pixel-audio-test full-test hd-audio-test-vlc pixel-audio-test-vlc full-test-vlc; do
+        echo "--- ${service}.service ---"
+        systemctl status ${service}.service 2>&1 || echo "Service not found"
+        echo ""
+    done
+
+    echo "=== All Failed Services ==="
+    systemctl --failed 2>&1
+    echo ""
+
+    echo "=== Boot Time Analysis ==="
+    systemd-analyze 2>&1 || echo "systemd-analyze not available"
+    echo ""
+    systemd-analyze blame 2>&1 | head -20 || echo "Blame not available"
+    echo ""
+
+    # ============================================
+    # RUNNING PROCESSES
+    # ============================================
+    echo "==========================================="
+    echo "RUNNING PROCESSES"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Video Processes ==="
+    ps aux | grep -E "mpv|vlc|ffmpeg|ffplay" | grep -v grep || echo "No video processes running"
+    echo ""
+
+    echo "=== All Processes ==="
+    ps auxf 2>&1
+    echo ""
+
+    echo "=== Process Tree ==="
+    pstree -p 2>&1 || echo "pstree not available"
+    echo ""
+
+    # ============================================
+    # SYSTEM RESOURCES
+    # ============================================
+    echo "==========================================="
+    echo "SYSTEM RESOURCES"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Uptime ==="
+    uptime
+    echo ""
+
+    echo "=== Load Average ==="
+    cat /proc/loadavg
+    echo ""
+
+    echo "=== Memory Usage ==="
+    free -h
+    echo ""
+
+    echo "=== Disk Usage ==="
+    df -h
+    echo ""
+
+    echo "=== Disk I/O Statistics ==="
+    iostat 2>&1 || echo "iostat not available"
+    echo ""
+
+    echo "=== Mount Points ==="
+    mount 2>&1
+    echo ""
+
+    echo "=== Block Devices ==="
+    lsblk 2>&1 || echo "lsblk not available"
+    echo ""
+
+    # ============================================
+    # NETWORK CONFIGURATION
+    # ============================================
+    echo "==========================================="
+    echo "NETWORK CONFIGURATION"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Network Interfaces ==="
+    ip addr show 2>&1
+    echo ""
+
+    echo "=== Routing Table ==="
+    ip route show 2>&1
+    echo ""
+
+    echo "=== DNS Configuration ==="
+    cat /etc/resolv.conf 2>&1 || echo "No resolv.conf"
+    echo ""
+
+    echo "=== Network Statistics ==="
+    netstat -s 2>&1 || ss -s 2>&1 || echo "Network stats not available"
+    echo ""
+
+    # ============================================
+    # ENVIRONMENT
+    # ============================================
+    echo "==========================================="
+    echo "ENVIRONMENT VARIABLES"
+    echo "==========================================="
+    echo ""
+    env | sort
+    echo ""
+
+    # ============================================
+    # KERNEL MODULES
+    # ============================================
+    echo "==========================================="
+    echo "KERNEL MODULES"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Loaded Modules ==="
+    lsmod 2>&1
+    echo ""
+
+    echo "=== DRM Modules ==="
+    lsmod | grep drm 2>&1 || echo "No DRM modules"
+    echo ""
+
+    echo "=== Video Modules ==="
+    lsmod | grep -E "vc4|v3d|hdmi" 2>&1 || echo "No video modules"
+    echo ""
+
+    # ============================================
+    # USB DEVICES
+    # ============================================
+    echo "==========================================="
+    echo "USB DEVICES"
+    echo "==========================================="
+    echo ""
+    lsusb 2>&1 || echo "lsusb not available"
+    echo ""
+
+    # ============================================
+    # PERMISSIONS
+    # ============================================
+    echo "==========================================="
+    echo "FILE PERMISSIONS"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Test Script Permissions ==="
+    ls -lh /usr/local/bin/test-* 2>&1 || echo "No test scripts found"
+    echo ""
+
+    echo "=== Video File Permissions ==="
+    ls -lh /opt/hdmi-tester/ 2>&1 || echo "No video directory"
+    echo ""
+
+    echo "=== Device Permissions ==="
+    ls -lh /dev/dri/ /dev/fb* /dev/video* /dev/snd/* 2>&1 || echo "Devices not found"
+    echo ""
+
+    echo "=== User Groups ==="
+    groups 2>&1
+    echo ""
+
+} > "${REPORT_FILE}" 2>&1
+
+echo "✓ System information captured"
+
+# ============================================
+# COPY LOG FILES
+# ============================================
+echo "Collecting log files..."
+
+# Test script logs
+mkdir -p "${DIAG_DIR}/test-logs"
+cp /tmp/test-*.log "${DIAG_DIR}/test-logs/" 2>/dev/null && echo "✓ Test logs copied" || echo "  No test logs found"
+
+# System logs
+mkdir -p "${DIAG_DIR}/system-logs"
+cp /var/log/syslog "${DIAG_DIR}/system-logs/" 2>/dev/null || echo "  syslog not found"
+cp /var/log/messages "${DIAG_DIR}/system-logs/" 2>/dev/null || echo "  messages not found"
+cp /var/log/kern.log "${DIAG_DIR}/system-logs/" 2>/dev/null || echo "  kern.log not found"
+cp /var/log/daemon.log "${DIAG_DIR}/system-logs/" 2>/dev/null || echo "  daemon.log not found"
+echo "✓ System logs collected"
+
+# Boot logs
+mkdir -p "${DIAG_DIR}/boot-logs"
+dmesg > "${DIAG_DIR}/boot-logs/dmesg.txt" 2>&1
+dmesg -T > "${DIAG_DIR}/boot-logs/dmesg-timestamp.txt" 2>&1
+echo "✓ Boot logs captured"
+
+# ============================================
+# SYSTEMD JOURNALS
+# ============================================
+echo "Extracting systemd journals..."
+
+mkdir -p "${DIAG_DIR}/journals"
+
+# Current boot journal
+journalctl -b 0 > "${DIAG_DIR}/journals/current-boot.log" 2>&1
+echo "✓ Current boot journal"
+
+# Previous boot journal
+journalctl -b -1 > "${DIAG_DIR}/journals/previous-boot.log" 2>&1
+echo "✓ Previous boot journal"
+
+# Service-specific journals
+for service in hd-audio-test pixel-audio-test full-test hd-audio-test-vlc pixel-audio-test-vlc full-test-vlc; do
+    journalctl -u ${service}.service --no-pager > "${DIAG_DIR}/journals/${service}-service.log" 2>&1
+done
+echo "✓ Service journals extracted"
+
+# Kernel messages
+journalctl -k > "${DIAG_DIR}/journals/kernel.log" 2>&1
+echo "✓ Kernel journal"
+
+# Priority filtered journals
+journalctl -p err -b 0 > "${DIAG_DIR}/journals/errors-current-boot.log" 2>&1
+journalctl -p warning -b 0 > "${DIAG_DIR}/journals/warnings-current-boot.log" 2>&1
+echo "✓ Error and warning logs"
+
+# Last 1000 lines of journal
+journalctl -n 1000 --no-pager > "${DIAG_DIR}/journals/last-1000-lines.log" 2>&1
+echo "✓ Recent journal entries"
+
+# ============================================
+# CONFIGURATION FILES
+# ============================================
+echo "Copying configuration files..."
+
+mkdir -p "${DIAG_DIR}/configs"
+cp /boot/firmware/config.txt "${DIAG_DIR}/configs/" 2>/dev/null || cp /boot/config.txt "${DIAG_DIR}/configs/" 2>/dev/null
+cp /boot/firmware/cmdline.txt "${DIAG_DIR}/configs/" 2>/dev/null || cp /boot/cmdline.txt "${DIAG_DIR}/configs/" 2>/dev/null
+cp /etc/systemd/system/*.service "${DIAG_DIR}/configs/" 2>/dev/null
+echo "✓ Configuration files copied"
+
+# ============================================
+# CREATE SUMMARY
+# ============================================
+echo "Creating summary..."
+
+cat > "${DIAG_DIR}/README.txt" << 'EOF'
+HDMI TESTER DIAGNOSTICS BUNDLE
+===============================
+
+This archive contains complete diagnostic information for troubleshooting
+the Raspberry Pi HDMI Tester.
+
+DIRECTORY STRUCTURE:
+--------------------
+
+diagnostic-report.txt    - Complete system information report
+README.txt              - This file
+
+test-logs/              - Logs from test script executions
+  test-image-loop.log
+  test-color-fullscreen.log
+  test-both-loop.log
+  test-*-vlc.log
+
+system-logs/            - System log files
+  syslog
+  kern.log
+  daemon.log
+  messages
+
+boot-logs/              - Boot and kernel logs
+  dmesg.txt
+  dmesg-timestamp.txt
+
+journals/               - Systemd journal exports
+  current-boot.log      - Full journal from current boot
+  previous-boot.log     - Full journal from previous boot
+  kernel.log            - Kernel messages only
+  errors-current-boot.log
+  warnings-current-boot.log
+  *-service.log         - Individual service logs
+  last-1000-lines.log   - Most recent journal entries
+
+configs/                - Configuration files
+  config.txt            - Boot configuration
+  cmdline.txt           - Kernel command line
+  *.service             - Systemd service files
+
+HOW TO USE:
+-----------
+
+1. Review diagnostic-report.txt for system overview
+2. Check journals/ for runtime issues
+3. Look at test-logs/ for specific test failures
+4. Review configs/ for configuration problems
+
+COMMON ISSUES:
+--------------
+
+No Display:
+  - Check HDMI configuration in configs/config.txt
+  - Review DRM device info in diagnostic-report.txt
+  - Check for errors in journals/kernel.log
+
+No Audio:
+  - Review audio configuration in diagnostic-report.txt
+  - Check ALSA device status
+  - Look for audio errors in service logs
+
+Service Failures:
+  - Check journals/*-service.log
+  - Review systemd status in diagnostic-report.txt
+  - Look for permission issues
+
+Performance Issues:
+  - Check throttling status in diagnostic-report.txt
+  - Review CPU temperature and voltage
+  - Check memory usage and disk space
+
+EOF
+
+echo "✓ Summary created"
+
+# ============================================
+# CREATE ARCHIVE
+# ============================================
+echo ""
+echo "Creating compressed archive..."
+
+cd /tmp
+tar -czf "${ARCHIVE_FILE}" "hdmi-diagnostics-${TIMESTAMP}/" 2>&1
+ARCHIVE_SIZE=$(ls -lh "${ARCHIVE_FILE}" | awk '{print $5}')
+
+echo ""
+echo "==========================================="
+echo "DIAGNOSTICS COMPLETE"
+echo "==========================================="
+echo ""
+echo "Archive created: ${ARCHIVE_FILE}"
+echo "Archive size: ${ARCHIVE_SIZE}"
+echo ""
+echo "Diagnostic directory: ${DIAG_DIR}"
+echo "Main report: ${REPORT_FILE}"
+echo ""
+echo "To view the report:"
+echo "  less ${REPORT_FILE}"
+echo ""
+echo "To extract the archive:"
+echo "  tar -xzf ${ARCHIVE_FILE}"
+echo ""
+echo "To copy to another system (if network is available):"
+echo "  scp ${ARCHIVE_FILE} user@hostname:/path/"
+echo ""
+echo "Or copy to a USB drive:"
+echo "  sudo mount /dev/sda1 /mnt"
+echo "  sudo cp ${ARCHIVE_FILE} /mnt/"
+echo "  sudo umount /mnt"
+echo ""
+echo "==========================================="

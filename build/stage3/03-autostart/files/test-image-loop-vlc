@@ -1,13 +1,13 @@
 #!/bin/bash
-# Test Script 2: Play color_test.webm fullscreen (stretched to fill all pixels)
+# Test Script 1 (VLC): Loop image-test.webm with optimized resolution (no OSD)
 
-VIDEO_FILE="/opt/hdmi-tester/color_test.webm"
-LOG_FILE="/tmp/test-color-fullscreen.log"
+VIDEO_FILE="/opt/hdmi-tester/image-test.webm"
+LOG_FILE="/tmp/test-image-loop-vlc.log"
 
 # Start logging
 {
     echo "==========================================="
-    echo "Color Test (Fullscreen) - Started $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Image Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
     echo "==========================================="
     echo "File: ${VIDEO_FILE}"
     echo "Log: ${LOG_FILE}"
@@ -113,15 +113,18 @@ LOG_FILE="/tmp/test-color-fullscreen.log"
     echo "PATH=${PATH}"
     echo ""
 
-    # Check mpv version and capabilities
-    echo "=== MPV Version and Capabilities ==="
-    mpv --version 2>&1
+    # Check VLC version and capabilities
+    echo "=== VLC Version and Capabilities ==="
+    cvlc --version 2>&1
     echo ""
-    echo "MPV Video Outputs:"
-    mpv --vo=help 2>&1
+    echo "VLC Video Outputs:"
+    cvlc --list | grep -A 50 "vout" 2>&1 | head -60
     echo ""
-    echo "MPV Audio Outputs:"
-    mpv --ao=help 2>&1
+    echo "VLC Audio Outputs:"
+    cvlc --list | grep -A 50 "aout" 2>&1 | head -60
+    echo ""
+    echo "VLC Modules:"
+    cvlc --list 2>&1 | head -100
     echo ""
 
     # System resources before start
@@ -140,17 +143,17 @@ LOG_FILE="/tmp/test-color-fullscreen.log"
     ps aux | grep -E "mpv|vlc|ffmpeg" | grep -v grep || echo "None"
     echo ""
 
-    echo "=== Starting MPV (Verbose Mode) ==="
-    echo "Command: mpv --loop=inf --fs --no-keepaspect --no-osd-bar --osd-level=0 --hwdec=no --vo=drm --drm-connector=HDMI-A-1 --cache=yes --demuxer-max-bytes=100M --no-config -v ${VIDEO_FILE}"
+    echo "=== Starting VLC (Verbose Mode) ==="
+    echo "Command: cvlc --loop --no-video-title-show --no-osd --vout=drm --drm-vout-connector=HDMI-A-1 --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
-    echo "--- MPV Output Below ---"
+    echo "--- VLC Output Below ---"
     echo ""
 
-    # Run mpv with verbose output
-    exec mpv --loop=inf --fs --no-keepaspect --no-osd-bar --osd-level=0 \
-        --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
-        --cache=yes --demuxer-max-bytes=100M --no-config -v \
+    # Run VLC with verbose output
+    exec cvlc --loop --no-video-title-show --no-osd \
+        --vout=drm --drm-vout-connector=HDMI-A-1 \
+        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1
 
 } | tee "${LOG_FILE}"

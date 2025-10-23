@@ -15,10 +15,37 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 
 ### Requirements
 - **Resolution**: 1920x1080 (Full HD) recommended
-- **Format**: PNG or JPEG
-- **Size**: < 10MB recommended
+- **Format**: PNG, JPEG, or video (WebM, MP4, FLV)
+- **Size**: < 10MB recommended (images), < 50MB (videos)
 - **Color**: Any (RGB, RGBA)
-- **Location**: `assets/image.png`
+- **Location**: `assets/image.png` (or video file)
+
+### Supported Video Codecs
+The image includes comprehensive codec support for video files:
+- **VP9** - Modern, efficient (used in WebM files: `color_test.webm`, `image-test.webm`)
+- **VP8** - Older WebM codec
+- **H.264** - Universal compatibility (MP4)
+- **H.265/HEVC** - High-efficiency compression
+- **AV1** - Next-generation codec
+- **Theora** - Open-source video
+- **FLV** - Flash Video format
+
+### Using Video Instead of Static Image
+You can replace the static test pattern with a looping video:
+
+1. **Prepare your video** (WebM recommended):
+   ```bash
+   # Convert to VP9/Opus WebM
+   ffmpeg -i your-video.mp4 -c:v libvpx-vp9 -b:v 2M -c:a libopus -b:a 128k assets/test-video.webm
+   ```
+
+2. **Update the display service** to use video:
+   Edit `build/stage3/03-autostart/files/hdmi-display.service`:
+   ```ini
+   ExecStart=/usr/bin/mpv --loop=inf --fs /opt/hdmi-tester/test-video.webm
+   ```
+
+3. **Rebuild the image**
 
 ### Steps in GitHub Codespaces
 
@@ -51,11 +78,20 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 ## Replacing the Audio File
 
 ### Requirements
-- **Format**: MP3, WAV, or OGG
+- **Format**: MP3, WAV, OGG, or WebM
 - **Duration**: Any (will loop infinitely)
 - **Recommended**: Short loops (5-30 seconds) for smaller file size
 - **Size**: < 10MB recommended
 - **Location**: `assets/audio.mp3`
+
+### Supported Audio Codecs
+The image includes comprehensive codec support:
+- **Opus** - High-quality, efficient (used in WebM files)
+- **Vorbis** - Open-source, widely supported
+- **MP3** - Universal compatibility
+- **WAV** - Uncompressed, highest quality
+- **AAC** - Advanced Audio Coding
+- **FLAC** - Lossless compression
 
 ### Steps in GitHub Codespaces
 

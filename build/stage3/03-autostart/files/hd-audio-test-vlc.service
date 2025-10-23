@@ -1,0 +1,43 @@
+[Unit]
+Description=HDMI HD Audio Test - Image Loop (VLC)
+After=local-fs.target sound.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=pi
+Group=audio
+
+# Pre-flight checks
+ExecStartPre=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Starting ===" && \
+    echo "Timestamp: $(date)" && \
+    echo "Checking test video file..." && \
+    if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
+        echo "ERROR: Test video not found at /opt/hdmi-tester/image-test.webm" && \
+        exit 1; \
+    fi && \
+    echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/image-test.webm) bytes)" && \
+    echo "Launching test-image-loop with VLC..."'
+
+# Run test-image-loop command (optimized resolution with audio) using VLC
+ExecStart=/usr/bin/cvlc --loop --no-video-title-show --no-osd --quiet \
+    --vout=drm --drm-vout-connector=HDMI-A-1 \
+    --no-audio-time-stretch --audio-replay-gain-mode=none \
+    /opt/hdmi-tester/image-test.webm
+
+# Log exit status
+ExecStopPost=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Stopped ===" && \
+    echo "Exit code: $EXIT_CODE" && \
+    if [ "$SERVICE_RESULT" != "success" ]; then \
+        echo "ERROR: Service failed - check logs"; \
+    fi'
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

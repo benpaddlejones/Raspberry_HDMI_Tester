@@ -1,14 +1,14 @@
 #!/bin/bash
-# Test Script 3: Play both videos in sequence and loop
+# Test Script 3 (VLC): Play both videos in sequence and loop
 
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.webm"
 COLOR_VIDEO="/opt/hdmi-tester/color_test.webm"
-LOG_FILE="/tmp/test-both-loop.log"
+LOG_FILE="/tmp/test-both-loop-vlc.log"
 
 # Start logging
 {
     echo "==========================================="
-    echo "Combined Test Loop - Started $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Combined Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
     echo "==========================================="
     echo "Files:"
     echo "  - ${IMAGE_VIDEO}"
@@ -65,15 +65,15 @@ LOG_FILE="/tmp/test-both-loop.log"
     aplay -l 2>&1 | head -10 || echo "No ALSA devices"
     echo ""
 
-    # MPV version
-    echo "=== MPV Version ==="
-    mpv --version 2>&1 | head -5
+    # VLC version
+    echo "=== VLC Version ==="
+    cvlc --version 2>&1 | head -5
     echo ""
 
     # Loop counter
     LOOP_COUNT=0
 
-    # Loop forever with Raspberry Pi optimized flags
+    # Loop forever with Raspberry Pi optimized flags using VLC
     while true; do
         LOOP_COUNT=$((LOOP_COUNT + 1))
         echo "==========================================="
@@ -89,18 +89,19 @@ LOG_FILE="/tmp/test-both-loop.log"
 
         echo "[${LOOP_COUNT}] Playing: image-test.webm (optimized resolution)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        mpv --no-osd-bar --osd-level=0 \
-            --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
-            --cache=yes --demuxer-max-bytes=100M --no-config -v \
+        cvlc --play-and-exit --no-video-title-show --no-osd \
+            --vout=drm --drm-vout-connector=HDMI-A-1 \
+            --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${IMAGE_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""
 
         echo "[${LOOP_COUNT}] Playing: color_test.webm (fullscreen stretched)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        mpv --fs --no-keepaspect --no-osd-bar --osd-level=0 \
-            --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
-            --cache=yes --demuxer-max-bytes=100M --no-config -v \
+        cvlc --play-and-exit --fullscreen --aspect-ratio=16:9 --autoscale \
+            --no-video-title-show --no-osd \
+            --vout=drm --drm-vout-connector=HDMI-A-1 \
+            --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${COLOR_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""

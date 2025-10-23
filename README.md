@@ -162,6 +162,30 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
   - ⚠️ **Change password if exposing to network!**
 - **Network**: WiFi not configured by default (optional)
 
+### Video & Audio Codecs
+
+**WebM Test Files** (`color_test.webm`, `image-test.webm`):
+- **Video Codec**: VP9 (Google VP9) - Modern, efficient compression
+- **Audio Codec**: Opus (Opus Interactive Audio Codec) - High-quality audio
+- **Container**: WebM (Matroska-based)
+
+**Supported Formats**:
+- ✅ WebM (VP8/VP9 video, Vorbis/Opus audio)
+- ✅ FLV (Flash Video)
+- ✅ MP4 (H.264/H.265 video)
+- ✅ Theora video
+- ✅ AV1 video (via libaom3)
+
+**Installed Codec Libraries**:
+- `libvpx9` - VP8/VP9 video codec
+- `libopus0` - Opus audio codec
+- `libvorbis0a` - Vorbis audio codec
+- `libx264-164` - H.264 video codec
+- `libx265-199` - H.265/HEVC video codec
+- `libtheora0` - Theora video codec
+- `libaom3` - AV1 video codec
+- `ffmpeg` + `libavcodec-extra` - Comprehensive codec support
+
 For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md).
 
 ## Development Status

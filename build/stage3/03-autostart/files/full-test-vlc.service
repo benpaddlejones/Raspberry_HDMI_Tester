@@ -1,0 +1,57 @@
+[Unit]
+Description=HDMI Full Test - Both Videos Loop (VLC)
+After=local-fs.target sound.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=pi
+Group=audio
+
+# Pre-flight checks
+ExecStartPre=/bin/bash -c 'echo "=== Full Test Service (VLC) Starting ===" && \
+    echo "Timestamp: $(date)" && \
+    echo "Checking test video files..." && \
+    if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
+        echo "ERROR: Image test video not found" && \
+        exit 1; \
+    fi && \
+    if [ ! -f /opt/hdmi-tester/color_test.webm ]; then \
+        echo "ERROR: Color test video not found" && \
+        exit 1; \
+    fi && \
+    echo "✓ Both test videos exist" && \
+    echo "Launching test-both-loop with VLC..."'
+
+# Run test-both-loop command (both videos in sequence, infinite loop) using VLC
+ExecStart=/bin/bash -c 'while true; do \
+    echo "Playing: image-test.webm (optimized resolution)..." && \
+    cvlc --play-and-exit --no-video-title-show --no-osd --quiet \
+        --vout=drm --drm-vout-connector=HDMI-A-1 \
+        --no-audio-time-stretch --audio-replay-gain-mode=none \
+        /opt/hdmi-tester/image-test.webm 2>/dev/null && \
+    echo "Playing: color_test.webm (fullscreen stretched)..." && \
+    cvlc --play-and-exit --fullscreen --aspect-ratio=16:9 --autoscale \
+        --no-video-title-show --no-osd --quiet \
+        --vout=drm --drm-vout-connector=HDMI-A-1 \
+        --no-audio-time-stretch --audio-replay-gain-mode=none \
+        /opt/hdmi-tester/color_test.webm 2>/dev/null && \
+    echo "Restarting loop..."; \
+done'
+
+# Log exit status
+ExecStopPost=/bin/bash -c 'echo "=== Full Test Service (VLC) Stopped ===" && \
+    echo "Exit code: $EXIT_CODE" && \
+    if [ "$SERVICE_RESULT" != "success" ]; then \
+        echo "ERROR: Service failed - check logs"; \
+    fi'
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

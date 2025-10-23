@@ -1,14 +1,29 @@
 # Audio/Video playback (console mode)
 mpv
+vlc-bin
+vlc-plugin-base
 
-# Video codecs and FFmpeg libraries (required for mpv video playback)
+# Video codecs and FFmpeg libraries (required for mpv/vlc video playback)
 ffmpeg
 libavcodec-extra
+libavformat60
+libavutil58
 
 # WebM codec support (VP8/VP9 video, Vorbis/Opus audio)
-libvpx7
+libvpx9
 libvorbis0a
 libopus0
+libwebm1
+
+# FLV (Flash Video) support
+libavformat-extra
+flvstreamer
+
+# Additional codec support for various formats
+libx264-164
+libx265-199
+libtheora0
+libaom3
 
 # Audio system (ALSA for direct hardware access)
 alsa-utils
