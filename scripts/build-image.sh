@@ -132,6 +132,29 @@ else
 fi
 
 log_subsection "Checking Required Tools"
+
+# MEDIUM PRIORITY FIX: Check disk space before starting build
+log_info "Checking disk space for build directory..."
+BUILD_DIR_SPACE_REQUIRED_MB=10240  # 10GB minimum for pi-gen build
+
+WORK_DIR_AVAILABLE_KB=$(df "${PROJECT_ROOT}/build" | tail -1 | awk '{print $4}')
+WORK_DIR_AVAILABLE_MB=$((WORK_DIR_AVAILABLE_KB / 1024))
+
+log_info "Build directory: ${PROJECT_ROOT}/build"
+log_info "Available space: ${WORK_DIR_AVAILABLE_MB}MB"
+log_info "Required space: ${BUILD_DIR_SPACE_REQUIRED_MB}MB"
+
+if [ ${WORK_DIR_AVAILABLE_MB} -lt ${BUILD_DIR_SPACE_REQUIRED_MB} ]; then
+    log_event "❌" "Insufficient disk space for build"
+    log_info "Required: ${BUILD_DIR_SPACE_REQUIRED_MB}MB (10GB)"
+    log_info "Available: ${WORK_DIR_AVAILABLE_MB}MB"
+    log_info "Free up space or use a different build location"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Insufficient disk space in build directory"
+    exit 1
+fi
+log_info "✓ Sufficient disk space for build"
+
 log_info "Checking for qemu-arm-static..."
 if ! command -v qemu-arm-static &> /dev/null; then
     log_event "❌" "qemu-arm-static not found"
@@ -152,6 +175,52 @@ if [ ! -d "${PI_GEN_DIR}" ]; then
     exit 1
 fi
 log_info "✓ pi-gen directory found"
+
+# HIGH PRIORITY FIX: Validate asset files for codec compatibility
+log_subsection "Validating Asset Files"
+IMAGE_ASSET="${PROJECT_ROOT}/assets/image.png"
+AUDIO_ASSET="${PROJECT_ROOT}/assets/audio.mp3"
+
+log_info "Checking image asset: ${IMAGE_ASSET}"
+if [ ! -f "${IMAGE_ASSET}" ]; then
+    log_event "❌" "Image asset not found: ${IMAGE_ASSET}"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Missing image asset"
+    exit 1
+fi
+log_info "✓ Image asset exists ($(stat -c%s "${IMAGE_ASSET}" | numfmt --to=iec-i --suffix=B))"
+
+log_info "Checking audio asset: ${AUDIO_ASSET}"
+if [ ! -f "${AUDIO_ASSET}" ]; then
+    log_event "❌" "Audio asset not found: ${AUDIO_ASSET}"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Missing audio asset"
+    exit 1
+fi
+log_info "✓ Audio asset exists ($(stat -c%s "${AUDIO_ASSET}" | numfmt --to=iec-i --suffix=B))"
+
+# Validate codecs if ffprobe is available
+if command -v ffprobe &>/dev/null; then
+    log_info "Validating audio codec compatibility..."
+    if ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${AUDIO_ASSET}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        AUDIO_CODEC=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${AUDIO_ASSET}" 2>/dev/null)
+        log_info "✓ Audio codec detected: ${AUDIO_CODEC}"
+    else
+        log_event "⚠️" "Warning: Could not validate audio codec (file may be corrupted)"
+        log_info "Build will continue, but runtime playback may fail"
+    fi
+
+    log_info "Validating image file..."
+    if ffprobe -v error "${IMAGE_ASSET}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        IMAGE_INFO=$(ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 "${IMAGE_ASSET}" 2>/dev/null | grep -E "width|height" | tr '\n' ' ')
+        log_info "✓ Image validated: ${IMAGE_INFO}"
+    else
+        log_event "⚠️" "Warning: Could not validate image file (may be corrupted)"
+        log_info "Build will continue, but runtime display may fail"
+    fi
+else
+    log_info "ℹ️  ffprobe not available, skipping codec validation"
+fi
 
 end_stage_timer "Prerequisites Check" 0
 monitor_disk_space "After Prerequisites Check"
@@ -182,6 +251,33 @@ monitor_disk_space "After Build Directory Setup"
 start_stage_timer "Custom Stage Installation"
 
 log_subsection "Installing Custom Stages"
+
+# CRITICAL FIX: Validate custom stage files exist before copying
+log_info "Validating custom stage files..."
+STAGE3_SOURCE="${PROJECT_ROOT}/build/stage3"
+declare -a REQUIRED_STAGE_FILES=(
+    "00-install-packages/00-packages"
+    "01-test-image/00-run.sh"
+    "01-test-image/files/image.png"
+    "02-audio-test/00-run.sh"
+    "02-audio-test/files/audio.mp3"
+    "03-autostart/00-run.sh"
+    "03-autostart/files/test-image-loop"
+    "03-autostart/files/test-color-fullscreen"
+    "03-autostart/files/test-both-loop"
+    "03-autostart/files/hdmi-diagnostics"
+    "04-boot-config/00-run.sh"
+)
+
+for file in "${REQUIRED_STAGE_FILES[@]}"; do
+    if [ ! -e "${STAGE3_SOURCE}/${file}" ]; then
+        log_event "❌" "Missing required custom stage file: ${file}"
+        capture_error_context "Custom stage validation failed: ${file} not found"
+        finalize_log "failure" "Missing custom stage file: ${file}"
+        exit 1
+    fi
+done
+log_info "✓ All required custom stage files validated"
 
 # Override stage2 to fix Trixie-only package issues for Bookworm builds
 log_info "Copying stage2 override (Bookworm compatibility fix)..."

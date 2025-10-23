@@ -78,6 +78,16 @@ if [ ${LOOP_EXIT} -ne 0 ] || [ -z "${LOOP_DEVICE}" ]; then
 fi
 
 echo "✅ Loop device ready: ${LOOP_DEVICE}"
+
+# CRITICAL FIX: Give kernel time to create partition devices
+echo "⏳ Waiting for partition devices to be created..."
+sleep 2
+sudo partprobe "${LOOP_DEVICE}" 2>/dev/null || true
+
+# Additional wait for udev to settle
+if command -v udevadm &>/dev/null; then
+    sudo udevadm settle 2>/dev/null || true
+fi
 echo ""
 
 # Verify boot partition exists

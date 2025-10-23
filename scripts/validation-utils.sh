@@ -26,10 +26,36 @@ cleanup_all() {
         if mountpoint -q "${mount}" 2>/dev/null; then
             echo "  Unmounting: ${mount}"
             if ! sudo umount "${mount}" 2>/dev/null; then
-                echo "  ⚠️  Failed to unmount ${mount}, trying lazy unmount..."
-                if ! sudo umount -l "${mount}" 2>/dev/null; then
-                    echo "  ❌ Failed to unmount ${mount}"
-                    cleanup_failed=1
+                echo "  ⚠️  Failed to unmount ${mount}, checking for processes..."
+
+                # HIGH PRIORITY FIX: Check for processes using the mount
+                if command -v lsof &>/dev/null; then
+                    local procs=$(sudo lsof +D "${mount}" 2>/dev/null | tail -n +2 | awk '{print $2}' | sort -u || true)
+                    if [ -n "${procs}" ]; then
+                        echo "  ⚠️  Processes still using mount: ${procs}"
+                        echo "  Terminating processes..."
+                        for pid in ${procs}; do
+                            sudo kill -TERM ${pid} 2>/dev/null || true
+                        done
+                        sleep 2
+
+                        # Force kill if still running
+                        for pid in ${procs}; do
+                            if kill -0 ${pid} 2>/dev/null; then
+                                sudo kill -KILL ${pid} 2>/dev/null || true
+                            fi
+                        done
+                        sleep 1
+                    fi
+                fi
+
+                # Try regular unmount again
+                if ! sudo umount "${mount}" 2>/dev/null; then
+                    echo "  ⚠️  Still failed, trying lazy unmount..."
+                    if ! sudo umount -l "${mount}" 2>/dev/null; then
+                        echo "  ❌ Failed to unmount ${mount}"
+                        cleanup_failed=1
+                    fi
                 fi
             fi
         fi
@@ -494,8 +520,13 @@ verify_partition() {
         return 0
     fi
 
-    # Wait a moment for udev to create devices
-    sleep 1
+    # CRITICAL FIX: Wait longer and trigger udev settle for partition devices
+    sleep 2
+
+    # Trigger udev to settle if available
+    if command -v udevadm &>/dev/null; then
+        udevadm settle 2>/dev/null || true
+    fi
 
     # Try all patterns again after wait
     if [ -e "${loop_device}p${partition_num}" ]; then

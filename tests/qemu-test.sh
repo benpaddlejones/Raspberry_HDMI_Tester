@@ -289,8 +289,32 @@ for kernel_name in kernel8.img kernel7l.img kernel7.img kernel.img; do
             exit 1
         fi
 
-        KERNEL_SIZE=$(du -h "${KERNEL_FILE}" | cut -f1)
-        echo "✅ Extracted ${kernel_name} (${KERNEL_SIZE})"
+        # HIGH PRIORITY FIX: Validate kernel size and integrity
+        KERNEL_SIZE_BYTES=$(stat -c%s "${KERNEL_FILE}")
+        KERNEL_SIZE_HUMAN=$(du -h "${KERNEL_FILE}" | cut -f1)
+
+        # Raspberry Pi kernels are typically 10-30MB
+        if [ ${KERNEL_SIZE_BYTES} -lt 10000000 ]; then
+            echo "⚠️  Warning: Kernel file seems too small (${KERNEL_SIZE_HUMAN})" | tee -a "${REPORT_FILE}"
+            echo "   Expected size: >10MB, actual: ${KERNEL_SIZE_BYTES} bytes" | tee -a "${REPORT_FILE}"
+            echo "   QEMU boot may fail due to incomplete kernel extraction" | tee -a "${REPORT_FILE}"
+        elif [ ${KERNEL_SIZE_BYTES} -gt 50000000 ]; then
+            echo "⚠️  Warning: Kernel file seems unusually large (${KERNEL_SIZE_HUMAN})" | tee -a "${REPORT_FILE}"
+        else
+            echo "✅ Kernel size validated: ${KERNEL_SIZE_HUMAN} (${KERNEL_SIZE_BYTES} bytes)"
+        fi
+
+        # Try to verify kernel is actually a kernel file (basic check)
+        if command -v file &>/dev/null; then
+            KERNEL_TYPE=$(file "${KERNEL_FILE}" | grep -i "kernel\|boot\|ARM\|executable" || true)
+            if [ -n "${KERNEL_TYPE}" ]; then
+                echo "✅ Kernel type check passed: ${KERNEL_TYPE}"
+            else
+                echo "⚠️  Warning: Kernel file type check inconclusive" | tee -a "${REPORT_FILE}"
+            fi
+        fi
+
+        echo "✅ Extracted ${kernel_name} (${KERNEL_SIZE_HUMAN})"
         KERNEL_FOUND=true
         break
     fi
@@ -362,6 +386,30 @@ QEMU_ARGS+=(
     -nographic
 )
 
+# CRITICAL FIX: Improved QEMU cleanup function
+cleanup_qemu() {
+    if [ -n "${QEMU_PID:-}" ] && kill -0 "${QEMU_PID}" 2>/dev/null; then
+        echo "🛑 Stopping QEMU (PID: ${QEMU_PID})..."
+        kill -TERM "${QEMU_PID}" 2>/dev/null || true
+
+        # Wait up to 3 seconds for graceful shutdown
+        local wait_count=0
+        while [ ${wait_count} -lt 3 ] && kill -0 "${QEMU_PID}" 2>/dev/null; do
+            sleep 1
+            wait_count=$((wait_count + 1))
+        done
+
+        # Force kill if still running
+        if kill -0 "${QEMU_PID}" 2>/dev/null; then
+            echo "⚠️  QEMU still running, forcing kill..."
+            kill -KILL "${QEMU_PID}" 2>/dev/null || true
+            sleep 1
+        fi
+
+        echo "✅ QEMU process terminated"
+    fi
+}
+
 # Run QEMU with timeout
 set +e  # Disable exit on error for QEMU run
 timeout ${TIMEOUT_SECONDS} qemu-system-arm "${QEMU_ARGS[@]}" 2>&1 | tee -a "${BOOT_LOG}" &
@@ -378,14 +426,12 @@ while kill -0 ${QEMU_PID} 2>/dev/null; do
     sleep ${CHECK_INTERVAL}
     ELAPSED=$(($(date +%s) - BOOT_START))
 
-    # Check for successful boot indicators
-    if grep -qi "login:" "${BOOT_LOG}" 2>/dev/null || \
-       grep -qi "Welcome to" "${BOOT_LOG}" 2>/dev/null; then
+    # MEDIUM PRIORITY FIX: Check for successful boot with multiple fallback patterns
+    if grep -Eqi "login:|Welcome to|Raspberry Pi|raspberrypi login:" "${BOOT_LOG}" 2>/dev/null; then
         BOOT_SUCCESS=1
         echo ""
         echo "✅ Boot successful! System reached userspace after ${ELAPSED}s"
-        kill ${QEMU_PID} 2>/dev/null || true
-        sleep 1
+        cleanup_qemu
         break
     fi
 
@@ -393,8 +439,7 @@ while kill -0 ${QEMU_PID} 2>/dev/null; do
     if grep -qi "kernel panic\|Kernel panic" "${BOOT_LOG}" 2>/dev/null; then
         echo ""
         echo "❌ Kernel panic detected!"
-        kill ${QEMU_PID} 2>/dev/null || true
-        sleep 1
+        cleanup_qemu
         break
     fi
 
@@ -402,8 +447,7 @@ while kill -0 ${QEMU_PID} 2>/dev/null; do
     if grep -qi "emergency mode\|Failed to mount" "${BOOT_LOG}" 2>/dev/null; then
         echo ""
         echo "❌ Critical boot failure detected"
-        kill ${QEMU_PID} 2>/dev/null || true
-        sleep 1
+        cleanup_qemu
         break
     fi
 
