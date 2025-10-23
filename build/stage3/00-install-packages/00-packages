@@ -6,11 +6,11 @@ vlc-plugin-base
 # Video codecs and FFmpeg libraries (required for mpv/vlc video playback)
 ffmpeg
 libavcodec-extra
-libavformat60
-libavutil58
+libavformat59
+libavutil57
 
 # WebM codec support (VP8/VP9 video, Vorbis/Opus audio)
-libvpx9
+libvpx7
 libvorbis0a
 libopus0
 libwebm1
