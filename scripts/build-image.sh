@@ -77,20 +77,20 @@ capture_environment
 # Validate that required assets exist
 start_stage_timer "Asset Validation"
 
-log_asset_validation "${PROJECT_ROOT}/assets/image.png" "Test Pattern Image"
-log_asset_validation "${PROJECT_ROOT}/assets/audio.mp3" "Test Audio File"
+log_asset_validation "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" "Image Test Video"
+log_asset_validation "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" "Color Test Video"
 
-if [ ! -f "${PROJECT_ROOT}/assets/image.png" ]; then
-    log_event "❌" "Test image not found at ${PROJECT_ROOT}/assets/image.png"
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; then
+    log_event "❌" "Image test video not found at ${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
     end_stage_timer "Asset Validation" 1
-    finalize_log "failure" "Missing test image asset"
+    finalize_log "failure" "Missing image-test.webm"
     exit 1
 fi
 
-if [ ! -f "${PROJECT_ROOT}/assets/audio.mp3" ]; then
-    log_event "❌" "Test audio not found at ${PROJECT_ROOT}/assets/audio.mp3"
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" ]; then
+    log_event "❌" "Color test video not found at ${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm"
     end_stage_timer "Asset Validation" 1
-    finalize_log "failure" "Missing test audio asset"
+    finalize_log "failure" "Missing color_test.webm"
     exit 1
 fi
 
@@ -213,36 +213,29 @@ end_stage_timer "Configuration Setup" 0
 # Copy assets to custom stages
 start_stage_timer "Asset Deployment"
 
-log_subsection "Creating Asset Directories"
-mkdir -p "${WORK_DIR}/stage3/01-test-image/files"
-mkdir -p "${WORK_DIR}/stage3/02-audio-test/files"
-log_info "✓ Asset directories created"
+log_subsection "Verifying WebM Video Files"
+# WebM files are already in place in stage3/01-test-image/files/
+# No need to copy from assets - they're built directly in the stage directory
 
-log_subsection "Copying Test Pattern Image"
-cp "${PROJECT_ROOT}/assets/image.png" "${WORK_DIR}/stage3/01-test-image/files/image.png"
-log_checksum "${WORK_DIR}/stage3/01-test-image/files/image.png" "Test Pattern Image (Deployed)"
+log_checksum "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" "Image Test Video"
+log_checksum "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" "Color Test Video"
 
-# Verify copy succeeded
-if [ ! -f "${WORK_DIR}/stage3/01-test-image/files/image.png" ]; then
-    log_event "❌" "Failed to copy test pattern image"
+# Verify files exist
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; then
+    log_event "❌" "Failed to find image-test.webm"
     end_stage_timer "Asset Deployment" 1
-    finalize_log "failure" "Failed to copy test pattern image"
+    finalize_log "failure" "Missing image-test.webm"
     exit 1
 fi
-log_info "✓ Test pattern copied"
 
-log_subsection "Copying Test Audio"
-cp "${PROJECT_ROOT}/assets/audio.mp3" "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3"
-log_checksum "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" "Test Audio File (Deployed)"
-
-# Verify copy succeeded
-if [ ! -f "${WORK_DIR}/stage3/02-audio-test/files/audio.mp3" ]; then
-    log_event "❌" "Failed to copy test audio file"
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" ]; then
+    log_event "❌" "Failed to find color_test.webm"
     end_stage_timer "Asset Deployment" 1
-    finalize_log "failure" "Failed to copy test audio file"
+    finalize_log "failure" "Missing color_test.webm"
     exit 1
 fi
-log_info "✓ Test audio copied"
+
+log_info "✓ Both WebM video files verified"
 
 end_stage_timer "Asset Deployment" 0
 monitor_disk_space "After Asset Deployment"

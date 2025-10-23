@@ -1,7 +1,7 @@
 #!/bin/bash
-# Test Script 2: Play color_test.mp4 fullscreen (stretched to fill all pixels)
+# Test Script 2: Play color_test.webm fullscreen (stretched to fill all pixels)
 
-VIDEO_FILE="/opt/hdmi-tester/color_test.mp4"
+VIDEO_FILE="/opt/hdmi-tester/color_test.webm"
 
 echo "========================================="
 echo "Color Test (Fullscreen Stretched)"
@@ -16,10 +16,18 @@ if [ ! -f "${VIDEO_FILE}" ]; then
     exit 1
 fi
 
-# Run mpv with:
+# Run mpv with Raspberry Pi specific flags:
 # --loop=inf - Loop forever
 # --fs - Fullscreen
 # --no-keepaspect - Stretch to fill screen (no letterbox/pillarbox)
 # --no-osd-bar - No on-screen display
 # --osd-level=0 - Disable all OSD
-exec mpv --loop=inf --fs --no-keepaspect --no-osd-bar --osd-level=0 "${VIDEO_FILE}"
+# --hwdec=no - Disable hardware decoding (software more stable for MP4)
+# --vo=drm - Direct rendering mode (framebuffer, no X11)
+# --drm-connector=HDMI-A-1 - Explicitly use HDMI output
+# --cache=yes --demuxer-max-bytes=100M - Large buffer to prevent stalls
+# --no-config - Ignore user config files that might cause issues
+exec mpv --loop=inf --fs --no-keepaspect --no-osd-bar --osd-level=0 \
+    --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
+    --cache=yes --demuxer-max-bytes=100M --no-config \
+    "${VIDEO_FILE}"

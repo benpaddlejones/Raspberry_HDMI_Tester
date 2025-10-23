@@ -5,37 +5,45 @@
 echo "=== HDMI Tester Audio Verification ==="
 echo ""
 
-# Check if audio file exists
-AUDIO_FILE="/opt/hdmi-tester/audio.mp3"
-if [ ! -f "$AUDIO_FILE" ]; then
-    echo "❌ Audio file not found: $AUDIO_FILE"
+# Check if video files with audio exist
+VIDEO_FILE_1="/opt/hdmi-tester/image-test.webm"
+VIDEO_FILE_2="/opt/hdmi-tester/color_test.webm"
+
+if [ ! -f "$VIDEO_FILE_1" ]; then
+    echo "❌ Video file not found: $VIDEO_FILE_1"
     exit 1
 fi
 
-echo "✅ Audio file found: $AUDIO_FILE"
+if [ ! -f "$VIDEO_FILE_2" ]; then
+    echo "❌ Video file not found: $VIDEO_FILE_2"
+    exit 1
+fi
+
+echo "✅ Video files found"
+echo "   - $VIDEO_FILE_1"
+echo "   - $VIDEO_FILE_2"
 echo ""
 
-# Check if audio services are running
-echo "🔍 Checking audio service status:"
-if systemctl is-active --quiet hdmi-audio.service; then
-    echo "✅ hdmi-audio.service is running"
-else
-    echo "❌ hdmi-audio.service is not running"
-    echo "   Status: $(systemctl is-active hdmi-audio.service)"
-fi
+# Check if test services are running
+echo "🔍 Checking test service status:"
+for service in hd-audio-test.service pixel-audio-test.service full-test.service; do
+    if systemctl is-active --quiet "$service" 2>/dev/null; then
+        echo "✅ $service is running"
+    fi
+done
 echo ""
 
 # Check if mpv process is actually running
 echo "🔍 Checking for active mpv processes:"
-MPV_PROCESSES=$(pgrep -f "mpv.*audio.mp3" | wc -l)
+MPV_PROCESSES=$(pgrep -f "mpv.*webm" | wc -l)
 if [ "$MPV_PROCESSES" -gt 0 ]; then
-    echo "✅ Found $MPV_PROCESSES mpv process(es) playing audio"
+    echo "✅ Found $MPV_PROCESSES mpv process(es) playing video/audio"
     echo "   Process details:"
-    pgrep -f "mpv.*audio.mp3" | while read pid; do
+    pgrep -f "mpv.*webm" | while read pid; do
         echo "   PID $pid: $(ps -p $pid -o args --no-headers)"
     done
 else
-    echo "❌ No mpv processes found playing audio"
+    echo "❌ No mpv processes found playing video"
 fi
 echo ""
 
@@ -66,21 +74,26 @@ echo "🔍 Current audio mixer settings:"
 amixer get Master 2>/dev/null || echo "⚠️  Master volume control not found"
 echo ""
 
-# Check system logs for audio errors
-echo "🔍 Recent audio-related log entries:"
-journalctl -u hdmi-audio.service --no-pager -n 10 2>/dev/null || echo "⚠️  Unable to read service logs"
+# Check system logs for errors
+echo "🔍 Recent log entries (if services running):"
+for service in hd-audio-test.service pixel-audio-test.service full-test.service; do
+    if systemctl is-active --quiet "$service" 2>/dev/null; then
+        echo "Logs for $service:"
+        journalctl -u "$service" --no-pager -n 5 2>/dev/null || echo "  Unable to read logs"
+    fi
+done
 echo ""
 
 # Summary
 echo "=== Summary ==="
 if [ "$MPV_PROCESSES" -gt 0 ]; then
-    echo "🎵 Audio should be playing! If you can't hear it:"
+    echo "🎵 Video/Audio should be playing! If you can't hear it:"
     echo "   1. Check HDMI cable connection"
     echo "   2. Verify display supports audio"
     echo "   3. Check 3.5mm output with headphones"
-    echo "   4. Check service logs: journalctl -u hdmi-audio.service"
+    echo "   4. Check service logs: journalctl -u <service-name>"
 else
-    echo "🔇 Audio is not currently playing"
-    echo "   Try restarting the service: sudo systemctl restart hdmi-audio.service"
-    echo "   Check logs: journalctl -u hdmi-audio.service"
+    echo "🔇 No test videos currently playing"
+    echo "   Run manually: test-image-loop, test-color-fullscreen, or test-both-loop"
+    echo "   Or enable a service: sudo systemctl start hd-audio-test.service"
 fi

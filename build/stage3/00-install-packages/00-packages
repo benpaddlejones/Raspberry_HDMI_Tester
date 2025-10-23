@@ -1,5 +1,14 @@
 # Audio/Video playback (console mode)
 mpv
 
+# Video codecs and FFmpeg libraries (required for mpv video playback)
+ffmpeg
+libavcodec-extra
+
+# WebM codec support (VP8/VP9 video, Vorbis/Opus audio)
+libvpx7
+libvorbis0a
+libopus0
+
 # Audio system (ALSA for direct hardware access)
 alsa-utils

@@ -76,23 +76,26 @@ The built image was mounted and inspected to verify all required components are 
   - `hdmi_force_hotplug=1` - Force HDMI detection
   - `hdmi_drive=2` - Enable HDMI audio
   - `hdmi_group=1` and `hdmi_mode=16` - 1920x1080@60Hz
-- ✅ **Test Pattern:** Image file present at `/opt/hdmi-tester/image.png`
-- ✅ **Audio File:** MP3 file present at `/opt/hdmi-tester/audio.mp3`
+- ✅ **Test Videos:** WebM files present
+  - `/opt/hdmi-tester/image-test.webm` - Image quality test
+  - `/opt/hdmi-tester/color_test.webm` - Color test with embedded audio
 
 #### Service Validation
-- ✅ **hdmi-display.service** - Installed and enabled
-  - Auto-starts X server with feh displaying test pattern
+- ✅ **hd-audio-test.service** - Installed (not enabled by default)
+  - Plays image-test.webm in loop (optimized resolution)
   - Configured for automatic restart on failure
-- ✅ **hdmi-audio.service** - Installed and enabled
-  - Auto-starts mpv with infinite audio loop (`--loop=inf`)
+- ✅ **pixel-audio-test.service** - Installed (not enabled by default)
+  - Plays color_test.webm fullscreen stretched in loop
+  - Configured for automatic restart on failure
+- ✅ **full-test.service** - Installed (not enabled by default)
+  - Plays both videos in sequence, infinite loop
   - Configured for automatic restart on failure
 
 #### Package Validation
-- ✅ **X Server:** xserver-xorg installed
-- ✅ **X Init:** xinit installed
-- ✅ **Image Viewer:** feh installed
-- ✅ **Media Player:** mpv installed
-- ✅ **Audio Utilities:** ALSA and PulseAudio configured
+- ✅ **Media Player:** mpv installed with WebM codec support
+- ✅ **Video Codecs:** VP8/VP9 (libvpx) installed
+- ✅ **Audio Codecs:** Opus, Vorbis installed
+- ✅ **Audio System:** ALSA utilities configured
 
 #### User Configuration
 - ✅ **Default User:** 'pi' user exists

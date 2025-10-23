@@ -127,10 +127,11 @@ echo "🔍 Checking required files..."
 echo ""
 
 FILES_TO_CHECK=(
-    "/opt/hdmi-tester/image.png|Test Pattern Image"
-    "/opt/hdmi-tester/audio.mp3|Test Audio File"
-    "/etc/systemd/system/hdmi-display.service|HDMI Display Service"
-    "/etc/systemd/system/hdmi-audio.service|HDMI Audio Service"
+    "/opt/hdmi-tester/image-test.webm|Image Test Video"
+    "/opt/hdmi-tester/color_test.webm|Color Test Video"
+    "/etc/systemd/system/hd-audio-test.service|HD Audio Test Service"
+    "/etc/systemd/system/pixel-audio-test.service|Pixel Audio Test Service"
+    "/etc/systemd/system/full-test.service|Full Test Service"
 )
 
 for file_entry in "${FILES_TO_CHECK[@]}"; do
@@ -230,12 +231,13 @@ fi
 echo ""
 
 # Check if services are enabled
-echo "🔍 Checking systemd service enablement..."
+echo "🔍 Checking systemd service availability..."
 echo ""
 
 SERVICES_TO_CHECK=(
-    "hdmi-display.service|HDMI Display Service|multi-user.target"
-    "hdmi-audio.service|HDMI Audio Service|multi-user.target"
+    "hd-audio-test.service|HD Audio Test Service|multi-user.target"
+    "pixel-audio-test.service|Pixel Audio Test Service|multi-user.target"
+    "full-test.service|Full Test Service|multi-user.target"
 )
 
 for service_entry in "${SERVICES_TO_CHECK[@]}"; do

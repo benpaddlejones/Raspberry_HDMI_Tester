@@ -350,13 +350,14 @@ fi
 
 echo ""
 echo "🖼️  Test Assets:" | tee -a "${REPORT_FILE}"
-validate_file "${ROOT_MOUNT}/opt/hdmi-tester/image.png" "Test pattern image"
-validate_file "${ROOT_MOUNT}/opt/hdmi-tester/audio.mp3" "Test audio file"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/image-test.webm" "Image test video"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color_test.webm" "Color test video"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
-validate_service "hdmi-display.service" "HDMI Display Service" "multi-user.target"
-validate_service "hdmi-audio.service" "HDMI Audio Service" "multi-user.target"
+validate_service "hd-audio-test.service" "HD Audio Test Service" "multi-user.target"
+validate_service "pixel-audio-test.service" "Pixel Audio Test Service" "multi-user.target"
+validate_service "full-test.service" "Full Test Service" "multi-user.target"
 
 echo ""
 echo "📦 Required Packages:" | tee -a "${REPORT_FILE}"
@@ -380,6 +381,11 @@ check_package() {
 
 check_package "mpv" "mpv (audio/video player)"
 check_package "alsa-utils" "ALSA utilities"
+check_package "ffmpeg" "ffmpeg (media framework)"
+check_package "libavcodec-extra" "libavcodec-extra (codec support)"
+check_package "libvpx7" "libvpx7 (VP8/VP9 codec)"
+check_package "libvorbis0a" "libvorbis0a (Vorbis audio)"
+check_package "libopus0" "libopus0 (Opus audio)"
 
 echo ""
 echo "👤 User Configuration:" | tee -a "${REPORT_FILE}"

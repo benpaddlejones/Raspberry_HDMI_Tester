@@ -40,23 +40,25 @@ echo "✅ Test scripts installed successfully"
 echo "Installing systemd service files (disabled)..."
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
 
-if [ -f "files/hdmi-display.service" ]; then
-    install -m 644 files/hdmi-display.service "${ROOTFS_DIR}/etc/systemd/system/"
-    echo "  • hdmi-display.service installed (not enabled)"
-fi
-
-if [ -f "files/hdmi-audio.service" ]; then
-    install -m 644 files/hdmi-audio.service "${ROOTFS_DIR}/etc/systemd/system/"
-    echo "  • hdmi-audio.service installed (not enabled)"
-fi
+# Install test services based on test commands
+SERVICES=("hd-audio-test.service" "pixel-audio-test.service" "full-test.service")
+for service in "${SERVICES[@]}"; do
+    if [ -f "files/${service}" ]; then
+        install -m 644 "files/${service}" "${ROOTFS_DIR}/etc/systemd/system/"
+        echo "  • ${service} installed (not enabled)"
+    else
+        echo "⚠️  Warning: ${service} not found"
+    fi
+done
 
 echo "✅ Systemd services installed but NOT enabled"
 echo "   (Services are available for future enablement)"
 
 # NOTE: Services are intentionally NOT enabled for manual testing phase
 # To enable services later, run on the Pi:
-#   sudo systemctl enable hdmi-display.service
-#   sudo systemctl enable hdmi-audio.service
+#   sudo systemctl enable hd-audio-test.service       # Image loop test
+#   sudo systemctl enable pixel-audio-test.service    # Color fullscreen test
+#   sudo systemctl enable full-test.service           # Both videos in sequence
 
 # Configure auto-login for user pi on tty1
 echo "Configuring auto-login..."
@@ -85,9 +87,19 @@ echo "========================================="
 echo ""
 echo "Available test commands:"
 echo ""
-echo "  test-image-loop        - Loop image-test.mp4 (optimized resolution)"
-echo "  test-color-fullscreen  - Play color_test.mp4 (fullscreen stretched)"
+echo "  test-image-loop        - Loop image-test.webm (optimized resolution)"
+echo "  test-color-fullscreen  - Play color_test.webm (fullscreen stretched)"
 echo "  test-both-loop         - Play both videos in sequence (loop forever)"
+echo ""
+echo "Available systemd services (not enabled by default):"
+echo ""
+echo "  hd-audio-test.service      - Auto-run test-image-loop on boot"
+echo "  pixel-audio-test.service   - Auto-run test-color-fullscreen on boot"
+echo "  full-test.service          - Auto-run test-both-loop on boot"
+echo ""
+echo "To enable auto-start:"
+echo "  sudo systemctl enable hd-audio-test.service"
+echo "  sudo systemctl start hd-audio-test.service"
 echo ""
 echo "Examples:"
 echo "  test-image-loop          # Loop image test video"

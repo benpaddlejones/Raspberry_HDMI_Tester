@@ -1,8 +1,8 @@
 #!/bin/bash
 # Test Script 3: Play both videos in sequence and loop
 
-IMAGE_VIDEO="/opt/hdmi-tester/image-test.mp4"
-COLOR_VIDEO="/opt/hdmi-tester/color_test.mp4"
+IMAGE_VIDEO="/opt/hdmi-tester/image-test.webm"
+COLOR_VIDEO="/opt/hdmi-tester/color_test.webm"
 
 echo "========================================="
 echo "Combined Test Loop"
@@ -26,13 +26,19 @@ if [ ! -f "${COLOR_VIDEO}" ]; then
     exit 1
 fi
 
-# Loop forever
+# Loop forever with Raspberry Pi optimized flags
 while true; do
-    echo "Playing: image-test.mp4 (optimized resolution)..."
-    mpv --no-osd-bar --osd-level=0 "${IMAGE_VIDEO}" 2>/dev/null
+    echo "Playing: image-test.webm (optimized resolution)..."
+    mpv --no-osd-bar --osd-level=0 \
+        --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
+        --cache=yes --demuxer-max-bytes=100M --no-config \
+        "${IMAGE_VIDEO}" 2>/dev/null
 
-    echo "Playing: color_test.mp4 (fullscreen stretched)..."
-    mpv --fs --no-keepaspect --no-osd-bar --osd-level=0 "${COLOR_VIDEO}" 2>/dev/null
+    echo "Playing: color_test.webm (fullscreen stretched)..."
+    mpv --fs --no-keepaspect --no-osd-bar --osd-level=0 \
+        --hwdec=no --vo=drm --drm-connector=HDMI-A-1 \
+        --cache=yes --demuxer-max-bytes=100M --no-config \
+        "${COLOR_VIDEO}" 2>/dev/null
 
     echo "Restarting loop..."
 done

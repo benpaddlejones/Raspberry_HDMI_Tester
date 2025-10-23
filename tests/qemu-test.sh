@@ -462,12 +462,8 @@ echo "=================================================="
     echo "----------------------------------------"
 
     # Service detection (informational only, may fail in QEMU)
-    if grep -qi "hdmi-display.service" "${BOOT_LOG}" 2>/dev/null; then
-        echo "ℹ️  hdmi-display.service mentioned (may have failed in QEMU)"
-    fi
-
-    if grep -qi "hdmi-audio.service" "${BOOT_LOG}" 2>/dev/null; then
-        echo "ℹ️  hdmi-audio.service mentioned (may have failed in QEMU)"
+    if grep -qi "hd-audio-test.service\|pixel-audio-test.service\|full-test.service" "${BOOT_LOG}" 2>/dev/null; then
+        echo "ℹ️  HDMI test service(s) mentioned (may have failed in QEMU - expected)"
     fi
 
     # Error analysis
