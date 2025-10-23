@@ -561,10 +561,9 @@ diagnostic-report.txt    - Complete system information report
 README.txt              - This file
 
 test-logs/              - Logs from test script executions
-  test-image-loop.log
-  test-color-fullscreen.log
-  test-both-loop.log
-  test-*-vlc.log
+  test-image-loop-vlc.log
+  test-color-fullscreen-vlc.log
+  test-both-loop-vlc.log
 
 system-logs/            - System log files
   syslog

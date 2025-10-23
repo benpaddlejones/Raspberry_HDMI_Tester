@@ -8,9 +8,6 @@ All logs are stored in `/tmp/` on the Raspberry Pi:
 
 | Log File | Description | Command to View |
 |----------|-------------|-----------------|
-| `/tmp/test-image-loop.log` | Image loop test (VLC) | `less /tmp/test-image-loop.log` |
-| `/tmp/test-color-fullscreen.log` | Color fullscreen test (VLC) | `less /tmp/test-color-fullscreen.log` |
-| `/tmp/test-both-loop.log` | Combined test loop (VLC) | `less /tmp/test-both-loop.log` |
 | `/tmp/test-image-loop-vlc.log` | Image loop test (VLC) | `less /tmp/test-image-loop-vlc.log` |
 | `/tmp/test-color-fullscreen-vlc.log` | Color fullscreen test (VLC) | `less /tmp/test-color-fullscreen-vlc.log` |
 | `/tmp/test-both-loop-vlc.log` | Combined test loop (VLC) | `less /tmp/test-both-loop-vlc.log` |
@@ -100,10 +97,7 @@ hdmi-diagnostics-YYYYMMDD_HHMMSS/
 │   ├── kernel.log              # Kernel messages only
 │   ├── errors-current-boot.log # Errors from current boot
 │   ├── warnings-current-boot.log # Warnings from current boot
-│   ├── hd-audio-test-service.log # Individual service logs
-│   ├── pixel-audio-test-service.log
-│   ├── full-test-service.log
-│   ├── hd-audio-test-vlc-service.log
+│   ├── hd-audio-test-vlc-service.log # Individual service logs
 │   ├── pixel-audio-test-vlc-service.log
 │   ├── full-test-vlc-service.log
 │   └── last-1000-lines.log     # Most recent journal entries
@@ -189,11 +183,6 @@ If running tests via systemd services (auto-start), view service logs:
 
 ```bash
 # Check service status
-sudo systemctl status hd-audio-test.service
-sudo systemctl status pixel-audio-test.service
-sudo systemctl status full-test.service
-
-# VLC services
 sudo systemctl status hd-audio-test-vlc.service
 sudo systemctl status pixel-audio-test-vlc.service
 sudo systemctl status full-test-vlc.service
@@ -203,13 +192,13 @@ sudo systemctl status full-test-vlc.service
 
 ```bash
 # View service journal in real-time
-sudo journalctl -u hd-audio-test.service -f
+sudo journalctl -u hd-audio-test-vlc.service -f
 
 # View complete service journal
-sudo journalctl -u hd-audio-test.service --no-pager
+sudo journalctl -u hd-audio-test-vlc.service --no-pager
 
 # View last 100 lines
-sudo journalctl -u hd-audio-test.service -n 100
+sudo journalctl -u hd-audio-test-vlc.service -n 100
 
 # View since specific time
 sudo journalctl -u hd-audio-test.service --since "1 hour ago"
