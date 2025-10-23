@@ -34,21 +34,45 @@ fi
 echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
-for pkg in mpv alsa-utils; do
+# Core packages that must be installed
+REQUIRED_PACKAGES="mpv alsa-utils ffmpeg"
+
+for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-        echo "  ✅ $pkg: Installed"
+        VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || echo "unknown")
+        echo "  ✅ $pkg: Installed (version: ${VERSION})"
     else
         echo "  ❌ $pkg: NOT INSTALLED!"
         PACKAGES_OK=false
     fi
 done
 
+# Check for codec libraries (these are critical for video playback)
+CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0"
+
+echo ""
+echo "🔍 Verifying codec libraries..."
+for pkg in ${CODEC_PACKAGES}; do
+    if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+        VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || echo "unknown")
+        echo "  ✅ $pkg: Installed (${VERSION})"
+    else
+        echo "  ⚠️  $pkg: NOT INSTALLED (optional but recommended)"
+    fi
+done
+
 if [ "$PACKAGES_OK" = false ]; then
-    echo "❌ ERROR: Some packages are missing!"
-    echo "This should not happen - packages should be installed via 00-packages file"
+    echo ""
+    echo "❌ ERROR: Some required packages are missing!"
+    echo "This indicates a package installation failure."
+    echo ""
+    echo "Installed packages:"
+    dpkg-query -W -f='${Package} ${Status}\n' | grep "install ok installed" | head -20
+    echo ""
     exit 1
 fi
 
+echo ""
 echo "✅ All required packages verified"
 echo ""
 

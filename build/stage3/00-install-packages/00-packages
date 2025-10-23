@@ -4,9 +4,11 @@ vlc-bin
 vlc-plugin-base
 
 # Video codecs and FFmpeg libraries (required for mpv/vlc video playback)
+# NOTE: libavcodec-extra includes codecs, libavformat-extra includes formats
+# DO NOT install both libavformat59 and libavformat-extra (they conflict)
 ffmpeg
 libavcodec-extra
-libavformat59
+libavformat-extra
 libavutil57
 
 # WebM codec support (VP8/VP9 video, Vorbis/Opus audio)
@@ -16,8 +18,8 @@ libopus0
 libwebm1
 
 # FLV (Flash Video) support
-libavformat-extra
-flvstreamer
+# NOTE: flvstreamer not needed with libavformat-extra
+# flvstreamer
 
 # Additional codec support for various formats
 libx264-164

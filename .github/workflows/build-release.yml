@@ -130,35 +130,60 @@ jobs:
           mkdir -p logs/successful-builds
           mkdir -p logs/failed-builds
 
-          # Clean previous build artifacts
+          # Clean previous build artifacts (use sudo in case files were created with elevated permissions)
           if [ -d "build/pi-gen-work" ]; then
-            rm -rf build/pi-gen-work/*
+            echo "Removing previous build artifacts..."
+            sudo rm -rf build/pi-gen-work/* || {
+              echo "❌ Failed to clean build directory"
+              echo "Attempting to continue anyway..."
+            }
             echo "✅ Build directory cleaned"
           else
             echo "⚠️  Build directory did not exist, created it"
           fi
 
           # Verify critical directories exist
-          if [ ! -d "build" ] || [ ! -d "scripts" ] || [ ! -d "assets" ]; then
+          if [ ! -d "build" ] || [ ! -d "scripts" ]; then
             echo "❌ Error: Critical project directories missing!"
             echo "Expected structure:"
             echo "  - build/"
             echo "  - scripts/"
-            echo "  - assets/"
             ls -la || true
             exit 1
           fi
 
+          # Verify asset files exist
+          echo "Checking asset files..."
+          if [ ! -d "build/stage3/01-test-image/files" ]; then
+            echo "❌ Error: Asset directory missing: build/stage3/01-test-image/files/"
+            exit 1
+          fi
+
+          ASSET_COUNT=$(find build/stage3/01-test-image/files -name "*.webm" -type f | wc -l)
+          echo "Found ${ASSET_COUNT} WebM asset file(s)"
+
+          if [ ${ASSET_COUNT} -lt 2 ]; then
+            echo "⚠️  Warning: Expected 2 WebM files (image-test.webm, color_test.webm)"
+            echo "Contents of asset directory:"
+            ls -la build/stage3/01-test-image/files/
+          fi
+
           echo "✅ Directory structure validated"
 
-      - name: Check available disk space
+      - name: Check available disk space and memory
         run: |
-          echo "📊 Checking available disk space..."
+          echo "📊 Checking system resources..."
+          echo ""
+          echo "=== Disk Space ==="
           df -h
+          echo ""
+          echo "=== Memory ==="
+          free -h
+          echo ""
 
           # Get available space in GB for current directory
           AVAILABLE_GB=$(df --output=avail -BG . | tail -1 | tr -d 'G ')
-          echo "Available space: ${AVAILABLE_GB}GB"
+          echo "Available disk space: ${AVAILABLE_GB}GB"
 
           # Require at least 15GB for build
           if [ ${AVAILABLE_GB} -lt 15 ]; then
@@ -172,6 +197,17 @@ jobs:
           fi
 
           echo "✅ Sufficient disk space available (${AVAILABLE_GB}GB)"
+
+          # Check available memory
+          AVAILABLE_MEM_GB=$(free -g | awk '/^Mem:/{print $7}')
+          echo "Available memory: ${AVAILABLE_MEM_GB}GB"
+
+          if [ ${AVAILABLE_MEM_GB} -lt 2 ]; then
+            echo "⚠️  Warning: Low memory (${AVAILABLE_MEM_GB}GB available)"
+            echo "Build may be slower or fail if memory is exhausted"
+          else
+            echo "✅ Sufficient memory available"
+          fi
 
       - name: Cache pi-gen downloads
         if: ${{ !inputs.force_rebuild }}
