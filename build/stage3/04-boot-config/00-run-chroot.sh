@@ -8,11 +8,30 @@ disable_service() {
     local service="$1"
     local description="$2"
 
-    # Check if systemctl is available and service exists (allow list-unit-files to fail)
-    if systemctl list-unit-files 2>/dev/null | grep -q "^${service}"; then
-        systemctl disable "${service}" 2>/dev/null || true
-        systemctl mask "${service}" 2>/dev/null || true
-        echo "  ✅ Disabled: ${description}"
+    # HIGH PRIORITY FIX #4: Use direct symlink manipulation instead of systemctl in chroot
+    # systemctl requires running systemd/D-Bus which isn't available in chroot
+    # Instead, we manually create the disable/mask symlinks
+
+    local service_file="/lib/systemd/system/${service}"
+    local alt_service_file="/usr/lib/systemd/system/${service}"
+
+    # Check if service exists
+    if [ -f "${service_file}" ] || [ -f "${alt_service_file}" ]; then
+        # Disable: Create symlink to /dev/null in /etc/systemd/system
+        local wants_dir="/etc/systemd/system/multi-user.target.wants"
+        local service_link="${wants_dir}/${service}"
+
+        # Remove any existing enable symlink
+        if [ -L "${service_link}" ]; then
+            rm -f "${service_link}"
+        fi
+
+        # Mask: Create symlink to /dev/null in /etc/systemd/system
+        local mask_link="/etc/systemd/system/${service}"
+        mkdir -p /etc/systemd/system
+        ln -sf /dev/null "${mask_link}"
+
+        echo "  ✅ Disabled and masked: ${description}"
     else
         echo "  ℹ️  Not found: ${description} (may not be installed)"
     fi
@@ -66,23 +85,33 @@ else
     echo "  ⚠️  /etc/fstab not found"
 fi
 
-# Reduce filesystem check frequency
-echo "  📝 Reducing filesystem check frequency..."
+# HIGH PRIORITY FIX #5: tune2fs cannot run on mounted filesystems in chroot
+# Instead, create a systemd oneshot service to run tune2fs on first boot
+echo "  📝 Creating first-boot service for filesystem optimization..."
 
-# Find root partition device (allow failure in chroot)
-ROOT_DEV=$(findmnt -n -o SOURCE / 2>/dev/null || true)
+cat > /etc/systemd/system/tune-filesystem.service << 'EOF'
+[Unit]
+Description=Optimize filesystem check frequency (one-time)
+DefaultDependencies=no
+After=local-fs.target
+Before=multi-user.target
+ConditionPathExists=!/var/lib/tune-filesystem-done
 
-if [ -n "${ROOT_DEV}" ]; then
-    # Set filesystem check to every 100 mounts (instead of default 20-30)
-    tune2fs -c 100 "${ROOT_DEV}" 2>/dev/null || echo "  ℹ️  Could not set mount count check (may not be ext filesystem)"
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'ROOT_DEV=$(findmnt -n -o SOURCE /); if [ -n "$ROOT_DEV" ]; then tune2fs -c 100 "$ROOT_DEV" 2>/dev/null || true; tune2fs -i 6m "$ROOT_DEV" 2>/dev/null || true; touch /var/lib/tune-filesystem-done; echo "Filesystem tuning complete"; fi'
+RemainAfterExit=yes
 
-    # Set filesystem check interval to 6 months (instead of default ~1 month)
-    tune2fs -i 6m "${ROOT_DEV}" 2>/dev/null || echo "  ℹ️  Could not set time interval check"
+[Install]
+WantedBy=multi-user.target
+EOF
 
-    echo "  ✅ Filesystem check frequency reduced"
-else
-    echo "  ℹ️  Could not determine root device (this is normal in chroot - will be configured at first boot)"
-fi
+# Enable the service to run on first boot
+mkdir -p /etc/systemd/system/multi-user.target.wants
+ln -sf /etc/systemd/system/tune-filesystem.service /etc/systemd/system/multi-user.target.wants/tune-filesystem.service
+
+echo "  ✅ Filesystem optimization service created (will run on first boot)"
+echo "  ℹ️  tune2fs cannot run on mounted filesystems, deferred to first boot"
 
 echo "✅ Filesystem optimizations complete"
 echo ""

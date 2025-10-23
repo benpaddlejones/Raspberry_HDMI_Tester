@@ -288,16 +288,51 @@ fi
 
 # Check if we can use chroot (need qemu-user-static for ARM binaries on x86_64)
 CAN_CHROOT=false
+QEMU_COPIED=false
 if [ -f "${MOUNT_POINT}/usr/bin/dpkg-query" ]; then
     # Check if qemu-arm-static is available and binfmt is configured
     if [ -f "/usr/bin/qemu-arm-static" ] && [ -f "/proc/sys/fs/binfmt_misc/qemu-arm" ]; then
+        # CRITICAL FIX #1: Mount required pseudo-filesystems for chroot
+        echo "  ℹ️  Mounting pseudo-filesystems for chroot environment..."
+
+        # Mount /proc if not already mounted
+        if ! mountpoint -q "${MOUNT_POINT}/proc" 2>/dev/null; then
+            sudo mount -t proc proc "${MOUNT_POINT}/proc" || {
+                echo "  ⚠️  Failed to mount /proc, chroot may not work properly"
+            }
+        fi
+
+        # Mount /dev if not already mounted
+        if ! mountpoint -q "${MOUNT_POINT}/dev" 2>/dev/null; then
+            sudo mount --bind /dev "${MOUNT_POINT}/dev" || {
+                echo "  ⚠️  Failed to mount /dev, chroot may not work properly"
+            }
+        fi
+
+        # Mount /sys if not already mounted
+        if ! mountpoint -q "${MOUNT_POINT}/sys" 2>/dev/null; then
+            sudo mount --bind /sys "${MOUNT_POINT}/sys" || {
+                echo "  ⚠️  Failed to mount /sys, chroot may not work properly"
+            }
+        fi
+
+        # Track these mounts for cleanup
+        track_mount "${MOUNT_POINT}/proc"
+        track_mount "${MOUNT_POINT}/dev"
+        track_mount "${MOUNT_POINT}/sys"
+
+        # CRITICAL FIX #2: Track qemu-arm-static for cleanup
         # Ensure qemu-arm-static is available in chroot
         if [ ! -f "${MOUNT_POINT}/usr/bin/qemu-arm-static" ]; then
             echo "  ℹ️  Copying qemu-arm-static to chroot..."
             sudo cp /usr/bin/qemu-arm-static "${MOUNT_POINT}/usr/bin/"
+            QEMU_COPIED=true
+            track_temp_file "${MOUNT_POINT}/usr/bin/qemu-arm-static"
         fi
+
         CAN_CHROOT=true
         echo "  ✅ ARM binary execution available (qemu-user-static)"
+        echo "  ✅ Chroot environment prepared with pseudo-filesystems"
     else
         echo "  ⚠️  Cannot execute ARM binaries (qemu-user-static not configured)"
         echo "      Will use fallback binary checks instead"
@@ -317,8 +352,16 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     # Try chroot method first if available
     PKG_INSTALLED=false
     if [ "${CAN_CHROOT}" = true ]; then
-        if timeout 10 sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q "install ok installed"; then
+        # CRITICAL FIX #3: Add timeout for entire chroot operation, not just dpkg-query
+        # Use timeout to prevent hangs from QEMU/binfmt issues
+        if timeout 15 bash -c "sudo chroot '${MOUNT_POINT}' dpkg-query -W -f='\${Status}' '${package}' 2>/dev/null | grep -q 'install ok installed'"; then
             PKG_INSTALLED=true
+        else
+            CHROOT_EXIT=$?
+            if [ ${CHROOT_EXIT} -eq 124 ]; then
+                echo "  ⚠️  Chroot timeout for ${package} (QEMU/binfmt may be failing)"
+                CAN_CHROOT=false  # Disable chroot for remaining checks
+            fi
         fi
     fi
 
