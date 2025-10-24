@@ -6,11 +6,12 @@ This guide explains how to access logs and diagnostic information from the Raspb
 
 All logs are stored in `/tmp/` on the Raspberry Pi:
 
-| Log File | Description | Command to View |
-|----------|-------------|-----------------|
-| `/tmp/test-image-loop-vlc.log` | Image loop test (VLC) | `less /tmp/test-image-loop-vlc.log` |
-| `/tmp/test-color-fullscreen-vlc.log` | Color fullscreen test (VLC) | `less /tmp/test-color-fullscreen-vlc.log` |
-| `/tmp/test-both-loop-vlc.log` | Combined test loop (VLC) | `less /tmp/test-both-loop-vlc.log` |
+| Log File | Description | Quick View |
+|----------|-------------|------------|
+| `/tmp/hdmi-test.log` | HDMI test (image loop) | `less /tmp/hdmi-test.log` |
+| `/tmp/pixel-test.log` | Pixel test (color fullscreen) | `less /tmp/pixel-test.log` |
+| `/tmp/audio-test.log` | Audio test (MP3 loop) | `less /tmp/audio-test.log` |
+| `/tmp/full-test.log` | Full test (both videos) | `less /tmp/full-test.log` |
 | `/tmp/hdmi-diagnostics-*.tar.gz` | Complete diagnostic bundle | See below |
 
 ---
@@ -74,12 +75,10 @@ hdmi-diagnostics-YYYYMMDD_HHMMSS/
 ├── README.txt                  # Usage instructions
 │
 ├── test-logs/                  # Test script execution logs
-│   ├── test-image-loop.log
-│   ├── test-color-fullscreen.log
-│   ├── test-both-loop.log
-│   ├── test-image-loop-vlc.log
-│   ├── test-color-fullscreen-vlc.log
-│   └── test-both-loop-vlc.log
+│   ├── hdmi-test.log
+│   ├── pixel-test.log
+│   ├── audio-test.log
+│   └── full-test.log
 │
 ├── system-logs/                # System log files
 │   ├── syslog                  # General system log
@@ -97,9 +96,10 @@ hdmi-diagnostics-YYYYMMDD_HHMMSS/
 │   ├── kernel.log              # Kernel messages only
 │   ├── errors-current-boot.log # Errors from current boot
 │   ├── warnings-current-boot.log # Warnings from current boot
-│   ├── hd-audio-test-vlc-service.log # Individual service logs
-│   ├── pixel-audio-test-vlc-service.log
-│   ├── full-test-vlc-service.log
+│   ├── hdmi-test-service.log # Individual service logs
+│   ├── pixel-test-service.log
+│   ├── audio-test-service.log
+│   ├── full-test-service.log
 │   └── last-1000-lines.log     # Most recent journal entries
 │
 └── configs/                    # Configuration files
@@ -183,31 +183,20 @@ If running tests via systemd services (auto-start), view service logs:
 
 ```bash
 # Check service status
-sudo systemctl status hd-audio-test-vlc.service
-sudo systemctl status pixel-audio-test-vlc.service
-sudo systemctl status full-test-vlc.service
+sudo systemctl status hdmi-test.service
+sudo systemctl status pixel-test.service
+sudo systemctl status audio-test.service
+sudo systemctl status full-test.service
 ```
 
-### View Service Journals
+# Follow live logs (Ctrl+C to exit)
+sudo journalctl -u hdmi-test.service -f
 
-```bash
-# View service journal in real-time
-sudo journalctl -u hd-audio-test-vlc.service -f
-
-# View complete service journal
-sudo journalctl -u hd-audio-test-vlc.service --no-pager
+# View all logs
+sudo journalctl -u hdmi-test.service --no-pager
 
 # View last 100 lines
-sudo journalctl -u hd-audio-test-vlc.service -n 100
-
-# View since specific time
-sudo journalctl -u hd-audio-test.service --since "1 hour ago"
-sudo journalctl -u hd-audio-test.service --since "2024-10-23 10:00:00"
-
-# View with timestamps
-sudo journalctl -u hd-audio-test.service -o short-precise
-```
-
+sudo journalctl -u hdmi-test.service -n 100
 ### View All Failed Services
 
 ```bash
