@@ -69,18 +69,18 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     # Append configuration (dtparam=audio=on is already in base image, so we skip it)
     cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Force 1920x1080 @ 60Hz (Console Mode)
+# HDMI Tester Configuration - Auto-detect Display Resolution
 # Force HDMI output even if no display detected
 hdmi_force_hotplug=1
 
 # Use HDMI audio (not 3.5mm jack)
 hdmi_drive=2
 
-# Set HDMI mode to CEA (consumer electronics)
-hdmi_group=1
-
-# 1920x1080 @ 60Hz (CEA mode 16)
-hdmi_mode=16
+# Auto-detect HDMI mode (allows flexibility for different displays)
+# hdmi_group=0 and hdmi_mode=0 let the Pi negotiate with the display
+# This supports: 720p, 1080p, 1440p, 4K, and non-standard resolutions
+hdmi_group=0
+hdmi_mode=0
 
 # GPU memory for video playback (minimum 256MB for smooth VP9 decoding)
 gpu_mem=256
