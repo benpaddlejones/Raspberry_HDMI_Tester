@@ -26,5 +26,10 @@ libx265-199
 libtheora0
 libaom3
 
+# MP3 codec support (encoding and decoding)
+libmp3lame0
+mpg123
+libmpg123-0
+
 # Audio system (ALSA for direct hardware access)
 alsa-utils

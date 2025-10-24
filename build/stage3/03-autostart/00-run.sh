@@ -32,7 +32,7 @@ echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "hdmi-diagnostics" "detect-hdmi-audio")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -118,6 +118,7 @@ echo ""
 echo "  hdmi-test                  - Loop image-test.webm"
 echo "  pixel-test                 - Play color-test.webm fullscreen"
 echo "  full-test                  - Play both videos in sequence"
+echo "  audio-test                 - Loop stereo and 5.1 surround audio"
 echo ""
 echo "Diagnostic tools:"
 echo ""
@@ -137,8 +138,9 @@ echo "  sudo systemctl start hdmi-test.service"
 echo ""
 echo "Examples:"
 echo "  hdmi-test          # Loop image test video"
-echo "  pixel-test    # Fullscreen color test"
-echo "  full-test           # Play both videos in sequence"
+echo "  pixel-test         # Fullscreen color test"
+echo "  full-test          # Play both videos in sequence"
+echo "  audio-test         # Loop audio tests"
 echo ""
 echo "Troubleshooting:"
 echo "  hdmi-diagnostics             # Collect all logs and system info"

@@ -1,15 +1,18 @@
 #!/bin/bash
-# Test Script 2 (VLC): Play color-test.webm fullscreen (stretched to fill all pixels)
+# Audio Test Script: Loop stereo.flac and surround51.flac for HDMI audio testing
 
-VIDEO_FILE="/opt/hdmi-tester/color-test.webm"
-LOG_FILE="/tmp/pixel-test.log"
+STEREO_FILE="/opt/hdmi-tester/stereo.flac"
+SURROUND_FILE="/opt/hdmi-tester/surround51.flac"
+LOG_FILE="/tmp/audio-test.log"
 
 # Start logging
 {
     echo "==========================================="
-    echo "Color Test (Fullscreen VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Audio Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
     echo "==========================================="
-    echo "File: ${VIDEO_FILE}"
+    echo "Files:"
+    echo "  - ${STEREO_FILE}"
+    echo "  - ${SURROUND_FILE}"
     echo "Log: ${LOG_FILE}"
     echo "PID: $$"
     echo "User: $(whoami)"
@@ -43,33 +46,6 @@ LOG_FILE="/tmp/pixel-test.log"
     fi
     echo ""
 
-    # Display information
-    echo "=== Display Information ==="
-    echo "Connected Displays:"
-    for display in /sys/class/drm/card*/status; do
-        if [ -f "$display" ]; then
-            card=$(echo "$display" | cut -d/ -f5)
-            status=$(cat "$display")
-            echo "  $card: $status"
-        fi
-    done
-    echo ""
-    echo "HDMI Status:"
-    tvservice -s 2>/dev/null || echo "tvservice not available"
-    echo ""
-
-    # Check DRM devices
-    echo "=== DRM Devices ==="
-    if [ -d /dev/dri/ ]; then
-        ls -lah /dev/dri/ 2>&1
-        echo ""
-        echo "DRM Device Ownership:"
-        stat -c "%A %U:%G %n" /dev/dri/* 2>&1
-    else
-        echo "No /dev/dri/ found"
-    fi
-    echo ""
-
     # Audio devices
     echo "=== Audio Devices ==="
     echo "ALSA Devices:"
@@ -79,27 +55,37 @@ LOG_FILE="/tmp/pixel-test.log"
     pactl list sinks short 2>&1 || echo "PulseAudio not available"
     echo ""
 
-    # Check video file
-    echo "=== Video File Check ==="
-    if [ ! -f "${VIDEO_FILE}" ]; then
-        echo "❌ ERROR: Video file not found at ${VIDEO_FILE}"
+    # Check audio files
+    echo "=== Audio File Check ==="
+    if [ ! -f "${STEREO_FILE}" ]; then
+        echo "❌ ERROR: Stereo audio file not found at ${STEREO_FILE}"
         exit 1
     fi
-
-    ls -lh "${VIDEO_FILE}"
-    echo ""
-    echo "File Details:"
-    file "${VIDEO_FILE}"
-    echo ""
-    echo "File Stats:"
-    stat "${VIDEO_FILE}"
-    echo ""
-    echo "MD5 Checksum: $(md5sum "${VIDEO_FILE}" | cut -d' ' -f1)"
+    echo "✓ Stereo FLAC exists: $(ls -lh "${STEREO_FILE}" | awk '{print $5}')"
+    echo "  Path: ${STEREO_FILE}"
+    echo "  File Details:"
+    file "${STEREO_FILE}" 2>&1 | sed 's/^/    /'
+    echo "  MD5 Checksum: $(md5sum "${STEREO_FILE}" | cut -d' ' -f1)"
     echo ""
 
-    echo "Video Metadata (ffprobe):"
+    if [ ! -f "${SURROUND_FILE}" ]; then
+        echo "❌ ERROR: Surround audio file not found at ${SURROUND_FILE}"
+        exit 1
+    fi
+    echo "✓ 5.1 Surround FLAC exists: $(ls -lh "${SURROUND_FILE}" | awk '{print $5}')"
+    echo "  Path: ${SURROUND_FILE}"
+    echo "  File Details:"
+    file "${SURROUND_FILE}" 2>&1 | sed 's/^/    /'
+    echo "  MD5 Checksum: $(md5sum "${SURROUND_FILE}" | cut -d' ' -f1)"
+    echo ""
+
+    echo "Audio Metadata (ffprobe):"
     if command -v ffprobe &> /dev/null; then
-        ffprobe -v quiet -show_format -show_streams "${VIDEO_FILE}" 2>&1 | head -50
+        echo "Stereo FLAC:"
+        ffprobe -v quiet -show_format -show_streams "${STEREO_FILE}" 2>&1 | head -30 | sed 's/^/  /'
+        echo ""
+        echo "5.1 Surround FLAC:"
+        ffprobe -v quiet -show_format -show_streams "${SURROUND_FILE}" 2>&1 | head -30 | sed 's/^/  /'
     else
         echo "ffprobe not available"
     fi
@@ -117,14 +103,8 @@ LOG_FILE="/tmp/pixel-test.log"
     echo "=== VLC Version and Capabilities ==="
     cvlc --version 2>&1
     echo ""
-    echo "VLC Video Outputs:"
-    cvlc --list | grep -A 50 "vout" 2>&1 | head -60
-    echo ""
     echo "VLC Audio Outputs:"
     cvlc --list | grep -A 50 "aout" 2>&1 | head -60
-    echo ""
-    echo "VLC Modules:"
-    cvlc --list 2>&1 | head -100
     echo ""
 
     # System resources before start
@@ -139,8 +119,8 @@ LOG_FILE="/tmp/pixel-test.log"
 
     # Process information
     echo "=== Process Information ==="
-    echo "Running video processes:"
-    ps aux | grep -E "vlc|ffmpeg" | grep -v grep || echo "None"
+    echo "Running audio processes:"
+    ps aux | grep -E "vlc|aplay|paplay" | grep -v grep || echo "None"
     echo ""
 
     # Detect HDMI audio device dynamically
@@ -149,18 +129,17 @@ LOG_FILE="/tmp/pixel-test.log"
     echo "Detected HDMI audio device: ${HDMI_DEVICE}"
     echo ""
 
-    echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --alsa-audio-device ${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "=== Starting VLC Audio Loop (Verbose Mode) ==="
+    echo "Command: cvlc --loop --no-video --alsa-audio-device ${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${STEREO_FILE} ${SURROUND_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
-    # Run VLC with verbose output (stretches to fill screen for pixel testing)
-    exec cvlc --loop --fullscreen --no-autoscale \
-        --no-video-title-show --no-osd \
-        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
+    # Run VLC with verbose output (plays both audio files in loop)
+    exec cvlc --loop --no-video \
+        --alsa-audio-device ${HDMI_DEVICE} \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
-        "${VIDEO_FILE}" 2>&1
+        "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1
 
 } | tee "${LOG_FILE}"

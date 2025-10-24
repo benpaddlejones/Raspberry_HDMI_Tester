@@ -38,13 +38,20 @@ fi
 echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 
 # Validate source files exist
-TEST_VIDEOS=("image-test.webm" "color-test.webm")
+TEST_VIDEOS=("image-test.webm" "color-test.webm" "image-test.mp4" "color-test.mp4")
 
+echo "Validating source files..."
 for video in "${TEST_VIDEOS[@]}"; do
     if [ ! -f "files/${video}" ]; then
         echo "❌ Error: Source file not found: files/${video}"
         exit 1
     fi
+    # Validate file is not empty
+    if [ ! -s "files/${video}" ]; then
+        echo "❌ Error: Source file is empty: files/${video}"
+        exit 1
+    fi
+    echo "  ✓ Found: ${video} ($(stat -c%s "files/${video}") bytes)"
 done
 
 # Create directory and install files
@@ -60,4 +67,35 @@ for video in "${TEST_VIDEOS[@]}"; do
     echo "  • ${video} deployed"
 done
 
-echo "✅ All test videos deployed successfully"
+echo ""
+echo "Validating deployed files..."
+for video in "${TEST_VIDEOS[@]}"; do
+    target_file="${ROOTFS_DIR}/opt/hdmi-tester/${video}"
+
+    # Check file exists
+    if [ ! -f "${target_file}" ]; then
+        echo "❌ Error: Deployed file not found: ${video}"
+        exit 1
+    fi
+
+    # Check file is not empty
+    if [ ! -s "${target_file}" ]; then
+        echo "❌ Error: Deployed file is empty: ${video}"
+        exit 1
+    fi
+
+    # Compare sizes
+    source_size=$(stat -c%s "files/${video}")
+    target_size=$(stat -c%s "${target_file}")
+
+    if [ "${source_size}" -ne "${target_size}" ]; then
+        echo "❌ Error: File size mismatch for ${video}"
+        echo "   Source: ${source_size} bytes"
+        echo "   Target: ${target_size} bytes"
+        exit 1
+    fi
+
+    echo "  ✓ Validated: ${video} (${target_size} bytes)"
+done
+
+echo "✅ All test videos deployed and validated successfully"
