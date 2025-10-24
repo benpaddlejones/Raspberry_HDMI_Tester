@@ -1,5 +1,5 @@
 [Unit]
-Description=HDMI Pixel Audio Test - Color Fullscreen (VLC)
+Description=HDMI Pixel Test - Color Fullscreen
 After=local-fs.target sound.target
 Wants=sound.target
 
@@ -9,7 +9,7 @@ User=pi
 Group=audio
 
 # Pre-flight checks
-ExecStartPre=/bin/bash -c 'echo "=== Pixel Audio Test Service (VLC) Starting ===" && \
+ExecStartPre=/bin/bash -c 'echo "=== Pixel Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
     echo "Checking test video file..." && \
     if [ ! -f /opt/hdmi-tester/color-test.webm ]; then \
@@ -17,9 +17,9 @@ ExecStartPre=/bin/bash -c 'echo "=== Pixel Audio Test Service (VLC) Starting ===
         exit 1; \
     fi && \
     echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/color-test.webm) bytes)" && \
-    echo "Launching test-color-fullscreen with VLC..."'
+    echo "Launching pixel-test..."'
 
-# Run test-color-fullscreen command (fullscreen stretched with audio) using VLC
+# Run pixel-test command (fullscreen stretched with audio) using VLC
 # --no-autoscale forces stretching to fill screen (for pixel testing)
 ExecStart=/usr/bin/cvlc --loop --fullscreen --no-autoscale \
     --no-video-title-show --no-osd --quiet \
@@ -28,7 +28,7 @@ ExecStart=/usr/bin/cvlc --loop --fullscreen --no-autoscale \
     /opt/hdmi-tester/color-test.webm
 
 # Log exit status
-ExecStopPost=/bin/bash -c 'echo "=== Pixel Audio Test Service (VLC) Stopped ===" && \
+ExecStopPost=/bin/bash -c 'echo "=== Pixel Test Service Stopped ===" && \
     echo "Exit code: $EXIT_CODE" && \
     if [ "$SERVICE_RESULT" != "success" ]; then \
         echo "ERROR: Service failed - check logs"; \

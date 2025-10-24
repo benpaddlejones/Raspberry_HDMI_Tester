@@ -81,13 +81,16 @@ The built image was mounted and inspected to verify all required components are 
   - `/opt/hdmi-tester/color-test.webm` - Color test with embedded audio
 
 #### Service Validation
-- ✅ **hd-audio-test-vlc.service** - Installed (not enabled by default)
+- ✅ **hdmi-test.service** - Installed (not enabled by default)
   - Plays image-test.webm in loop (optimized resolution)
   - Configured for automatic restart on failure
-- ✅ **pixel-audio-test-vlc.service** - Installed (not enabled by default)
+- ✅ **pixel-test.service** - Installed (not enabled by default)
   - Plays color-test.webm fullscreen stretched in loop
   - Configured for automatic restart on failure
-- ✅ **full-test-vlc.service** - Installed (not enabled by default)
+- ✅ **audio-test.service** - Installed (not enabled by default)
+  - Plays audio.mp3 in loop (audio only)
+  - Configured for automatic restart on failure
+- ✅ **full-test.service** - Installed (not enabled by default)
   - Plays both videos in sequence, infinite loop
   - Configured for automatic restart on failure
 

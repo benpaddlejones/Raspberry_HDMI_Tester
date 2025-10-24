@@ -2,7 +2,7 @@
 # Test Script 2 (VLC): Play color-test.webm fullscreen (stretched to fill all pixels)
 
 VIDEO_FILE="/opt/hdmi-tester/color-test.webm"
-LOG_FILE="/tmp/test-color-fullscreen-vlc.log"
+LOG_FILE="/tmp/pixel-test.log"
 
 # Start logging
 {

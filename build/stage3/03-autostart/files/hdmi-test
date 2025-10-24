@@ -2,7 +2,7 @@
 # Test Script 1 (VLC): Loop image-test.webm with optimized resolution (no OSD)
 
 VIDEO_FILE="/opt/hdmi-tester/image-test.webm"
-LOG_FILE="/tmp/test-image-loop-vlc.log"
+LOG_FILE="/tmp/hdmi-test.log"
 
 # Start logging
 {

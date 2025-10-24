@@ -1,5 +1,5 @@
 [Unit]
-Description=HDMI Full Test - Both Videos Loop (VLC)
+Description=HDMI Full Test - HDMI + Pixel Tests Loop
 After=local-fs.target sound.target
 Wants=sound.target
 
@@ -9,7 +9,7 @@ User=pi
 Group=audio
 
 # Pre-flight checks
-ExecStartPre=/bin/bash -c 'echo "=== Full Test Service (VLC) Starting ===" && \
+ExecStartPre=/bin/bash -c 'echo "=== Full Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
     echo "Checking test video files..." && \
     if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
@@ -21,16 +21,16 @@ ExecStartPre=/bin/bash -c 'echo "=== Full Test Service (VLC) Starting ===" && \
         exit 1; \
     fi && \
     echo "✓ Both test videos exist" && \
-    echo "Launching test-both-loop with VLC..."'
+    echo "Launching full-test (hdmi-test + pixel-test)..."'
 
-# Run test-both-loop command (both videos in sequence, infinite loop) using VLC
+# Run full-test command (both videos in sequence, infinite loop) using VLC
 ExecStart=/bin/bash -c 'while true; do \
-    echo "Playing: image-test.webm (optimized resolution with aspect ratio)..." && \
+    echo "Playing: image-test.webm (HDMI test - optimized resolution)..." && \
     cvlc --play-and-exit --no-video-title-show --no-osd --quiet \
         --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/image-test.webm 2>/dev/null && \
-    echo "Playing: color-test.webm (fullscreen stretched for pixel testing)..." && \
+    echo "Playing: color-test.webm (Pixel test - fullscreen stretched)..." && \
     cvlc --play-and-exit --fullscreen --no-autoscale \
         --no-video-title-show --no-osd --quiet \
         --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
@@ -40,7 +40,7 @@ ExecStart=/bin/bash -c 'while true; do \
 done'
 
 # Log exit status
-ExecStopPost=/bin/bash -c 'echo "=== Full Test Service (VLC) Stopped ===" && \
+ExecStopPost=/bin/bash -c 'echo "=== Full Test Service Stopped ===" && \
     echo "Exit code: $EXIT_CODE" && \
     if [ "$SERVICE_RESULT" != "success" ]; then \
         echo "ERROR: Service failed - check logs"; \

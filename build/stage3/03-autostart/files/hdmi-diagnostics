@@ -310,7 +310,7 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     echo "=== HDMI Test Services Status ==="
-    for service in hd-audio-test pixel-audio-test full-test hd-audio-test-vlc pixel-audio-test-vlc full-test-vlc; do
+    for service in hdmi-test pixel-test audio-test full-test; do
         echo "--- ${service}.service ---"
         systemctl status ${service}.service 2>&1 || echo "Service not found"
         echo ""
@@ -513,7 +513,7 @@ journalctl -b -1 > "${DIAG_DIR}/journals/previous-boot.log" 2>&1
 echo "✓ Previous boot journal"
 
 # Service-specific journals
-for service in hd-audio-test pixel-audio-test full-test hd-audio-test-vlc pixel-audio-test-vlc full-test-vlc; do
+for service in hdmi-test pixel-test audio-test full-test; do
     journalctl -u ${service}.service --no-pager > "${DIAG_DIR}/journals/${service}-service.log" 2>&1
 done
 echo "✓ Service journals extracted"
@@ -561,9 +561,10 @@ diagnostic-report.txt    - Complete system information report
 README.txt              - This file
 
 test-logs/              - Logs from test script executions
-  test-image-loop-vlc.log
-  test-color-fullscreen-vlc.log
-  test-both-loop-vlc.log
+  hdmi-test.log
+  pixel-test.log
+  audio-test.log
+  full-test.log
 
 system-logs/            - System log files
   syslog
@@ -634,6 +635,71 @@ cd /tmp
 tar -czf "${ARCHIVE_FILE}" "hdmi-diagnostics-${TIMESTAMP}/" 2>&1
 ARCHIVE_SIZE=$(ls -lh "${ARCHIVE_FILE}" | awk '{print $5}')
 
+# ============================================
+# CHECK FOR USB DRIVE AND AUTO-SAVE
+# ============================================
+echo ""
+echo "==========================================="
+echo "CHECKING FOR USB DRIVE"
+echo "==========================================="
+
+USB_FOUND=false
+USB_MOUNT_POINT=""
+
+# Check for USB devices
+for device in /dev/sd[a-z]1 /dev/sdb1 /dev/sdc1; do
+    if [ -b "${device}" ]; then
+        echo "Found USB device: ${device}"
+
+        # Try to mount it
+        TEMP_MOUNT="/mnt/usb-diagnostics-${TIMESTAMP}"
+        mkdir -p "${TEMP_MOUNT}"
+
+        if mount "${device}" "${TEMP_MOUNT}" 2>/dev/null; then
+            echo "✓ Successfully mounted ${device} to ${TEMP_MOUNT}"
+
+            # Check if writable
+            if touch "${TEMP_MOUNT}/.test_write" 2>/dev/null; then
+                rm -f "${TEMP_MOUNT}/.test_write"
+                echo "✓ USB drive is writable"
+
+                # Copy archive to USB
+                echo "Copying diagnostics to USB..."
+                if cp "${ARCHIVE_FILE}" "${TEMP_MOUNT}/"; then
+                    USB_FOUND=true
+                    USB_MOUNT_POINT="${TEMP_MOUNT}"
+                    USB_DEVICE="${device}"
+                    echo "✅ Diagnostics saved to USB: ${TEMP_MOUNT}/$(basename "${ARCHIVE_FILE}")"
+
+                    # Also copy the uncompressed report for quick viewing
+                    if cp "${REPORT_FILE}" "${TEMP_MOUNT}/diagnostic-report.txt"; then
+                        echo "✅ Diagnostic report saved to USB: ${TEMP_MOUNT}/diagnostic-report.txt"
+                    fi
+
+                    sync
+                    echo "✓ Data synced to USB"
+                    break
+                else
+                    echo "❌ Failed to copy to USB"
+                fi
+            else
+                echo "⚠️  USB drive is read-only"
+            fi
+
+            umount "${TEMP_MOUNT}"
+            rmdir "${TEMP_MOUNT}"
+        else
+            echo "⚠️  Could not mount ${device}"
+            rmdir "${TEMP_MOUNT}" 2>/dev/null
+        fi
+    fi
+done
+
+if [ "${USB_FOUND}" = "false" ]; then
+    echo "No writable USB drive found"
+    echo "Diagnostics remain in: ${ARCHIVE_FILE}"
+fi
+
 echo ""
 echo "==========================================="
 echo "DIAGNOSTICS COMPLETE"
@@ -642,6 +708,16 @@ echo ""
 echo "Archive created: ${ARCHIVE_FILE}"
 echo "Archive size: ${ARCHIVE_SIZE}"
 echo ""
+
+if [ "${USB_FOUND}" = "true" ]; then
+    echo "📁 SAVED TO USB: ${USB_DEVICE}"
+    echo "   Location: $(basename "${ARCHIVE_FILE}")"
+    echo "   Report: diagnostic-report.txt"
+    echo ""
+    echo "You can now safely remove the USB drive."
+    echo ""
+fi
+
 echo "Diagnostic directory: ${DIAG_DIR}"
 echo "Main report: ${REPORT_FILE}"
 echo ""
@@ -651,12 +727,15 @@ echo ""
 echo "To extract the archive:"
 echo "  tar -xzf ${ARCHIVE_FILE}"
 echo ""
+if [ "${USB_FOUND}" = "false" ]; then
+    echo "To copy to a USB drive manually:"
+    echo "  1. Insert USB drive"
+    echo "  2. sudo mount /dev/sda1 /mnt"
+    echo "  3. sudo cp ${ARCHIVE_FILE} /mnt/"
+    echo "  4. sudo umount /mnt"
+    echo ""
+fi
 echo "To copy to another system (if network is available):"
 echo "  scp ${ARCHIVE_FILE} user@hostname:/path/"
-echo ""
-echo "Or copy to a USB drive:"
-echo "  sudo mount /dev/sda1 /mnt"
-echo "  sudo cp ${ARCHIVE_FILE} /mnt/"
-echo "  sudo umount /mnt"
 echo ""
 echo "==========================================="

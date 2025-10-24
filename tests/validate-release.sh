@@ -355,9 +355,10 @@ validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color-test.webm" "Color test video"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
-validate_service "hd-audio-test-vlc.service" "HD Audio Test Service (VLC)" "multi-user.target"
-validate_service "pixel-audio-test-vlc.service" "Pixel Audio Test Service (VLC)" "multi-user.target"
-validate_service "full-test-vlc.service" "Full Test Service (VLC)" "multi-user.target"
+validate_service "hdmi-test.service" "HDMI Test Service" "multi-user.target"
+validate_service "pixel-test.service" "Pixel Test Service" "multi-user.target"
+validate_service "audio-test.service" "Audio Test Service" "multi-user.target"
+validate_service "full-test.service" "Full Test Service" "multi-user.target"
 
 echo ""
 echo "📦 Required Packages:" | tee -a "${REPORT_FILE}"

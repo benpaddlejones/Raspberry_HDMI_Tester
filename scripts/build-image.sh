@@ -262,9 +262,9 @@ declare -a REQUIRED_STAGE_FILES=(
     "01-test-image/files/color-test.webm"
     "02-audio-test/00-run.sh"
     "03-autostart/00-run.sh"
-    "03-autostart/files/test-image-loop-vlc"
-    "03-autostart/files/test-color-fullscreen-vlc"
-    "03-autostart/files/test-both-loop-vlc"
+    "03-autostart/files/hdmi-test"
+    "03-autostart/files/pixel-test"
+    "03-autostart/files/full-test"
     "03-autostart/files/hdmi-diagnostics"
     "04-boot-config/00-run.sh"
 )

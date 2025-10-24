@@ -1,5 +1,5 @@
 [Unit]
-Description=HDMI HD Audio Test - Image Loop (VLC)
+Description=HDMI Test - Image Loop with Audio
 After=local-fs.target sound.target
 Wants=sound.target
 
@@ -9,7 +9,7 @@ User=pi
 Group=audio
 
 # Pre-flight checks
-ExecStartPre=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Starting ===" && \
+ExecStartPre=/bin/bash -c 'echo "=== HDMI Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
     echo "Checking test video file..." && \
     if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
@@ -17,16 +17,16 @@ ExecStartPre=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Starting ===" &
         exit 1; \
     fi && \
     echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/image-test.webm) bytes)" && \
-    echo "Launching test-image-loop with VLC..."'
+    echo "Launching hdmi-test..."'
 
-# Run test-image-loop command (optimized resolution with audio) using VLC
+# Run hdmi-test command (optimized resolution with audio) using VLC
 ExecStart=/usr/bin/cvlc --loop --no-video-title-show --no-osd --quiet \
     --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
     /opt/hdmi-tester/image-test.webm
 
 # Log exit status
-ExecStopPost=/bin/bash -c 'echo "=== HD Audio Test Service (VLC) Stopped ===" && \
+ExecStopPost=/bin/bash -c 'echo "=== HDMI Test Service Stopped ===" && \
     echo "Exit code: $EXIT_CODE" && \
     if [ "$SERVICE_RESULT" != "success" ]; then \
         echo "ERROR: Service failed - check logs"; \

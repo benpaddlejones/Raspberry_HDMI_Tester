@@ -26,7 +26,7 @@ echo ""
 
 # Check if test services are running
 echo "🔍 Checking test service status:"
-for service in hd-audio-test-vlc.service pixel-audio-test-vlc.service full-test-vlc.service; do
+for service in hdmi-test.service pixel-test.service audio-test.service full-test.service; do
     if systemctl is-active --quiet "$service" 2>/dev/null; then
         echo "✅ $service is running"
     fi
@@ -76,7 +76,7 @@ echo ""
 
 # Check system logs for errors
 echo "🔍 Recent log entries (if services running):"
-for service in hd-audio-test-vlc.service pixel-audio-test-vlc.service full-test-vlc.service; do
+for service in hdmi-test.service pixel-test.service audio-test.service full-test.service; do
     if systemctl is-active --quiet "$service" 2>/dev/null; then
         echo "Logs for $service:"
         journalctl -u "$service" --no-pager -n 5 2>/dev/null || echo "  Unable to read logs"
@@ -94,6 +94,6 @@ if [ "$VLC_PROCESSES" -gt 0 ]; then
     echo "   4. Check service logs: journalctl -u <service-name>"
 else
     echo "🔇 No test videos currently playing"
-    echo "   Run manually: test-image-loop-vlc, test-color-fullscreen-vlc, or test-both-loop-vlc"
-    echo "   Or enable a service: sudo systemctl start hd-audio-test-vlc.service"
+    echo "   Run manually: hdmi-test, pixel-test, audio-test, or full-test"
+    echo "   Or enable a service: sudo systemctl start hdmi-test.service"
 fi

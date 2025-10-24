@@ -3,7 +3,7 @@
 
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.webm"
 COLOR_VIDEO="/opt/hdmi-tester/color-test.webm"
-LOG_FILE="/tmp/test-both-loop-vlc.log"
+LOG_FILE="/tmp/full-test.log"
 
 # Start logging
 {

@@ -1,0 +1,43 @@
+[Unit]
+Description=HDMI Audio Test - MP3 Loop
+After=local-fs.target sound.target
+Wants=sound.target
+
+[Service]
+Type=simple
+User=pi
+Group=audio
+
+# Pre-flight checks
+ExecStartPre=/bin/bash -c 'echo "=== Audio Test Service Starting ===" && \
+    echo "Timestamp: $(date)" && \
+    echo "Checking test audio file..." && \
+    if [ ! -f /opt/hdmi-tester/audio.mp3 ]; then \
+        echo "ERROR: Test audio not found at /opt/hdmi-tester/audio.mp3" && \
+        exit 1; \
+    fi && \
+    echo "✓ Test audio exists ($(stat -c%%s /opt/hdmi-tester/audio.mp3) bytes)" && \
+    echo "Launching audio-test..."'
+
+# Run audio-test command (loop audio.mp3) using VLC
+ExecStart=/usr/bin/cvlc --loop --no-video \
+    --quiet --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+    --no-audio-time-stretch --audio-replay-gain-mode=none \
+    /opt/hdmi-tester/audio.mp3
+
+# Log exit status
+ExecStopPost=/bin/bash -c 'echo "=== Audio Test Service Stopped ===" && \
+    echo "Exit code: $EXIT_CODE" && \
+    if [ "$SERVICE_RESULT" != "success" ]; then \
+        echo "ERROR: Service failed - check logs"; \
+    fi'
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

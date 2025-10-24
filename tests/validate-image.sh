@@ -139,9 +139,10 @@ echo ""
 FILES_TO_CHECK=(
     "/opt/hdmi-tester/image-test.webm|Image Test Video"
     "/opt/hdmi-tester/color-test.webm|Color Test Video"
-    "/etc/systemd/system/hd-audio-test-vlc.service|HD Audio Test Service (VLC)"
-    "/etc/systemd/system/pixel-audio-test-vlc.service|Pixel Audio Test Service (VLC)"
-    "/etc/systemd/system/full-test-vlc.service|Full Test Service (VLC)"
+    "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
+    "/etc/systemd/system/pixel-test.service|Pixel Test Service"
+    "/etc/systemd/system/audio-test.service|Audio Test Service"
+    "/etc/systemd/system/full-test.service|Full Test Service"
 )
 
 for file_entry in "${FILES_TO_CHECK[@]}"; do
@@ -245,9 +246,10 @@ echo "🔍 Checking systemd service availability..."
 echo ""
 
 SERVICES_TO_CHECK=(
-    "hd-audio-test-vlc.service|HD Audio Test Service (VLC)|multi-user.target"
-    "pixel-audio-test-vlc.service|Pixel Audio Test Service (VLC)|multi-user.target"
-    "full-test-vlc.service|Full Test Service (VLC)|multi-user.target"
+    "hdmi-test.service|HDMI Test Service|multi-user.target"
+    "pixel-test.service|Pixel Test Service|multi-user.target"
+    "audio-test.service|Audio Test Service|multi-user.target"
+    "full-test.service|Full Test Service|multi-user.target"
 )
 
 for service_entry in "${SERVICES_TO_CHECK[@]}"; do
