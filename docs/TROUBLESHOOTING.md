@@ -653,9 +653,9 @@ overscan_bottom=-20
 **Solutions**:
 1. **Use faster SD card** (Class 10 or UHS-I)
 2. **Use official power supply**
-3. **Adjust audio buffer** (edit `hdmi-audio.service`):
+3. **Adjust audio buffer** (edit service file):
    ```
-   ExecStart=/usr/bin/vlc --loop --no-video /opt/hdmi-tester/audio.mp3
+   ExecStart=/bin/bash -c 'export AUDIODEV=default && /usr/bin/vlc --loop --no-video --aout=alsa /opt/hdmi-tester/audio.mp3'
    ```
 
 ### Audio Doesn't Loop
@@ -663,10 +663,10 @@ overscan_bottom=-20
 **Symptoms**: Audio plays once then stops
 
 **Solution**:
-Check `hdmi-audio.service`:
+Check your audio service file - ensure it has `--loop`:
 ```bash
-# Must have --loop=inf and --audio-device=auto
-ExecStart=/usr/bin/vlc --loop --no-video /opt/hdmi-tester/audio.mp3
+# Must have --loop for continuous playback
+ExecStart=/bin/bash -c 'export AUDIODEV=default && /usr/bin/vlc --loop --no-video --aout=alsa /opt/hdmi-tester/audio.mp3'
 ```
 
 ### Wrong Audio Output (3.5mm instead of HDMI)

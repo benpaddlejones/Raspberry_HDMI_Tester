@@ -1,0 +1,134 @@
+#!/bin/bash
+# Image Rotation Test: Cycle through color test images using VLC
+# Displays each image for 10 seconds in fullscreen
+
+LOG_FILE="/tmp/image-test.log"
+IMAGE_DIR="/opt/hdmi-tester"
+DISPLAY_TIME=10  # seconds per image
+
+# Define image sequence
+IMAGES=(
+    "${IMAGE_DIR}/black.png"
+    "${IMAGE_DIR}/white.png"
+    "${IMAGE_DIR}/red.png"
+    "${IMAGE_DIR}/green.png"
+    "${IMAGE_DIR}/blue.png"
+    "${IMAGE_DIR}/image.png"
+)
+
+# Start logging
+{
+    echo "==========================================="
+    echo "Image Rotation Test - Started $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "==========================================="
+    echo "Display Time: ${DISPLAY_TIME} seconds per image"
+    echo "Total Images: ${#IMAGES[@]}"
+    echo "Log: ${LOG_FILE}"
+    echo "PID: $$"
+    echo "User: $(whoami)"
+    echo "Working Directory: $(pwd)"
+    echo ""
+
+    # System information
+    echo "=== System Information ==="
+    echo "Hostname: $(hostname)"
+    echo "Kernel: $(uname -r)"
+    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+    echo "Architecture: $(uname -m)"
+    echo "CPU: $(cat /proc/cpuinfo | grep "Model" | head -1 | cut -d: -f2 | xargs)"
+    echo "CPU Cores: $(nproc)"
+    echo "Memory Total: $(free -h | awk '/^Mem:/ {print $2}')"
+    echo "Memory Available: $(free -h | awk '/^Mem:/ {print $7}')"
+    echo "GPU Memory: $(vcgencmd get_mem gpu 2>/dev/null || echo 'N/A')"
+    echo "CPU Temperature: $(vcgencmd measure_temp 2>/dev/null || echo 'N/A')"
+    echo "Uptime: $(uptime -p)"
+    echo ""
+
+    # Boot configuration
+    echo "=== Boot Configuration ==="
+    if [ -f /boot/firmware/config.txt ]; then
+        echo "HDMI Config:"
+        grep -E "^hdmi_|^gpu_mem" /boot/firmware/config.txt 2>/dev/null || echo "No HDMI config found"
+    elif [ -f /boot/config.txt ]; then
+        echo "HDMI Config:"
+        grep -E "^hdmi_|^gpu_mem" /boot/config.txt 2>/dev/null || echo "No HDMI config found"
+    fi
+    echo ""
+
+    # Display information
+    echo "=== Display Information ==="
+    echo "Connected Displays:"
+    for display in /sys/class/drm/card*/status; do
+        if [ -f "$display" ]; then
+            card=$(echo "$display" | cut -d/ -f5)
+            status=$(cat "$display")
+            echo "  $card: $status"
+        fi
+    done
+    echo ""
+    echo "HDMI Status:"
+    tvservice -s 2>/dev/null || echo "tvservice not available"
+    echo ""
+
+    # Check all images exist
+    echo "=== Image File Check ==="
+    MISSING_FILES=0
+    for img in "${IMAGES[@]}"; do
+        if [ ! -f "${img}" ]; then
+            echo "❌ ERROR: Image file not found at ${img}"
+            ((MISSING_FILES++))
+        else
+            echo "✓ Found: ${img} ($(stat -c%s "${img}" | numfmt --to=iec-i)B)"
+        fi
+    done
+    echo ""
+
+    if [ ${MISSING_FILES} -gt 0 ]; then
+        echo "❌ ERROR: ${MISSING_FILES} image file(s) missing. Exiting."
+        exit 1
+    fi
+
+    # Environment variables
+    echo "=== Environment Variables ==="
+    echo "DISPLAY=${DISPLAY:-not set}"
+    echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-not set}"
+    echo "TERM=${TERM:-not set}"
+    echo ""
+
+    # Check VLC version
+    echo "=== VLC Version ==="
+    cvlc --version 2>&1 | head -5
+    echo ""
+
+    # Detect HDMI audio device dynamically
+    echo "=== Detecting HDMI Audio Device ==="
+    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
+    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
+    echo ""
+
+    echo "=== Starting Image Rotation ==="
+    echo "Starting infinite loop at $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+
+    # Infinite loop through images
+    while true; do
+        for img in "${IMAGES[@]}"; do
+            IMAGE_NAME=$(basename "${img}")
+            echo "--- Displaying: ${IMAGE_NAME} at $(date '+%Y-%m-%d %H:%M:%S') ---"
+
+            # Display image for specified time using VLC
+            # Use timeout to kill VLC after display time
+            timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
+                --no-osd --vout=drm --drm-vout-no-modeset --play-and-exit --no-audio \
+                --image-duration=${DISPLAY_TIME} "${img}" 2>&1 | \
+                grep -E "main|drm|error|warning" || true
+
+            echo "Finished displaying ${IMAGE_NAME}"
+            echo ""
+        done
+
+        echo "=== Completed full rotation at $(date '+%Y-%m-%d %H:%M:%S') - Restarting ==="
+        echo ""
+    done
+
+} | tee "${LOG_FILE}"

@@ -167,16 +167,18 @@ LOG_FILE="/tmp/pixel-test.log"
     echo ""
 
     echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --alsa-audio-device ${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --drm-vout-no-modeset --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
     # Run VLC with verbose output (stretches to fill screen for pixel testing)
+    # Use AUDIODEV environment variable to set ALSA device
+    export AUDIODEV="${HDMI_DEVICE}"
     exec cvlc --loop --fullscreen --no-autoscale \
         --no-video-title-show --no-osd \
-        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
+        --vout=drm --drm-vout-no-modeset --aout=alsa \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1
 

@@ -1,0 +1,26 @@
+[Unit]
+Description=HDMI Image Rotation Test Service
+Documentation=https://github.com/benpaddlejones/Raspberry_HDMI_Tester
+After=multi-user.target
+Conflicts=hdmi-test.service pixel-test.service full-test.service
+
+[Service]
+Type=simple
+ExecStart=/opt/hdmi-tester/image-test
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=image-test
+
+# Resource limits
+CPUQuota=80%
+MemoryLimit=512M
+
+# Security
+User=root
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -54,7 +54,7 @@ After=multi-user.target
 Type=simple
 User=pi
 Group=video
-ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show /opt/hdmi-tester/image.png
+ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show --vout=drm --drm-vout-no-modeset /opt/hdmi-tester/image.png
 Restart=always
 RestartSec=10
 StandardOutput=journal

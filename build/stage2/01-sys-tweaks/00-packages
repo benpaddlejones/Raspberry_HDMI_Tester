@@ -1,40 +1,40 @@
-ssh less fbset sudo psmisc strace ed ncdu
+# Core system utilities (essential)
+ssh less fbset sudo psmisc
 console-setup keyboard-configuration debconf-utils parted
-build-essential manpages-dev bash-completion gdb pkg-config
-python-is-python3
-v4l-utils
-gpiod python3-libgpiod
-python3-gpiozero
-python3-rpi-lgpio
-python3-spidev
-python3-smbus2
-avahi-daemon
-lua5.1
-luajit
 ca-certificates curl
-usbutils
 dosfstools
 raspberrypi-sys-mods
-apt-listchanges
-usb-modeswitch
-libpam-chksshpwd
-rpi-update
-libmtp-runtime
-rsync
-htop
-man-db
-ssh-import-id
-ethtool
-ntfs-3g
-pciutils
 rpi-eeprom
 raspi-utils
-udisks2
-unzip zip p7zip-full
 file
-kms++-utils
-python3-venv
-bluez bluez-firmware
-rpi-keyboard-config
-rpi-keyboard-fw-update
-rpi-connect-lite
+
+# Removed for minimal image (conservative removals):
+# - strace, ed, ncdu (debugging tools not needed for HDMI tester)
+# - build-essential, manpages-dev, gdb, pkg-config (build tools not needed)
+# - bash-completion (convenience feature, not essential)
+# - python-is-python3 (not using Python scripts)
+# - v4l-utils (video4linux not needed)
+# - gpiod, python3-libgpiod, python3-gpiozero, python3-rpi-lgpio (GPIO not used)
+# - python3-spidev, python3-smbus2 (SPI/I2C not used)
+# - avahi-daemon (mDNS already disabled in services)
+# - lua5.1, luajit (scripting languages not needed)
+# - usbutils (USB management not needed)
+# - apt-listchanges (package changelog viewer)
+# - usb-modeswitch (USB modem switching)
+# - libpam-chksshpwd (SSH password checking)
+# - rpi-update (firmware update tool - use rpi-eeprom instead)
+# - libmtp-runtime (MTP device access)
+# - rsync (file sync not needed)
+# - htop (monitoring tool - ssh access allows 'top' if needed)
+# - man-db (manual pages - reduces image size significantly)
+# - ssh-import-id (SSH key import from GitHub/Launchpad)
+# - ethtool (network tool not needed)
+# - ntfs-3g (NTFS support not needed)
+# - pciutils (PCI utilities)
+# - udisks2 (disk management daemon)
+# - unzip, zip, p7zip-full (archive tools not needed)
+# - kms++-utils (KMS utilities not needed for VLC)
+# - python3-venv (Python virtual environments)
+# - bluez, bluez-firmware (Bluetooth already disabled)
+# - rpi-keyboard-config, rpi-keyboard-fw-update (keyboard not used)
+# - rpi-connect-lite (remote access service)

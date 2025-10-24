@@ -262,7 +262,7 @@ Edit `build/stage3/03-autostart/files/hdmi-display.service`:
 ExecStartPre=/bin/sleep 5    # Change this number
 
 # Change VLC parameters (display)
-ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show /opt/hdmi-tester/image.png
+ExecStart=/usr/bin/vlc --loop --fullscreen --no-video-title-show --vout=drm --drm-vout-no-modeset /opt/hdmi-tester/image.png
 
 # Adjust restart delay
 RestartSec=10    # Change this number
@@ -274,17 +274,17 @@ Edit `build/stage3/03-autostart/files/hdmi-audio.service`:
 
 ```ini
 [Service]
-# Change audio via ALSA
-ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device default /opt/hdmi-tester/audio.mp3
+# Change audio via ALSA (use AUDIODEV environment variable)
+ExecStart=/bin/bash -c 'export AUDIODEV=default && /usr/bin/vlc --loop --no-video --aout=alsa /opt/hdmi-tester/audio.mp3'
 
 # Adjust volume (0-100, VLC uses 0-512 scale, so 80% = 410)
-ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device default --volume 410 /opt/hdmi-tester/audio.mp3
+ExecStart=/bin/bash -c 'export AUDIODEV=default && /usr/bin/vlc --loop --no-video --aout=alsa --volume 410 /opt/hdmi-tester/audio.mp3'
 
 # Play once (no loop)
-ExecStart=/usr/bin/vlc --no-video --alsa-audio-device default /opt/hdmi-tester/audio.mp3
+ExecStart=/bin/bash -c 'export AUDIODEV=default && /usr/bin/vlc --no-video --aout=alsa /opt/hdmi-tester/audio.mp3'
 
-# Use specific ALSA device
-ExecStart=/usr/bin/vlc --loop --no-video --alsa-audio-device hw:CARD=vc4hdmi /opt/hdmi-tester/audio.mp3
+# Use specific ALSA device (HDMI)
+ExecStart=/bin/bash -c 'export AUDIODEV=hw:CARD=vc4hdmi && /usr/bin/vlc --loop --no-video --aout=alsa /opt/hdmi-tester/audio.mp3'
 ```
 
 ### Add New Service

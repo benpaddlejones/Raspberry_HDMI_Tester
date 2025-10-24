@@ -32,7 +32,7 @@ echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test" "test-notvideo")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -69,7 +69,7 @@ echo "Installing systemd service files (disabled)..."
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
 
 # Install test services based on test commands (VLC only)
-SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service")
+SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service" "image-test.service" "test-notvideo.service")
 for service in "${SERVICES[@]}"; do
     if [ -f "files/${service}" ]; then
         install -m 644 "files/${service}" "${ROOTFS_DIR}/etc/systemd/system/"
@@ -117,6 +117,8 @@ echo "Available test commands:"
 echo ""
 echo "  hdmi-test                  - Loop image-test.webm"
 echo "  pixel-test                 - Play color-test.webm fullscreen"
+echo "  image-test                 - Rotate through color test images (10s each)"
+echo "  test-notvideo              - Display static image with looping audio"
 echo "  full-test                  - Play both videos in sequence"
 echo "  audio-test                 - Loop stereo and 5.1 surround audio"
 echo ""
@@ -129,16 +131,20 @@ echo "Available systemd services (not enabled by default):"
 echo ""
 echo "  hdmi-test.service              - Auto-run hdmi-test on boot"
 echo "  pixel-test.service             - Auto-run pixel-test on boot"
+echo "  image-test.service             - Auto-run image-test on boot"
+echo "  test-notvideo.service          - Auto-run test-notvideo on boot"
 echo "  full-test.service              - Auto-run full-test on boot"
 echo "  audio-test.service             - Auto-run audio-test on boot (MP3 only)"
 echo ""
 echo "To enable auto-start:"
-echo "  sudo systemctl enable hdmi-test.service"
-echo "  sudo systemctl start hdmi-test.service"
+echo "  sudo systemctl enable test-notvideo.service"
+echo "  sudo systemctl start test-notvideo.service"
 echo ""
 echo "Examples:"
 echo "  hdmi-test          # Loop image test video"
 echo "  pixel-test         # Fullscreen color test"
+echo "  image-test         # Rotate through color images"
+echo "  test-notvideo      # Static image with audio"
 echo "  full-test          # Play both videos in sequence"
 echo "  audio-test         # Loop audio tests"
 echo ""

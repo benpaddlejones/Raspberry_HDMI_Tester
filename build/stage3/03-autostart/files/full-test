@@ -112,8 +112,9 @@ LOG_FILE="/tmp/full-test.log"
 
         echo "[${LOOP_COUNT}] Playing: image-test.${VIDEO_FORMAT} (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        export AUDIODEV="${HDMI_DEVICE}"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
+            --vout=drm --drm-vout-no-modeset --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${IMAGE_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
@@ -123,7 +124,7 @@ LOG_FILE="/tmp/full-test.log"
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
+            --vout=drm --drm-vout-no-modeset --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${COLOR_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"

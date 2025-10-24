@@ -59,11 +59,11 @@ Test WebM playback on your current build:
 
 ```bash
 # Test with verbose output
-cvlc -vv --vout=drm /opt/hdmi-tester/image-test.webm
+AUDIODEV=hw:CARD=vc4hdmi,DEV=0 cvlc -vv --vout=drm --drm-vout-no-modeset --aout=alsa /opt/hdmi-tester/image-test.webm
 
 # Test with production flags (VLC)
-cvlc --loop --no-video-title-show --no-osd \
-    --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+AUDIODEV=hw:CARD=vc4hdmi,DEV=0 cvlc --loop --no-video-title-show --no-osd \
+    --vout=drm --drm-vout-no-modeset --aout=alsa \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
     /opt/hdmi-tester/image-test.webm
 ```
