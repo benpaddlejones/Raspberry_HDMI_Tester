@@ -89,12 +89,12 @@ download_latest_release() {
     mkdir -p "${TEST_DIR}" || {
         echo "❌ Error: Failed to create test directory"
         return 1
-    fi
+    }
 
     cd "${TEST_DIR}" || {
         echo "❌ Error: Failed to change to test directory"
         return 1
-    fi
+    }
 
     # Check disk space
     if ! check_disk_space "${TEST_DIR}" 4096; then
