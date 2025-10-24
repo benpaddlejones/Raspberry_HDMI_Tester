@@ -21,11 +21,12 @@ ExecStartPre=/bin/bash -c 'echo "=== Pixel Test Service Starting ===" && \
 
 # Run pixel-test command (fullscreen stretched with audio) using VLC
 # --no-autoscale forces stretching to fill screen (for pixel testing)
-ExecStart=/usr/bin/cvlc --loop --fullscreen --no-autoscale \
+ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
+    cvlc --loop --fullscreen --no-autoscale \
     --no-video-title-show --no-osd --quiet \
-    --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+    --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/color-test.webm
+    /opt/hdmi-tester/color-test.webm'
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Pixel Test Service Stopped ===" && \

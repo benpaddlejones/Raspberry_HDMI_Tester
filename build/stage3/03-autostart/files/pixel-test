@@ -143,8 +143,14 @@ LOG_FILE="/tmp/pixel-test.log"
     ps aux | grep -E "vlc|ffmpeg" | grep -v grep || echo "None"
     echo ""
 
+    # Detect HDMI audio device dynamically
+    echo "=== Detecting HDMI Audio Device ==="
+    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
+    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
+    echo ""
+
     echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --alsa-audio-device ${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
@@ -153,7 +159,7 @@ LOG_FILE="/tmp/pixel-test.log"
     # Run VLC with verbose output (stretches to fill screen for pixel testing)
     exec cvlc --loop --fullscreen --no-autoscale \
         --no-video-title-show --no-osd \
-        --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1
 

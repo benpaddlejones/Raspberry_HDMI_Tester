@@ -70,6 +70,12 @@ LOG_FILE="/tmp/full-test.log"
     cvlc --version 2>&1 | head -5
     echo ""
 
+    # Detect HDMI audio device dynamically
+    echo "=== Detecting HDMI Audio Device ==="
+    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
+    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
+    echo ""
+
     # Loop counter
     LOOP_COUNT=0
 
@@ -90,7 +96,7 @@ LOG_FILE="/tmp/full-test.log"
         echo "[${LOOP_COUNT}] Playing: image-test.webm (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+            --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${IMAGE_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
@@ -100,7 +106,7 @@ LOG_FILE="/tmp/full-test.log"
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+            --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${COLOR_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"

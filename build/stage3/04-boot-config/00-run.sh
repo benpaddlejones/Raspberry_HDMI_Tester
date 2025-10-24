@@ -82,8 +82,8 @@ hdmi_group=1
 # 1920x1080 @ 60Hz (CEA mode 16)
 hdmi_mode=16
 
-# Minimal GPU memory for framebuffer (console mode doesn't need GPU acceleration)
-gpu_mem=64
+# GPU memory for video playback (minimum 256MB for smooth VP9 decoding)
+gpu_mem=256
 
 # Disable rainbow splash screen
 disable_splash=1

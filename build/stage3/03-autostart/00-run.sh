@@ -32,7 +32,7 @@ echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "hdmi-diagnostics")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "hdmi-diagnostics" "detect-hdmi-audio")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"

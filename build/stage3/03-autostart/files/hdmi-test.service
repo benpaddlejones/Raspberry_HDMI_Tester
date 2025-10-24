@@ -20,10 +20,11 @@ ExecStartPre=/bin/bash -c 'echo "=== HDMI Test Service Starting ===" && \
     echo "Launching hdmi-test..."'
 
 # Run hdmi-test command (optimized resolution with audio) using VLC
-ExecStart=/usr/bin/cvlc --loop --no-video-title-show --no-osd --quiet \
-    --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
+    cvlc --loop --no-video-title-show --no-osd --quiet \
+    --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/image-test.webm
+    /opt/hdmi-tester/image-test.webm'
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== HDMI Test Service Stopped ===" && \

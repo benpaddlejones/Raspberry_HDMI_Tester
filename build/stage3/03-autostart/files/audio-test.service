@@ -20,10 +20,11 @@ ExecStartPre=/bin/bash -c 'echo "=== Audio Test Service Starting ===" && \
     echo "Launching audio-test..."'
 
 # Run audio-test command (loop audio.mp3) using VLC
-ExecStart=/usr/bin/cvlc --loop --no-video \
-    --quiet --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
+    cvlc --loop --no-video \
+    --quiet --alsa-audio-device ${HDMI_DEVICE} \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/audio.mp3
+    /opt/hdmi-tester/audio.mp3'
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Audio Test Service Stopped ===" && \

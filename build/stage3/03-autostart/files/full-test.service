@@ -24,16 +24,17 @@ ExecStartPre=/bin/bash -c 'echo "=== Full Test Service Starting ===" && \
     echo "Launching full-test (hdmi-test + pixel-test)..."'
 
 # Run full-test command (both videos in sequence, infinite loop) using VLC
-ExecStart=/bin/bash -c 'while true; do \
+ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
+while true; do \
     echo "Playing: image-test.webm (HDMI test - optimized resolution)..." && \
     cvlc --play-and-exit --no-video-title-show --no-osd --quiet \
-        --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/image-test.webm 2>/dev/null && \
     echo "Playing: color-test.webm (Pixel test - fullscreen stretched)..." && \
     cvlc --play-and-exit --fullscreen --no-autoscale \
         --no-video-title-show --no-osd --quiet \
-        --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
+        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/color-test.webm 2>/dev/null && \
     echo "Restarting loop..."; \
