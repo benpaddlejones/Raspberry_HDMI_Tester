@@ -42,8 +42,10 @@ if [ -f /opt/hdmi-tester/image.png ]; then
 else
     echo "   ❌ Test image NOT found"
 fi
-if [ -f /opt/hdmi-tester/audio.mp3 ]; then
-    echo "   ✅ Test audio exists ($(du -h /opt/hdmi-tester/audio.mp3 | cut -f1))"
+if [ -f /opt/hdmi-tester/stereo.flac ] && [ -f /opt/hdmi-tester/surround51.flac ]; then
+    echo "   ✅ Test audio exists:"
+    echo "      - stereo.flac: $(du -h /opt/hdmi-tester/stereo.flac | cut -f1)"
+    echo "      - surround51.flac: $(du -h /opt/hdmi-tester/surround51.flac | cut -f1)"
 else
     echo "   ❌ Test audio NOT found"
 fi

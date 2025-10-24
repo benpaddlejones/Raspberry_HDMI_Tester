@@ -139,6 +139,13 @@ echo ""
 FILES_TO_CHECK=(
     "/opt/hdmi-tester/image-test.webm|Image Test Video"
     "/opt/hdmi-tester/color-test.webm|Color Test Video"
+    "/opt/hdmi-tester/stereo.flac|Stereo FLAC Audio"
+    "/opt/hdmi-tester/surround51.flac|5.1 Surround FLAC Audio"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script"
+    "/opt/hdmi-tester/full-test|Full Test Script"
+    "/opt/hdmi-tester/hdmi-diagnostics|HDMI Diagnostics Script"
+    "/opt/hdmi-tester/detect-hdmi-audio|Detect HDMI Audio Script"
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
     "/etc/systemd/system/audio-test.service|Audio Test Service"
@@ -205,8 +212,8 @@ CONFIG_FOUND=false
 REQUIRED_SETTINGS=(
     "hdmi_force_hotplug=1|HDMI Force Hotplug"
     "hdmi_drive=2|HDMI Audio"
-    "hdmi_group=1|HDMI Group (CEA)"
-    "hdmi_mode=16|HDMI Mode (1920x1080@60Hz)"
+    "hdmi_group=0|HDMI Group (Auto-detect)"
+    "hdmi_mode=0|HDMI Mode (Auto-detect)"
 )
 
 for config_path in "${CONFIG_PATHS[@]}"; do

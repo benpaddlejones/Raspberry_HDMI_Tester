@@ -40,15 +40,26 @@ for script in "${SCRIPTS[@]}"; do
     fi
 done
 
-# Install test scripts to /usr/local/bin (in PATH)
+# Install test scripts to /opt/hdmi-tester (for services) and /usr/local/bin (for manual use)
 echo "Installing test scripts..."
+mkdir -p "${ROOTFS_DIR}/opt/hdmi-tester"
+
 for script in "${SCRIPTS[@]}"; do
-    install -m 755 "files/${script}" "${ROOTFS_DIR}/usr/local/bin/"
-    if [ ! -f "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
-        echo "❌ Error: Failed to install ${script}"
+    # Install to /opt/hdmi-tester for services
+    install -m 755 "files/${script}" "${ROOTFS_DIR}/opt/hdmi-tester/"
+    if [ ! -f "${ROOTFS_DIR}/opt/hdmi-tester/${script}" ]; then
+        echo "❌ Error: Failed to install ${script} to /opt/hdmi-tester"
         exit 1
     fi
-    echo "  • ${script} installed"
+
+    # Also install to /usr/local/bin for manual command-line use (in PATH)
+    install -m 755 "files/${script}" "${ROOTFS_DIR}/usr/local/bin/"
+    if [ ! -f "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
+        echo "❌ Error: Failed to install ${script} to /usr/local/bin"
+        exit 1
+    fi
+
+    echo "  • ${script} installed to /opt/hdmi-tester and /usr/local/bin"
 done
 
 echo "✅ Test scripts installed successfully"

@@ -1,5 +1,5 @@
 [Unit]
-Description=HDMI Audio Test - MP3 Loop
+Description=HDMI Audio Test - Stereo and 5.1 Surround FLAC Loop
 After=local-fs.target sound.target
 Wants=sound.target
 
@@ -11,20 +11,25 @@ Group=audio
 # Pre-flight checks
 ExecStartPre=/bin/bash -c 'echo "=== Audio Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
-    echo "Checking test audio file..." && \
-    if [ ! -f /opt/hdmi-tester/audio.mp3 ]; then \
-        echo "ERROR: Test audio not found at /opt/hdmi-tester/audio.mp3" && \
+    echo "Checking test audio files..." && \
+    if [ ! -f /opt/hdmi-tester/stereo.flac ]; then \
+        echo "ERROR: Stereo FLAC not found at /opt/hdmi-tester/stereo.flac" && \
         exit 1; \
     fi && \
-    echo "✓ Test audio exists ($(stat -c%%s /opt/hdmi-tester/audio.mp3) bytes)" && \
+    if [ ! -f /opt/hdmi-tester/surround51.flac ]; then \
+        echo "ERROR: 5.1 Surround FLAC not found at /opt/hdmi-tester/surround51.flac" && \
+        exit 1; \
+    fi && \
+    echo "✓ Stereo FLAC exists ($(stat -c%%s /opt/hdmi-tester/stereo.flac) bytes)" && \
+    echo "✓ 5.1 Surround FLAC exists ($(stat -c%%s /opt/hdmi-tester/surround51.flac) bytes)" && \
     echo "Launching audio-test..."'
 
-# Run audio-test command (loop audio.mp3) using VLC
+# Run audio-test command (loop both FLAC files) using VLC
 ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
     cvlc --loop --no-video \
     --quiet --alsa-audio-device ${HDMI_DEVICE} \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/audio.mp3'
+    /opt/hdmi-tester/stereo.flac /opt/hdmi-tester/surround51.flac'
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Audio Test Service Stopped ===" && \

@@ -343,12 +343,12 @@ hdmi_force_hotplug=1
 # Enable HDMI audio
 hdmi_drive=2
 
-# Set resolution to 1920x1080@60Hz
-hdmi_group=1
-hdmi_mode=16
+# Auto-detect display resolution (flexible for all displays and Pi models)
+hdmi_group=0
+hdmi_mode=0
 
-# GPU memory allocation (minimal for console/framebuffer mode)
-gpu_mem=64
+# GPU memory allocation (256MB for video playback)
+gpu_mem=256
 
 # Enable audio on both HDMI and 3.5mm
 dtparam=audio=on
@@ -526,14 +526,18 @@ cp /path/to/your/audio.mp3 assets/audio.mp3
 
 ### Modify HDMI Settings
 
-Edit `build/stage-custom/04-boot-config/00-run.sh`:
+Edit `build/stage3/04-boot-config/00-run.sh`:
 
 ```bash
-# Change resolution
-hdmi_group=1    # 1=CEA (HDTV), 2=DMT (monitors)
-hdmi_mode=16    # 16=1920x1080@60Hz
+# Current: Auto-detect resolution (flexible for all displays)
+hdmi_group=0    # 0=Auto-detect
+hdmi_mode=0     # 0=Auto-detect
 
-# Available modes:
+# To hardcode a specific resolution, use:
+# hdmi_group=1    # 1=CEA (HDTV), 2=DMT (monitors)
+# hdmi_mode=16    # 16=1920x1080@60Hz
+
+# Available modes (if hardcoding):
 # Mode 4: 1280x720@60Hz
 # Mode 16: 1920x1080@60Hz
 # Mode 82: 1080p@60Hz (DMT)

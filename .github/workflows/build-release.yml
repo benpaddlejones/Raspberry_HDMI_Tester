@@ -277,12 +277,12 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "assets/audio.mp3" ]; then
-            echo "❌ Error: Test audio not found at assets/audio.mp3"
+          if [ ! -f "assets/stereo.flac" ] || [ ! -f "assets/surround51.flac" ]; then
+            echo "❌ Error: Test audio files not found (stereo.flac and surround51.flac required)"
             echo "Build cannot proceed without test assets"
             {
               echo ""
-              echo "ERROR: Missing test audio file (assets/audio.mp3)"
+              echo "ERROR: Missing test audio files (assets/stereo.flac and assets/surround51.flac)"
               echo "Build terminated before starting"
             } >> "${EARLY_LOG}"
             exit 1

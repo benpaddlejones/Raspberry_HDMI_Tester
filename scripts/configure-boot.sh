@@ -44,20 +44,20 @@ fi
 # Append HDMI configuration
 cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Force 1920x1080 @ 60Hz with Wayland
+# HDMI Tester Configuration - Auto-detect Resolution
 # Force HDMI output even if no display detected
 hdmi_force_hotplug=1
 
 # Use HDMI audio (not 3.5mm jack)
 hdmi_drive=2
 
-# Set HDMI mode to CEA (consumer electronics)
-hdmi_group=1
+# Auto-detect HDMI mode (flexible for all displays and Pi models)
+hdmi_group=0
 
-# 1920x1080 @ 60Hz (CEA mode 16)
-hdmi_mode=16
+# Auto-detect resolution (supports 720p, 1080p, 4K, etc.)
+hdmi_mode=0
 
-# GPU memory allocation (increased for Wayland compositing)
+# GPU memory allocation (256MB for video playback)
 gpu_mem=256
 
 # Disable rainbow splash screen

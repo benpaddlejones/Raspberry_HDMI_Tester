@@ -72,10 +72,10 @@ The built image was mounted and inspected to verify all required components are 
 
 #### File System Validation
 - ✅ **Boot Configuration:** `config.txt` and `cmdline.txt` present
-- ✅ **HDMI Settings:** Correct configuration for 1920x1080@60Hz
+- ✅ **HDMI Settings:** Flexible auto-detect configuration
   - `hdmi_force_hotplug=1` - Force HDMI detection
   - `hdmi_drive=2` - Enable HDMI audio
-  - `hdmi_group=1` and `hdmi_mode=16` - 1920x1080@60Hz
+  - `hdmi_group=0` and `hdmi_mode=0` - Auto-detect (supports 720p, 1080p, 4K)
 - ✅ **Test Videos:** WebM files present
   - `/opt/hdmi-tester/image-test.webm` - Image test with embedded audio
   - `/opt/hdmi-tester/color-test.webm` - Color test with embedded audio
@@ -88,7 +88,8 @@ The built image was mounted and inspected to verify all required components are 
   - Plays color-test.webm fullscreen stretched in loop
   - Configured for automatic restart on failure
 - ✅ **audio-test.service** - Installed (not enabled by default)
-  - Plays audio.mp3 in loop (audio only)
+  - Plays stereo.flac and surround51.flac in loop (audio only)
+  - Tests both stereo and 5.1 surround sound capabilities
   - Configured for automatic restart on failure
 - ✅ **full-test.service** - Installed (not enabled by default)
   - Plays both videos in sequence, infinite loop

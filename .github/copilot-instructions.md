@@ -61,7 +61,7 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 - ✅ Dev container configuration (Ubuntu 24.04)
 - ✅ Build configuration (`build/config`)
 - ✅ 5 custom pi-gen stages (00 through 04)
-- ✅ Test assets (1920x1080 PNG in `assets/image.png`, MP3 audio in `assets/audio.mp3`)
+- ✅ Test assets (WebM videos in `assets/image-test.webm` and `assets/color-test.webm`, FLAC audio in `assets/stereo.flac` and `assets/surround51.flac`)
 - ✅ Build scripts (`build-image.sh`, `configure-boot.sh`)
 - ✅ Testing scripts (`qemu-test.sh`, `validate-image.sh`)
 - ✅ User documentation (end-user focused)
@@ -76,12 +76,10 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 - ⏳ Multi-resolution support
 
 ### Key Technical Details
-- **Test Pattern**: `assets/image.png` - 1920x1080 PNG
-- **Test Audio**: `assets/audio.mp3` - MP3, 96kbps, 32kHz stereo
-- **Audio Looping**: `vlc --loop` ensures infinite playback
-- **HDMI Resolution**: Forced to 1920x1080@60Hz via `hdmi_mode=16`
+- **Test Videos**: `assets/image-test.webm`, `assets/color-test.webm` - WebM VP9 videos
+- **HDMI Resolution**: Auto-detect via `hdmi_group=0` and `hdmi_mode=0` (supports 720p, 1080p, 4K)
 - **SSH**: Enabled by default (username: `pi`, password: `raspberry`)
-- **Auto-start**: X server launches on login, systemd services start display + audio
+- **Auto-start**: Console auto-login, systemd services start display + audio
 - **Architecture**: x86_64 host building ARM images in GitHub Codespaces
 
 ---
@@ -205,9 +203,9 @@ echo "✅ Example script completed"
      ```
      hdmi_force_hotplug=1     # Force HDMI even if no display detected
      hdmi_drive=2             # Enable HDMI audio
-     hdmi_group=1             # CEA (consumer electronics)
-     hdmi_mode=16             # 1920x1080 @ 60Hz
-     gpu_mem=128              # GPU memory allocation
+     hdmi_group=0             # Auto-detect (flexible for all displays)
+     hdmi_mode=0              # Auto-detect resolution
+     gpu_mem=256              # GPU memory allocation for video playback
      enable_uart=1            # Enable serial console
      ```
 
@@ -568,7 +566,7 @@ Current implementation status:
 - [x] Project documentation created
 - [x] Dev container configured
 - [x] Test pattern assets created (`assets/image.png`)
-- [x] Audio test file created (`assets/audio.mp3`)
+- [x] Audio test files created (`assets/stereo.flac` and `assets/surround51.flac`)
 - [x] pi-gen configuration complete
 - [x] Custom build stages implemented
 - [x] systemd auto-start services

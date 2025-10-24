@@ -132,8 +132,8 @@ cat > "${TEST_CONFIG}" << 'EOF'
 # This is a comment
 hdmi_force_hotplug=1
 # hdmi_drive=2
-  hdmi_mode=16
-hdmi_group=1
+  hdmi_mode=0
+hdmi_group=0
 EOF
 
 # Test uncommented settings
@@ -151,7 +151,7 @@ else
 fi
 
 # Test with leading whitespace
-if validate_config_setting "${TEST_CONFIG}" "^[[:space:]]*hdmi_mode=16"; then
+if validate_config_setting "${TEST_CONFIG}" "^[[:space:]]*hdmi_mode=0"; then
     test_result "validate_config_setting (with whitespace)" "PASS"
 else
     test_result "validate_config_setting (with whitespace)" "FAIL"

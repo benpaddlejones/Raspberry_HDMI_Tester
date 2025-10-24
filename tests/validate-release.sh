@@ -339,11 +339,11 @@ if [ -f "${BOOT_MOUNT}/config.txt" ]; then
         ((VALIDATION_ERRORS++))
     fi
 
-    if validate_config_setting "${BOOT_MOUNT}/config.txt" "^[[:space:]]*hdmi_group=1" && \
-       validate_config_setting "${BOOT_MOUNT}/config.txt" "^[[:space:]]*hdmi_mode=16"; then
-        echo "✅ HDMI resolution: 1920x1080@60Hz" | tee -a "${REPORT_FILE}"
+    if validate_config_setting "${BOOT_MOUNT}/config.txt" "^[[:space:]]*hdmi_group=0" && \
+       validate_config_setting "${BOOT_MOUNT}/config.txt" "^[[:space:]]*hdmi_mode=0"; then
+        echo "✅ HDMI resolution: Auto-detect (flexible for all displays)" | tee -a "${REPORT_FILE}"
     else
-        echo "⚠️  HDMI resolution: Custom or default (hdmi_group=1 and hdmi_mode=16 recommended)" | tee -a "${REPORT_FILE}"
+        echo "⚠️  HDMI resolution: Custom or hardcoded (hdmi_group=0 and hdmi_mode=0 recommended for flexibility)" | tee -a "${REPORT_FILE}"
         ((VALIDATION_WARNINGS++))
     fi
 fi
@@ -352,6 +352,16 @@ echo ""
 echo "🖼️  Test Assets:" | tee -a "${REPORT_FILE}"
 validate_file "${ROOT_MOUNT}/opt/hdmi-tester/image-test.webm" "Image test video"
 validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color-test.webm" "Color test video"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/stereo.flac" "Stereo FLAC audio"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/surround51.flac" "5.1 Surround FLAC audio"
+
+echo ""
+echo "🔧 Test Scripts:" | tee -a "${REPORT_FILE}"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/hdmi-test" "HDMI test script"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/pixel-test" "Pixel test script"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/full-test" "Full test script"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/hdmi-diagnostics" "HDMI diagnostics script"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/detect-hdmi-audio" "Detect HDMI audio script"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
