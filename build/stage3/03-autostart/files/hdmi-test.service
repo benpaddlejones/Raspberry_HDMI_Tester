@@ -11,20 +11,16 @@ SupplementaryGroups=audio video render
 # Pre-flight checks
 ExecStartPre=/bin/bash -c 'echo "=== HDMI Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
-    echo "Checking test video file..." && \
-    if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
-        echo "ERROR: Test video not found at /opt/hdmi-tester/image-test.webm" && \
+    echo "Checking test video files..." && \
+    if [ ! -f /opt/hdmi-tester/image-test.webm ] && [ ! -f /opt/hdmi-tester/image-test.mp4 ]; then \
+        echo "ERROR: No test video found (checked .webm and .mp4)" && \
         exit 1; \
     fi && \
-    echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/image-test.webm) bytes)" && \
-    echo "Launching hdmi-test..."'
+    echo "✓ Test video files available" && \
+    echo "Launching hdmi-test script (auto-detects format)..."'
 
-# Run hdmi-test command (optimized resolution with audio) using VLC
-ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
-    cvlc --loop --no-video-title-show --no-osd --quiet \
-    --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
-    --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/image-test.webm'
+# Run hdmi-test script (auto-detects Pi model and selects appropriate format)
+ExecStart=/opt/hdmi-tester/hdmi-test
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== HDMI Test Service Stopped ===" && \

@@ -11,22 +11,16 @@ SupplementaryGroups=audio video render
 # Pre-flight checks
 ExecStartPre=/bin/bash -c 'echo "=== Pixel Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
-    echo "Checking test video file..." && \
-    if [ ! -f /opt/hdmi-tester/color-test.webm ]; then \
-        echo "ERROR: Test video not found at /opt/hdmi-tester/color-test.webm" && \
+    echo "Checking test video files..." && \
+    if [ ! -f /opt/hdmi-tester/color-test.webm ] && [ ! -f /opt/hdmi-tester/color-test.mp4 ]; then \
+        echo "ERROR: No test video found (checked .webm and .mp4)" && \
         exit 1; \
     fi && \
-    echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/color-test.webm) bytes)" && \
-    echo "Launching pixel-test..."'
+    echo "✓ Test video files available" && \
+    echo "Launching pixel-test script (auto-detects format)..."'
 
-# Run pixel-test command (fullscreen stretched with audio) using VLC
-# --no-autoscale forces stretching to fill screen (for pixel testing)
-ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
-    cvlc --loop --fullscreen --no-autoscale \
-    --no-video-title-show --no-osd --quiet \
-    --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
-    --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/color-test.webm'
+# Run pixel-test script (auto-detects Pi model and selects appropriate format)
+ExecStart=/opt/hdmi-tester/pixel-test
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Pixel Test Service Stopped ===" && \

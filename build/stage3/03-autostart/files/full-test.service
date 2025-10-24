@@ -12,33 +12,19 @@ SupplementaryGroups=audio video render
 ExecStartPre=/bin/bash -c 'echo "=== Full Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
     echo "Checking test video files..." && \
-    if [ ! -f /opt/hdmi-tester/image-test.webm ]; then \
-        echo "ERROR: Image test video not found" && \
+    if [ ! -f /opt/hdmi-tester/image-test.webm ] && [ ! -f /opt/hdmi-tester/image-test.mp4 ]; then \
+        echo "ERROR: Image test video not found (checked .webm and .mp4)" && \
         exit 1; \
     fi && \
-    if [ ! -f /opt/hdmi-tester/color-test.webm ]; then \
-        echo "ERROR: Color test video not found" && \
+    if [ ! -f /opt/hdmi-tester/color-test.webm ] && [ ! -f /opt/hdmi-tester/color-test.mp4 ]; then \
+        echo "ERROR: Color test video not found (checked .webm and .mp4)" && \
         exit 1; \
     fi && \
-    echo "✓ Both test videos exist" && \
-    echo "Launching full-test (hdmi-test + pixel-test)..."'
+    echo "✓ Test video files available" && \
+    echo "Launching full-test script (auto-detects format)..."'
 
-# Run full-test command (both videos in sequence, infinite loop) using VLC
-ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
-while true; do \
-    echo "Playing: image-test.webm (HDMI test - optimized resolution)..." && \
-    cvlc --play-and-exit --no-video-title-show --no-osd --quiet \
-        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
-        --no-audio-time-stretch --audio-replay-gain-mode=none \
-        /opt/hdmi-tester/image-test.webm 2>/dev/null && \
-    echo "Playing: color-test.webm (Pixel test - fullscreen stretched)..." && \
-    cvlc --play-and-exit --fullscreen --no-autoscale \
-        --no-video-title-show --no-osd --quiet \
-        --vout=drm --alsa-audio-device ${HDMI_DEVICE} \
-        --no-audio-time-stretch --audio-replay-gain-mode=none \
-        /opt/hdmi-tester/color-test.webm 2>/dev/null && \
-    echo "Restarting loop..."; \
-done'
+# Run full-test script (auto-detects Pi model and selects appropriate format)
+ExecStart=/opt/hdmi-tester/full-test
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Full Test Service Stopped ===" && \

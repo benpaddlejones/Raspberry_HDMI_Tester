@@ -1,7 +1,23 @@
 #!/bin/bash
-# Test Script 2 (VLC): Play color-test.webm fullscreen (stretched to fill all pixels)
+# Test Script 2 (VLC): Play color test fullscreen (stretched to fill all pixels)
 
-VIDEO_FILE="/opt/hdmi-tester/color-test.webm"
+# Detect Raspberry Pi model and choose appropriate video format
+# Pi 4 and higher: Use WebM (VP9 with hardware support)
+# Pi 3 and lower: Use H.264 (hardware accelerated)
+detect_video_format() {
+    local model_info
+    model_info=$(cat /proc/cpuinfo | grep "Model" | head -1)
+
+    # Extract Pi version (look for "Raspberry Pi 4" or "Raspberry Pi 5", etc.)
+    if echo "${model_info}" | grep -qE "Raspberry Pi [45678]"; then
+        echo "webm"  # Pi 4+ has VP9 support
+    else
+        echo "mp4"   # Pi 3 and earlier: use H.264
+    fi
+}
+
+VIDEO_FORMAT=$(detect_video_format)
+VIDEO_FILE="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
 LOG_FILE="/tmp/pixel-test.log"
 
 # Start logging
@@ -9,6 +25,7 @@ LOG_FILE="/tmp/pixel-test.log"
     echo "==========================================="
     echo "Color Test (Fullscreen VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
     echo "==========================================="
+    echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
     echo "File: ${VIDEO_FILE}"
     echo "Log: ${LOG_FILE}"
     echo "PID: $$"
