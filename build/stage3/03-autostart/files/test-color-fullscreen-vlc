@@ -1,7 +1,7 @@
 #!/bin/bash
-# Test Script 2 (VLC): Play color_test.webm fullscreen (stretched to fill all pixels)
+# Test Script 2 (VLC): Play color-test.webm fullscreen (stretched to fill all pixels)
 
-VIDEO_FILE="/opt/hdmi-tester/color_test.webm"
+VIDEO_FILE="/opt/hdmi-tester/color-test.webm"
 LOG_FILE="/tmp/test-color-fullscreen-vlc.log"
 
 # Start logging

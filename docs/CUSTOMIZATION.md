@@ -22,7 +22,7 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 
 ### Supported Video Codecs
 The image includes comprehensive codec support for video files:
-- **VP9** - Modern, efficient (used in WebM files: `color_test.webm`, `image-test.webm`)
+- **VP9** - Modern, efficient (used in WebM files: `color-test.webm`, `image-test.webm`)
 - **VP8** - Older WebM codec
 - **H.264** - Universal compatibility (MP4)
 - **H.265/HEVC** - High-efficiency compression

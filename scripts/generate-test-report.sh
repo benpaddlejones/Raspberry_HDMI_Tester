@@ -77,15 +77,15 @@ The built image was mounted and inspected to verify all required components are 
   - `hdmi_drive=2` - Enable HDMI audio
   - `hdmi_group=1` and `hdmi_mode=16` - 1920x1080@60Hz
 - ✅ **Test Videos:** WebM files present
-  - `/opt/hdmi-tester/image-test.webm` - Image quality test
-  - `/opt/hdmi-tester/color_test.webm` - Color test with embedded audio
+  - `/opt/hdmi-tester/image-test.webm` - Image test with embedded audio
+  - `/opt/hdmi-tester/color-test.webm` - Color test with embedded audio
 
 #### Service Validation
 - ✅ **hd-audio-test-vlc.service** - Installed (not enabled by default)
   - Plays image-test.webm in loop (optimized resolution)
   - Configured for automatic restart on failure
 - ✅ **pixel-audio-test-vlc.service** - Installed (not enabled by default)
-  - Plays color_test.webm fullscreen stretched in loop
+  - Plays color-test.webm fullscreen stretched in loop
   - Configured for automatic restart on failure
 - ✅ **full-test-vlc.service** - Installed (not enabled by default)
   - Plays both videos in sequence, infinite loop

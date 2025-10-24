@@ -16,7 +16,7 @@ ExecStartPre=/bin/bash -c 'echo "=== Full Test Service (VLC) Starting ===" && \
         echo "ERROR: Image test video not found" && \
         exit 1; \
     fi && \
-    if [ ! -f /opt/hdmi-tester/color_test.webm ]; then \
+    if [ ! -f /opt/hdmi-tester/color-test.webm ]; then \
         echo "ERROR: Color test video not found" && \
         exit 1; \
     fi && \
@@ -30,12 +30,12 @@ ExecStart=/bin/bash -c 'while true; do \
         --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         /opt/hdmi-tester/image-test.webm 2>/dev/null && \
-    echo "Playing: color_test.webm (fullscreen stretched for pixel testing)..." && \
+    echo "Playing: color-test.webm (fullscreen stretched for pixel testing)..." && \
     cvlc --play-and-exit --fullscreen --no-autoscale \
         --no-video-title-show --no-osd --quiet \
         --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
         --no-audio-time-stretch --audio-replay-gain-mode=none \
-        /opt/hdmi-tester/color_test.webm 2>/dev/null && \
+        /opt/hdmi-tester/color-test.webm 2>/dev/null && \
     echo "Restarting loop..."; \
 done'
 

@@ -138,7 +138,7 @@ echo ""
 
 FILES_TO_CHECK=(
     "/opt/hdmi-tester/image-test.webm|Image Test Video"
-    "/opt/hdmi-tester/color_test.webm|Color Test Video"
+    "/opt/hdmi-tester/color-test.webm|Color Test Video"
     "/etc/systemd/system/hd-audio-test-vlc.service|HD Audio Test Service (VLC)"
     "/etc/systemd/system/pixel-audio-test-vlc.service|Pixel Audio Test Service (VLC)"
     "/etc/systemd/system/full-test-vlc.service|Full Test Service (VLC)"

@@ -7,7 +7,7 @@ echo ""
 
 # Check if video files with audio exist
 VIDEO_FILE_1="/opt/hdmi-tester/image-test.webm"
-VIDEO_FILE_2="/opt/hdmi-tester/color_test.webm"
+VIDEO_FILE_2="/opt/hdmi-tester/color-test.webm"
 
 if [ ! -f "$VIDEO_FILE_1" ]; then
     echo "❌ Video file not found: $VIDEO_FILE_1"

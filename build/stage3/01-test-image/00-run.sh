@@ -38,7 +38,7 @@ fi
 echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
 
 # Validate source files exist
-TEST_VIDEOS=("image-test.webm" "color_test.webm")
+TEST_VIDEOS=("image-test.webm" "color-test.webm")
 
 for video in "${TEST_VIDEOS[@]}"; do
     if [ ! -f "files/${video}" ]; then

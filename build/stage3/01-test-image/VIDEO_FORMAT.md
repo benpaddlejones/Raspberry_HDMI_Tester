@@ -8,7 +8,7 @@ The HDMI tester requires video files in **WebM format** for maximum compatibilit
 
 Place these files in `build/stage3/01-test-image/files/`:
 - `image-test.webm` - Image quality test video
-- `color_test.webm` - Color test video (fullscreen)
+- `color-test.webm` - Color test video (fullscreen)
 
 ## Converting MP4 to WebM
 

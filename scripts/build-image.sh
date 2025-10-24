@@ -78,7 +78,7 @@ capture_environment
 start_stage_timer "Asset Validation"
 
 log_asset_validation "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" "Image Test Video"
-log_asset_validation "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" "Color Test Video"
+log_asset_validation "${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm" "Color Test Video"
 
 if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; then
     log_event "❌" "Image test video not found at ${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
@@ -87,10 +87,10 @@ if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; 
     exit 1
 fi
 
-if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" ]; then
-    log_event "❌" "Color test video not found at ${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm"
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm" ]; then
+    log_event "❌" "Color test video not found at ${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm"
     end_stage_timer "Asset Validation" 1
-    finalize_log "failure" "Missing color_test.webm"
+    finalize_log "failure" "Missing color-test.webm"
     exit 1
 fi
 
@@ -179,7 +179,7 @@ log_info "✓ pi-gen directory found"
 # HIGH PRIORITY FIX: Validate asset files (WebM videos with embedded audio)
 log_subsection "Validating Asset Files"
 IMAGE_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
-COLOR_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm"
+COLOR_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm"
 
 log_info "Checking image test video: ${IMAGE_TEST_VIDEO}"
 if [ ! -f "${IMAGE_TEST_VIDEO}" ]; then
@@ -193,8 +193,8 @@ log_info "✓ Image test video exists ($(stat -c%s "${IMAGE_TEST_VIDEO}" | numfm
 log_info "Checking color test video: ${COLOR_TEST_VIDEO}"
 if [ ! -f "${COLOR_TEST_VIDEO}" ]; then
     log_event "❌" "Color test video not found: ${COLOR_TEST_VIDEO}"
-    end_stage_timer "Prerequisites Check" 1
-    finalize_log "failure" "Missing color_test.webm"
+    end_stage_timer "Video Validation" 1
+    finalize_log "failure" "Missing color-test.webm"
     exit 1
 fi
 log_info "✓ Color test video exists ($(stat -c%s "${COLOR_TEST_VIDEO}" | numfmt --to=iec-i --suffix=B))"
@@ -210,12 +210,12 @@ if command -v ffprobe &>/dev/null; then
         log_info "Build will continue, but runtime playback may fail"
     fi
 
-    log_info "Validating color_test.webm..."
+    log_info "Validating color-test.webm..."
     if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_VIDEO}" >> "${BUILD_LOG_FILE}" 2>&1; then
         VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_VIDEO}" 2>/dev/null | tr '\n' ' ')
         log_info "✓ Video validated: ${VIDEO_INFO}"
     else
-        log_event "⚠️" "Warning: Could not validate color_test.webm (file may be corrupted)"
+        log_event "⚠️" "Warning: Could not validate color-test.webm (file may be corrupted)"
         log_info "Build will continue, but runtime playback may fail"
     fi
 else
@@ -259,7 +259,7 @@ declare -a REQUIRED_STAGE_FILES=(
     "00-install-packages/00-packages"
     "01-test-image/00-run.sh"
     "01-test-image/files/image-test.webm"
-    "01-test-image/files/color_test.webm"
+    "01-test-image/files/color-test.webm"
     "02-audio-test/00-run.sh"
     "03-autostart/00-run.sh"
     "03-autostart/files/test-image-loop-vlc"
@@ -314,7 +314,7 @@ log_subsection "Verifying WebM Video Files"
 # No need to copy from assets - they're built directly in the stage directory
 
 log_checksum "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" "Image Test Video"
-log_checksum "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" "Color Test Video"
+log_checksum "${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm" "Color Test Video"
 
 # Verify files exist
 if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; then
@@ -324,10 +324,10 @@ if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm" ]; 
     exit 1
 fi
 
-if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color_test.webm" ]; then
-    log_event "❌" "Failed to find color_test.webm"
+if [ ! -f "${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm" ]; then
+    log_event "❌" "Failed to find color-test.webm"
     end_stage_timer "Asset Deployment" 1
-    finalize_log "failure" "Missing color_test.webm"
+    finalize_log "failure" "Missing color-test.webm"
     exit 1
 fi
 

@@ -164,7 +164,7 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 
 ### Video & Audio Codecs
 
-**WebM Test Files** (`color_test.webm`, `image-test.webm`):
+**WebM Test Files** (`color-test.webm`, `image-test.webm`):
 - **Video Codec**: VP9 (Google VP9) - Modern, efficient compression
 - **Audio Codec**: Opus (Opus Interactive Audio Codec) - High-quality audio
 - **Container**: WebM (Matroska-based)

@@ -163,7 +163,7 @@ jobs:
           echo "Found ${ASSET_COUNT} WebM asset file(s)"
 
           if [ ${ASSET_COUNT} -lt 2 ]; then
-            echo "⚠️  Warning: Expected 2 WebM files (image-test.webm, color_test.webm)"
+            echo "⚠️  Warning: Expected 2 WebM files (image-test.webm, color-test.webm)"
             echo "Contents of asset directory:"
             ls -la build/stage3/01-test-image/files/
           fi

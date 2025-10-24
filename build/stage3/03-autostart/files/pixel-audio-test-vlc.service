@@ -12,11 +12,11 @@ Group=audio
 ExecStartPre=/bin/bash -c 'echo "=== Pixel Audio Test Service (VLC) Starting ===" && \
     echo "Timestamp: $(date)" && \
     echo "Checking test video file..." && \
-    if [ ! -f /opt/hdmi-tester/color_test.webm ]; then \
-        echo "ERROR: Test video not found at /opt/hdmi-tester/color_test.webm" && \
+    if [ ! -f /opt/hdmi-tester/color-test.webm ]; then \
+        echo "ERROR: Test video not found at /opt/hdmi-tester/color-test.webm" && \
         exit 1; \
     fi && \
-    echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/color_test.webm) bytes)" && \
+    echo "✓ Test video exists ($(stat -c%%s /opt/hdmi-tester/color-test.webm) bytes)" && \
     echo "Launching test-color-fullscreen with VLC..."'
 
 # Run test-color-fullscreen command (fullscreen stretched with audio) using VLC
@@ -25,7 +25,7 @@ ExecStart=/usr/bin/cvlc --loop --fullscreen --no-autoscale \
     --no-video-title-show --no-osd --quiet \
     --vout=drm --alsa-audio-device hw:CARD=vc4hdmi,DEV=0 \
     --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/color_test.webm
+    /opt/hdmi-tester/color-test.webm
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Pixel Audio Test Service (VLC) Stopped ===" && \

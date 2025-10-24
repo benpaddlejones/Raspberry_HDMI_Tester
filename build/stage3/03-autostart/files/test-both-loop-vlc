@@ -2,7 +2,7 @@
 # Test Script 3 (VLC): Play both videos in sequence and loop
 
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.webm"
-COLOR_VIDEO="/opt/hdmi-tester/color_test.webm"
+COLOR_VIDEO="/opt/hdmi-tester/color-test.webm"
 LOG_FILE="/tmp/test-both-loop-vlc.log"
 
 # Start logging
@@ -96,7 +96,7 @@ LOG_FILE="/tmp/test-both-loop-vlc.log"
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""
 
-        echo "[${LOOP_COUNT}] Playing: color_test.webm (fullscreen stretched for pixel testing)..."
+        echo "[${LOOP_COUNT}] Playing: color-test.webm (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \

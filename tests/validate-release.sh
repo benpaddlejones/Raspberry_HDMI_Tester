@@ -351,7 +351,7 @@ fi
 echo ""
 echo "🖼️  Test Assets:" | tee -a "${REPORT_FILE}"
 validate_file "${ROOT_MOUNT}/opt/hdmi-tester/image-test.webm" "Image test video"
-validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color_test.webm" "Color test video"
+validate_file "${ROOT_MOUNT}/opt/hdmi-tester/color-test.webm" "Color test video"
 
 echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
