@@ -337,6 +337,15 @@ end_stage_timer "Asset Deployment" 0
 monitor_disk_space "After Asset Deployment"
 monitor_memory "Before pi-gen Build"
 
+## Ensure deploy directory exists and is writable before build
+DEPLOY_DIR="${WORK_DIR}/deploy"
+if [ ! -d "${DEPLOY_DIR}" ]; then
+    log_info "Creating deploy directory: ${DEPLOY_DIR}"
+    mkdir -p "${DEPLOY_DIR}"
+fi
+chmod 777 "${DEPLOY_DIR}"
+log_info "✓ Deploy directory ready and writable"
+
 # Run build
 start_stage_timer "pi-gen Build"
 
