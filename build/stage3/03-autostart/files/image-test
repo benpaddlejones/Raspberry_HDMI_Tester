@@ -6,6 +6,39 @@ LOG_FILE="/tmp/image-test.log"
 IMAGE_DIR="/opt/hdmi-tester"
 DISPLAY_TIME=10  # seconds per image
 
+# Setup unbuffered logging (survives crashes)
+exec > >(tee -a "${LOG_FILE}") 2>&1
+set -x  # Enable command tracing
+
+# Trap handler to ensure logs are flushed on exit/error
+cleanup() {
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    sync  # Flush filesystem buffers
+}
+trap cleanup EXIT INT TERM
+
+# Detect Raspberry Pi model and choose appropriate video output
+detect_vout_method() {
+    local model_info
+    model_info=$(cat /proc/cpuinfo | grep "Model" | head -1)
+
+    # Extract Pi version (look for "Raspberry Pi 4" or "Raspberry Pi 5", etc.)
+    if echo "${model_info}" | grep -qE "Raspberry Pi [45678]"; then
+        echo "drm"  # Pi 4+ use DRM
+    else
+        echo "fbdev"   # Pi 3 and earlier: use framebuffer
+    fi
+}
+
+VOUT_METHOD=$(detect_vout_method)
+
+# Set video output flags based on method
+if [ "${VOUT_METHOD}" = "drm" ]; then
+    VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
+else
+    VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
+fi
+
 # Define image sequence
 IMAGES=(
     "${IMAGE_DIR}/black.png"
@@ -16,16 +49,16 @@ IMAGES=(
     "${IMAGE_DIR}/image.png"
 )
 
-# Start logging
-{
-    echo "==========================================="
-    echo "Image Rotation Test - Started $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "==========================================="
-    echo "Display Time: ${DISPLAY_TIME} seconds per image"
-    echo "Total Images: ${#IMAGES[@]}"
-    echo "Log: ${LOG_FILE}"
-    echo "PID: $$"
-    echo "User: $(whoami)"
+# Log startup info
+echo "==========================================="
+echo "Image Rotation Test - Started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "==========================================="
+echo "Video Output: ${VOUT_METHOD}"
+echo "Display Time: ${DISPLAY_TIME} seconds per image"
+echo "Total Images: ${#IMAGES[@]}"
+echo "Log: ${LOG_FILE}"
+echo "PID: $$"
+echo "User: $(whoami)"
     echo "Working Directory: $(pwd)"
     echo ""
 
@@ -118,17 +151,18 @@ IMAGES=(
 
             # Display image for specified time using VLC
             # Use timeout to kill VLC after display time
-            timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
-                --no-osd --vout=drm --drm-vout-no-modeset --play-and-exit --no-audio \
-                --image-duration=${DISPLAY_TIME} "${img}" 2>&1 | \
-                grep -E "main|drm|error|warning" || true
-
-            echo "Finished displaying ${IMAGE_NAME}"
+            # Capture exit code to detect failures
+            if timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
+                --no-osd ${VOUT_FLAGS} --play-and-exit --no-audio \
+                --image-duration=${DISPLAY_TIME} "${img}" 2>&1; then
+                echo "✓ Finished displaying ${IMAGE_NAME}"
+            else
+                VLC_EXIT=$?
+                echo "⚠ VLC exited with code ${VLC_EXIT} for ${IMAGE_NAME}"
+            fi
             echo ""
         done
 
         echo "=== Completed full rotation at $(date '+%Y-%m-%d %H:%M:%S') - Restarting ==="
         echo ""
     done
-
-} | tee "${LOG_FILE}"

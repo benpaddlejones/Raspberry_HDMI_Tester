@@ -139,16 +139,16 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # Remove ALL existing audio parameters to avoid conflicts
     # Must remove ALL instances, including duplicates and conflicting values
     # Using global replacement to catch all occurrences
-    sed -i 's/snd_bcm2835\.enable_hdmi=[0-9]//g' "${CMDLINE_FILE}"
-    sed -i 's/snd_bcm2835\.enable_headphones=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' "${CMDLINE_FILE}"
+    sed -i 's/snd_bcm2835\.enable_headphones=[^ ]*//g' "${CMDLINE_FILE}"
     sed -i 's/noswap//g' "${CMDLINE_FILE}"
     sed -i 's/quiet//g' "${CMDLINE_FILE}"
     sed -i 's/splash//g' "${CMDLINE_FILE}"
-    sed -i 's/loglevel=[0-9]//g' "${CMDLINE_FILE}"
+    sed -i 's/loglevel=[^ ]*//g' "${CMDLINE_FILE}"
     sed -i 's/fastboot//g' "${CMDLINE_FILE}"
 
     # Remove cgroup_disable=memory (causes issues with modern kernels)
-    sed -i 's/cgroup_disable=memory//g' "${CMDLINE_FILE}"
+    sed -i 's/cgroup_disable=[^ ]*//g' "${CMDLINE_FILE}"
 
     # Remove ALL extra spaces (multiple passes to collapse all duplicate spaces)
     sed -i 's/  */ /g' "${CMDLINE_FILE}"

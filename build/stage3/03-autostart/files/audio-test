@@ -5,19 +5,28 @@ STEREO_FILE="/opt/hdmi-tester/stereo.flac"
 SURROUND_FILE="/opt/hdmi-tester/surround51.flac"
 LOG_FILE="/tmp/audio-test.log"
 
-# Start logging
-{
-    echo "==========================================="
-    echo "Audio Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "==========================================="
-    echo "Files:"
-    echo "  - ${STEREO_FILE}"
-    echo "  - ${SURROUND_FILE}"
-    echo "Log: ${LOG_FILE}"
-    echo "PID: $$"
-    echo "User: $(whoami)"
-    echo "Working Directory: $(pwd)"
-    echo ""
+# Setup unbuffered logging (survives crashes)
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
+cleanup() {
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    sync  # Flush filesystem buffers
+}
+trap cleanup EXIT INT TERM
+
+# Log startup info
+echo "==========================================="
+echo "Audio Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "==========================================="
+echo "Files:"
+echo "  - ${STEREO_FILE}"
+echo "  - ${SURROUND_FILE}"
+echo "Log: ${LOG_FILE}"
+echo "PID: $$"
+echo "User: $(whoami)"
+echo "Working Directory: $(pwd)"
+echo ""
 
     # System information
     echo "=== System Information ==="
@@ -142,5 +151,3 @@ LOG_FILE="/tmp/audio-test.log"
     exec cvlc --loop --no-video --aout=alsa \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1
-
-} | tee "${LOG_FILE}"

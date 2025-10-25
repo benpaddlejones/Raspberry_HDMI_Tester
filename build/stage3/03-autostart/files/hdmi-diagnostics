@@ -7,10 +7,27 @@ DIAG_DIR="/tmp/hdmi-diagnostics-${TIMESTAMP}"
 REPORT_FILE="${DIAG_DIR}/diagnostic-report.txt"
 ARCHIVE_FILE="/tmp/hdmi-diagnostics-${TIMESTAMP}.tar.gz"
 
+# Initialize USB variables (used later in script)
+USB_FOUND=false
+USB_MOUNT_POINT=""
+USB_DEVICE=""
+
+# Check if running as root (required for USB auto-save)
+if [ "$EUID" -ne 0 ]; then
+    RUNNING_AS_ROOT=false
+    echo "⚠️  WARNING: Not running as root - USB auto-save will be disabled"
+    echo "   To enable USB auto-save, run: sudo /opt/hdmi-tester/hdmi-diagnostics"
+    echo ""
+else
+    RUNNING_AS_ROOT=true
+fi
+
 echo "==========================================="
 echo "HDMI Tester Diagnostics"
 echo "==========================================="
 echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "Running as: $(whoami)"
+echo "USB auto-save: $([ "$RUNNING_AS_ROOT" = true ] && echo "enabled" || echo "disabled")"
 echo "Creating diagnostic bundle..."
 echo ""
 
@@ -250,11 +267,12 @@ mkdir -p "${DIAG_DIR}"
     # ============================================
     # VIDEO FILES
     # ============================================
-    echo "==========================================="
-    echo "VIDEO TEST FILES"
-    echo "==========================================="
-    echo ""
+echo "==========================================="
+echo "VIDEO TEST FILES"
+echo "==========================================="
+echo ""
 
+if [ -d /opt/hdmi-tester ]; then
     for video in /opt/hdmi-tester/*.webm /opt/hdmi-tester/*.mp4 /opt/hdmi-tester/*.mkv; do
         if [ -f "$video" ]; then
             echo "=== File: $video ==="
@@ -272,10 +290,22 @@ mkdir -p "${DIAG_DIR}"
         fi
     done
 
-    if [ ! -f /opt/hdmi-tester/*.webm ] && [ ! -f /opt/hdmi-tester/*.mp4 ]; then
-        echo "No video files found in /opt/hdmi-tester/"
+    # Check if any video files exist
+    VIDEO_FILES_EXIST=false
+    for ext in webm mp4; do
+        if compgen -G "/opt/hdmi-tester/*.${ext}" > /dev/null; then
+            VIDEO_FILES_EXIST=true
+            break
+        fi
+    done
+
+    if [ "${VIDEO_FILES_EXIST}" = "false" ]; then
+        echo "⚠️  WARNING: No video files found in /opt/hdmi-tester/"
     fi
-    echo ""
+else
+    echo "⚠️  WARNING: /opt/hdmi-tester directory not found"
+fi
+echo ""
 
     # ============================================
     # INSTALLED SOFTWARE
@@ -310,9 +340,9 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     echo "=== HDMI Test Services Status ==="
-    for service in hdmi-test pixel-test audio-test full-test; do
+    for service in image-test hdmi-test pixel-test audio-test test-notvideo full-test; do
         echo "--- ${service}.service ---"
-        systemctl status ${service}.service 2>&1 || echo "Service not found"
+        systemctl status "${service}.service" 2>&1 || echo "Service not found"
         echo ""
     done
 
@@ -513,8 +543,8 @@ journalctl -b -1 > "${DIAG_DIR}/journals/previous-boot.log" 2>&1
 echo "✓ Previous boot journal"
 
 # Service-specific journals
-for service in hdmi-test pixel-test audio-test full-test; do
-    journalctl -u ${service}.service --no-pager > "${DIAG_DIR}/journals/${service}-service.log" 2>&1
+for service in image-test hdmi-test pixel-test audio-test test-notvideo full-test; do
+    journalctl -u "${service}.service" --no-pager > "${DIAG_DIR}/journals/${service}-service.log" 2>&1
 done
 echo "✓ Service journals extracted"
 
@@ -631,7 +661,7 @@ echo "✓ Summary created"
 echo ""
 echo "Creating compressed archive..."
 
-cd /tmp
+cd /tmp || exit 1
 tar -czf "${ARCHIVE_FILE}" "hdmi-diagnostics-${TIMESTAMP}/" 2>&1
 ARCHIVE_SIZE=$(ls -lh "${ARCHIVE_FILE}" | awk '{print $5}')
 
@@ -643,55 +673,66 @@ echo "==========================================="
 echo "CHECKING FOR USB DRIVE"
 echo "==========================================="
 
-USB_FOUND=false
-USB_MOUNT_POINT=""
-USB_DEVICE=""
+# Skip USB auto-save if not running as root
+if [ "$RUNNING_AS_ROOT" = false ]; then
+    echo "⚠️  USB auto-save skipped (not running as root)"
+    echo ""
+    echo "Diagnostics saved locally: ${ARCHIVE_FILE}"
+    echo ""
+    echo "To enable USB auto-save, run with sudo:"
+    echo "  sudo /opt/hdmi-tester/hdmi-diagnostics"
+    echo ""
+else
+    # USB auto-save code (only runs as root)
+    USB_FOUND=false
+    USB_MOUNT_POINT=""
+    USB_DEVICE=""
 
-# List all block devices for debugging
-echo "Available block devices:"
-lsblk -o NAME,SIZE,TYPE,MOUNTPOINT 2>&1 || echo "  lsblk not available"
-echo ""
+    # List all block devices for debugging
+    echo "Available block devices:"
+    lsblk -o NAME,SIZE,TYPE,MOUNTPOINT 2>&1 || echo "  lsblk not available"
+    echo ""
 
-echo "Checking for removable USB devices..."
-echo ""
+    echo "Checking for removable USB devices..."
+    echo ""
 
-# Build a list of potential USB devices
-USB_DEVICES=()
+    # Build a list of potential USB devices
+    USB_DEVICES=()
 
-# Method 1: Check /sys/block for removable devices
-for device in /sys/block/sd*; do
-    if [ -d "${device}" ]; then
-        device_name=$(basename "${device}")
-        removable=$(cat "${device}/removable" 2>/dev/null || echo "0")
-        if [ "${removable}" = "1" ]; then
-            echo "Found removable device: /dev/${device_name}"
+    # Method 1: Check /sys/block for removable devices
+    for device in /sys/block/sd*; do
+        if [ -d "${device}" ]; then
+            device_name=$(basename "${device}")
+            removable=$(cat "${device}/removable" 2>/dev/null || echo "0")
+            if [ "${removable}" = "1" ]; then
+                echo "Found removable device: /dev/${device_name}"
 
-            # Check for partitions
-            if [ -d "${device}/${device_name}1" ]; then
-                USB_DEVICES+=("/dev/${device_name}1")
-                echo "  → Has partition 1: /dev/${device_name}1"
+                # Check for partitions (look for partition subdirectories)
+                if [ -b "/dev/${device_name}1" ]; then
+                    USB_DEVICES+=("/dev/${device_name}1")
+                    echo "  → Has partition 1: /dev/${device_name}1"
+                fi
+
+                # Also try the device itself (no partition number)
+                USB_DEVICES+=("/dev/${device_name}")
+                echo "  → Also trying: /dev/${device_name}"
             fi
-
-            # Also try the device itself (no partition number)
-            USB_DEVICES+=("/dev/${device_name}")
-            echo "  → Also trying: /dev/${device_name}"
         fi
+        done
+
+    # Method 2: Fallback - check common USB device paths
+    if [ ${#USB_DEVICES[@]} -eq 0 ]; then
+        echo "No removable devices found, checking common paths..."
+        for device in /dev/sda1 /dev/sda /dev/sdb1 /dev/sdb /dev/sdc1 /dev/sdc; do
+            if [ -b "${device}" ]; then
+                USB_DEVICES+=("${device}")
+                echo "  → Found block device: ${device}"
+            fi
+        done
     fi
-done
 
-# Method 2: Fallback - check common USB device paths
-if [ ${#USB_DEVICES[@]} -eq 0 ]; then
-    echo "No removable devices found, checking common paths..."
-    for device in /dev/sda1 /dev/sda /dev/sdb1 /dev/sdb /dev/sdc1 /dev/sdc; do
-        if [ -b "${device}" ]; then
-            USB_DEVICES+=("${device}")
-            echo "  → Found block device: ${device}"
-        fi
-    done
-fi
-
-# If no devices found
-if [ ${#USB_DEVICES[@]} -eq 0 ]; then
+    # If no devices found
+    if [ ${#USB_DEVICES[@]} -eq 0 ]; then
     echo "❌ No USB devices found"
     echo ""
     echo "Diagnostics saved locally: ${ARCHIVE_FILE}"
@@ -732,10 +773,15 @@ else
                         USB_FOUND=true
                         USB_MOUNT_POINT="${TEMP_MOUNT}"
                         USB_DEVICE="${device}"
+
+                        # Set permissions so files are readable by everyone
+                        chmod 644 "${TEMP_MOUNT}/$(basename "${ARCHIVE_FILE}")" 2>/dev/null || true
                         echo "  ✅ Archive saved: $(basename "${ARCHIVE_FILE}")"
 
                         # Also copy the uncompressed report for quick viewing
                         if cp -v "${REPORT_FILE}" "${TEMP_MOUNT}/diagnostic-report.txt" 2>&1; then
+                            # Set permissions on report file
+                            chmod 644 "${TEMP_MOUNT}/diagnostic-report.txt" 2>/dev/null || true
                             echo "  ✅ Report saved: diagnostic-report.txt"
                         fi
 
@@ -775,7 +821,8 @@ else
         echo "❌ Could not mount any USB drive for writing"
         echo "Diagnostics saved locally: ${ARCHIVE_FILE}"
     fi
-fi
+fi  # End of USB device check (no devices found vs devices found)
+fi  # End of root permission check for USB operations
 
 echo ""
 echo "==========================================="
@@ -793,8 +840,8 @@ if [ "${USB_FOUND}" = "true" ]; then
     echo "     • diagnostic-report.txt"
     echo ""
 
-    # Unmount USB drive safely
-    if [ -n "${USB_MOUNT_POINT}" ] && mountpoint -q "${USB_MOUNT_POINT}" 2>/dev/null; then
+    # Unmount USB drive safely (only if we actually mounted it)
+    if [ -n "${USB_MOUNT_POINT}" ] && [ -d "${USB_MOUNT_POINT}" ] && mountpoint -q "${USB_MOUNT_POINT}" 2>/dev/null; then
         echo "Safely unmounting USB drive..."
         sync
         if umount "${USB_MOUNT_POINT}" 2>/dev/null; then

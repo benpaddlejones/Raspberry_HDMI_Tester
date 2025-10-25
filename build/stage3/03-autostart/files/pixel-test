@@ -1,6 +1,21 @@
 #!/bin/bash
 # Test Script 2 (VLC): Play color test fullscreen (stretched to fill all pixels)
 
+#!/bin/bash
+# Test Script 2 (VLC): Loop color test pattern video (fullscreen stretched)
+
+LOG_FILE="/tmp/pixel-test.log"
+
+# Setup unbuffered logging (survives crashes)
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
+cleanup() {
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    sync  # Flush filesystem buffers
+}
+trap cleanup EXIT INT TERM
+
 # Detect Raspberry Pi model and choose appropriate video format
 # Pi 4 and higher: Use WebM (VP9 with hardware support)
 # Pi 3 and lower: Use H.264 (hardware accelerated)
@@ -18,20 +33,18 @@ detect_video_format() {
 
 VIDEO_FORMAT=$(detect_video_format)
 VIDEO_FILE="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
-LOG_FILE="/tmp/pixel-test.log"
 
-# Start logging
-{
-    echo "==========================================="
-    echo "Color Test (Fullscreen VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "==========================================="
-    echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
-    echo "File: ${VIDEO_FILE}"
-    echo "Log: ${LOG_FILE}"
-    echo "PID: $$"
-    echo "User: $(whoami)"
-    echo "Working Directory: $(pwd)"
-    echo ""
+# Log startup info
+echo "==========================================="
+echo "Pixel Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "==========================================="
+echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
+echo "File: ${VIDEO_FILE}"
+echo "Log: ${LOG_FILE}"
+echo "PID: $$"
+echo "User: $(whoami)"
+echo "Working Directory: $(pwd)"
+echo ""
 
     # System information
     echo "=== System Information ==="
@@ -166,20 +179,29 @@ LOG_FILE="/tmp/pixel-test.log"
     echo "Detected HDMI audio device: ${HDMI_DEVICE}"
     echo ""
 
+    # Detect video output method based on Pi model
+    if [ "${VIDEO_FORMAT}" = "webm" ]; then
+        # Pi 4+: Use DRM output (KMS)
+        VOUT_METHOD="drm"
+        VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
+    else
+        # Pi 3 and earlier: Use framebuffer
+        VOUT_METHOD="fbdev"
+        VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
+    fi
+
     echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --vout=drm --drm-vout-no-modeset --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Video Output: ${VOUT_METHOD}"
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
-    # Run VLC with verbose output (stretches to fill screen for pixel testing)
+    # Run VLC - fullscreen, stretched, looped
     # Use AUDIODEV environment variable to set ALSA device
     export AUDIODEV="${HDMI_DEVICE}"
-    exec cvlc --loop --fullscreen --no-autoscale \
-        --no-video-title-show --no-osd \
-        --vout=drm --drm-vout-no-modeset --aout=alsa \
+    exec cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
+        ${VOUT_FLAGS} --aout=alsa \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1
-
-} | tee "${LOG_FILE}"

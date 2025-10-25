@@ -1,6 +1,21 @@
 #!/bin/bash
 # Test Script 3 (VLC): Play both videos in sequence and loop
 
+#!/bin/bash
+# Full Test: Combined image-test + color-test videos
+
+LOG_FILE="/tmp/full-test.log"
+
+# Setup unbuffered logging (survives crashes)
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
+cleanup() {
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    sync  # Flush filesystem buffers
+}
+trap cleanup EXIT INT TERM
+
 # Detect Raspberry Pi model and choose appropriate video format
 # Pi 4 and higher: Use WebM (VP9 with hardware support)
 # Pi 3 and lower: Use H.264 (hardware accelerated)
@@ -19,29 +34,39 @@ detect_video_format() {
 VIDEO_FORMAT=$(detect_video_format)
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.${VIDEO_FORMAT}"
 COLOR_VIDEO="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
-LOG_FILE="/tmp/full-test.log"
 
-# Start logging
-{
-    echo "==========================================="
-    echo "Combined Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "==========================================="
-    echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
-    echo "Files:"
-    echo "  - ${IMAGE_VIDEO}"
-    echo "  - ${COLOR_VIDEO}"
-    echo "Log: ${LOG_FILE}"
-    echo "PID: $$"
-    echo "User: $(whoami)"
-    echo "Working Directory: $(pwd)"
-    echo ""
-    echo "Sequence:"
-    echo "  1. Image test (optimized resolution)"
-    echo "  2. Color test (fullscreen stretched)"
-    echo "  3. Loop forever"
-    echo ""
-    echo "Press Ctrl+C to stop"
-    echo ""
+# Detect video output method based on Pi model
+if [ "${VIDEO_FORMAT}" = "webm" ]; then
+    # Pi 4+: Use DRM output (KMS)
+    VOUT_METHOD="drm"
+    VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
+else
+    # Pi 3 and earlier: Use framebuffer
+    VOUT_METHOD="fbdev"
+    VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
+fi
+
+# Log startup info
+echo "==========================================="
+echo "Combined Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "==========================================="
+echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
+echo "Video Output: ${VOUT_METHOD}"
+echo "Files:"
+echo "  - ${IMAGE_VIDEO}"
+echo "  - ${COLOR_VIDEO}"
+echo "Log: ${LOG_FILE}"
+echo "PID: $$"
+echo "User: $(whoami)"
+echo "Working Directory: $(pwd)"
+echo ""
+echo "Sequence:"
+echo "  1. Image test (optimized resolution)"
+echo "  2. Color test (fullscreen stretched)"
+echo "  3. Loop forever"
+echo ""
+echo "Press Ctrl+C to stop"
+echo ""
 
     # System information
     echo "=== System Information ==="
@@ -114,7 +139,7 @@ LOG_FILE="/tmp/full-test.log"
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         export AUDIODEV="${HDMI_DEVICE}"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            --vout=drm --drm-vout-no-modeset --aout=alsa \
+            ${VOUT_FLAGS} --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${IMAGE_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
@@ -124,7 +149,7 @@ LOG_FILE="/tmp/full-test.log"
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            --vout=drm --drm-vout-no-modeset --aout=alsa \
+            ${VOUT_FLAGS} --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
             "${COLOR_VIDEO}" 2>&1
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
@@ -134,5 +159,3 @@ LOG_FILE="/tmp/full-test.log"
         echo ""
         sleep 1
     done
-
-} 2>&1 | tee "${LOG_FILE}"

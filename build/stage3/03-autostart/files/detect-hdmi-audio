@@ -39,14 +39,23 @@ find_hdmi_audio() {
         fi
     done
 
-    # Fallback: use default
-    echo "default"
+    # Fallback: use hw:0,0 (first card, first device)
+    # This is safer than "default" which might route to headphones
+    echo "hw:0,0"
     return 1
 }
 
 # Main execution
 HDMI_DEVICE=$(find_hdmi_audio)
+EXIT_CODE=$?
+
 echo "${HDMI_DEVICE}"
 
-# Optional: Log the detection for debugging
-logger -t hdmi-audio-detect "Detected HDMI audio device: ${HDMI_DEVICE}"
+# Log the detection for debugging
+if [ ${EXIT_CODE} -eq 0 ]; then
+    logger -t hdmi-audio-detect "Successfully detected HDMI audio device: ${HDMI_DEVICE}"
+else
+    logger -t hdmi-audio-detect "WARNING: Could not detect HDMI device, using fallback: ${HDMI_DEVICE}"
+fi
+
+exit 0

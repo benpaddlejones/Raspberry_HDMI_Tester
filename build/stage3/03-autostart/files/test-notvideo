@@ -6,22 +6,46 @@ IMAGE_FILE="/opt/hdmi-tester/image.png"
 AUDIO_FILE="/opt/hdmi-tester/audio.mp3"
 LOG_FILE="/tmp/test-notvideo.log"
 
-# Start logging
-{
-    echo "==========================================="
-    echo "Static Image + Audio Test - Started $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "==========================================="
-    echo "Image: ${IMAGE_FILE}"
-    echo "Audio: ${AUDIO_FILE}"
-    echo "Log: ${LOG_FILE}"
-    echo "PID: $$"
-    echo "User: $(whoami)"
-    echo "Working Directory: $(pwd)"
-    echo ""
+#!/bin/bash
+# Static Image + Audio Test: Display static PNG with looping MP3 audio
 
-    # System information
-    echo "=== System Information ==="
-    echo "Hostname: $(hostname)"
+LOG_FILE="/tmp/test-notvideo.log"
+
+# Setup unbuffered logging (survives crashes)
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
+cleanup() {
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    sync  # Flush filesystem buffers
+}
+trap cleanup EXIT INT TERM
+
+# Detect Raspberry Pi model and choose appropriate video output
+detect_vout_method() {
+    local model_info
+    model_info=$(cat /proc/cpuinfo | grep "Model" | head -1)
+
+    # Extract Pi version (look for "Raspberry Pi 4" or "Raspberry Pi 5", etc.)
+    if echo "${model_info}" | grep -qE "Raspberry Pi [45678]"; then
+        echo "drm"  # Pi 4+ use DRM
+    else
+        echo "fbdev"   # Pi 3 and earlier: use framebuffer
+    fi
+}
+
+VOUT_METHOD=$(detect_vout_method)
+
+# Set video output flags based on method
+if [ "${VOUT_METHOD}" = "drm" ]; then
+    VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
+else
+    VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
+fi
+
+# System information
+echo "=== System Information ==="
+echo "Hostname: $(hostname)"
     echo "Kernel: $(uname -r)"
     echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
     echo "Architecture: $(uname -m)"
@@ -169,7 +193,7 @@ LOG_FILE="/tmp/test-notvideo.log"
     echo ""
 
     echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --no-video-title-show --fullscreen --loop --vout=drm --drm-vout-no-modeset --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${IMAGE_FILE} ${AUDIO_FILE}"
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --no-video-title-show --fullscreen --loop ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${IMAGE_FILE} ${AUDIO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
@@ -179,8 +203,6 @@ LOG_FILE="/tmp/test-notvideo.log"
     # Use AUDIODEV environment variable to set ALSA device
     export AUDIODEV="${HDMI_DEVICE}"
     exec cvlc --no-video-title-show --fullscreen --loop \
-        --vout=drm --drm-vout-no-modeset --aout=alsa \
+        ${VOUT_FLAGS} --aout=alsa \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${IMAGE_FILE}" "${AUDIO_FILE}" 2>&1
-
-} | tee "${LOG_FILE}"
