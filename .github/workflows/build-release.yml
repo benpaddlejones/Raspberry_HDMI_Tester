@@ -1066,12 +1066,12 @@ jobs:
           # Compress image using pigz (parallel gzip) for maximum speed
           echo "🗜️  Compressing image with pigz (parallel gzip)..."
           echo "   This is significantly faster than zip (~2 min vs ~10 min)"
-          
+
           COMPRESSION_START=$(date +%s)
           (cd "${DEPLOY_DIR}" && pigz -9 -k "${VERSIONED_IMAGE}")
           COMPRESSION_END=$(date +%s)
           COMPRESSION_TIME=$((COMPRESSION_END - COMPRESSION_START))
-          
+
           echo "✅ Compression complete in ${COMPRESSION_TIME} seconds"
 
           # Generate SHA256 checksums and verification instructions

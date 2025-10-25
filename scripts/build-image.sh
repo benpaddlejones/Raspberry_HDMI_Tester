@@ -522,16 +522,16 @@ fi
 if [ -n "${LOOP_DEVICE}" ]; then
     # Find the root partition (usually partition 2)
     ROOT_PARTITION="${LOOP_DEVICE}p2"
-    
+
     if [ -b "${ROOT_PARTITION}" ]; then
         log_info "Running zerofree on root partition: ${ROOT_PARTITION}"
-        
+
         # Run zerofree (must be on unmounted or read-only partition)
         DEDUP_START=$(date +%s)
         if sudo zerofree -v "${ROOT_PARTITION}" 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
             DEDUP_END=$(date +%s)
             DEDUP_TIME=$((DEDUP_END - DEDUP_START))
-            
+
             log_info "✓ Deduplication complete in ${DEDUP_TIME} seconds"
             log_event "✅" "Deduplication successful - image optimized"
         else
@@ -540,7 +540,7 @@ if [ -n "${LOOP_DEVICE}" ]; then
     else
         log_event "⚠️" "Root partition ${ROOT_PARTITION} not found - skipping deduplication"
     fi
-    
+
     # Cleanup: detach loop device
     log_info "Detaching loop device..."
     if sudo losetup -d "${LOOP_DEVICE}" 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
