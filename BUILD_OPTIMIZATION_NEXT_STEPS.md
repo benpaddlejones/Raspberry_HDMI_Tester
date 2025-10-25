@@ -16,14 +16,20 @@
 - GitHub Actions cache for APT packages
 - **Impact**: ~30 seconds saved per build
 
-**Expected Total Impact**: 61 min → 48-49 min (21% faster), 400-500MB smaller
+✅ **Faster Compression (pigz)** - 8-10 min savings
+- Switched from ZIP to parallel gzip (pigz -9)
+- Compression time: ~10 min → ~2 min (80% faster)
+- Output format: .img.gz instead of .img.zip
+- **Impact**: 8-10 minutes saved, Raspberry Pi Imager compatible
+
+**Expected Total Impact**: 61 min → 41-43 min (30% faster), 400-500MB smaller
 
 ---
 
 ## High Priority - Next Phase
 
 ### 1. Parallel Package Installation
-**Estimated Savings**: 2-3 minutes  
+**Estimated Savings**: 2-3 minutes
 **Complexity**: Medium
 
 Current state: Packages install sequentially in each stage.
@@ -44,34 +50,8 @@ apt-get install -y $(cat 00-packages) -o APT::Install-Recommends=0
 
 ---
 
-### 2. Faster Compression Algorithm
-**Estimated Savings**: 8-10 minutes  
-**Complexity**: Low
-
-Current: ZIP with single-threaded deflate (~10 min for 2.8GB image)
-
-**Implementation Options**:
-```bash
-# Option A: pigz (parallel gzip) - fastest
-pigz -9 -k image.img  # Creates image.img.gz
-
-# Option B: zip with lower compression
-zip -1 image.zip image.img  # Fast compression (5:1 ratio)
-
-# Option C: zstd (best balance)
-zstd -19 image.img -o image.img.zst  # Fast + excellent compression
-```
-
-**Files to modify**:
-- `.github/workflows/build-release.yml` (line ~890 in "Prepare release assets")
-- Update release notes to reflect new compression format
-
-**Recommendation**: Use `pigz` for maximum speed (70% compression in ~2 min)
-
----
-
-### 3. Early Image Deduplication
-**Estimated Savings**: 1-2 minutes during export  
+### 2. Early Image Deduplication
+**Estimated Savings**: 1-2 minutes during export
 **Complexity**: Low
 
 Current: Deduplication happens during export-image (20-24MB saved)
@@ -93,8 +73,8 @@ fi
 
 ---
 
-### 4. Disk Space Monitoring & Alerts
-**Estimated Savings**: Prevents failures, not time  
+### 3. Disk Space Monitoring & Alerts
+**Estimated Savings**: Prevents failures, not time
 **Complexity**: Low
 
 Current: Build fails if disk fills up (89% usage observed)
@@ -126,8 +106,8 @@ Current: Build fails if disk fills up (89% usage observed)
 
 ---
 
-### 5. Build Time Breakdown Metrics
-**Estimated Savings**: None (visibility only)  
+### 4. Build Time Breakdown Metrics
+**Estimated Savings**: None (visibility only)
 **Complexity**: Low
 
 Current: Only total build time logged
@@ -156,8 +136,8 @@ Current: Only total build time logged
 
 ## Medium Priority
 
-### 6. Multiple Checksum Formats
-**Estimated Savings**: None (security improvement)  
+### 5. Multiple Checksum Formats
+**Estimated Savings**: None (security improvement)
 **Complexity**: Low
 
 Current: SHA256 only
@@ -177,8 +157,8 @@ b2sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.blake2"
 
 ---
 
-### 7. Stage-Specific APT Cache
-**Estimated Savings**: 30-60 seconds  
+### 6. Stage-Specific APT Cache
+**Estimated Savings**: 30-60 seconds
 **Complexity**: Medium
 
 Current: Global APT cache for all stages
@@ -199,8 +179,8 @@ Current: Global APT cache for all stages
 
 ---
 
-### 8. Incremental Build Support
-**Estimated Savings**: 40-50 minutes (for rebuilds)  
+### 7. Incremental Build Support
+**Estimated Savings**: 40-50 minutes (for rebuilds)
 **Complexity**: High
 
 Current: Every build starts from scratch
@@ -216,8 +196,8 @@ Current: Every build starts from scratch
 
 ## Low Priority / Future
 
-### 9. Parallel Stage Execution
-**Estimated Savings**: 10-15 minutes  
+### 8. Parallel Stage Execution
+**Estimated Savings**: 10-15 minutes
 **Complexity**: Very High
 
 Some stages could run in parallel if dependencies allow.
@@ -229,8 +209,8 @@ Some stages could run in parallel if dependencies allow.
 
 ---
 
-### 10. Local Build Cache Server
-**Estimated Savings**: 2-3 minutes  
+### 9. Local Build Cache Server
+**Estimated Savings**: 2-3 minutes
 **Complexity**: High
 
 Set up apt-cacher-ng or similar for package caching across builds.
@@ -244,16 +224,16 @@ Set up apt-cacher-ng or similar for package caching across builds.
 
 ## Recommended Implementation Order
 
-1. **Faster Compression** (Low complexity, high impact: 8-10 min)
+1. ~~**Faster Compression**~~ ✅ **COMPLETED** (saves 8-10 min)
 2. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
 3. **Disk Space Monitoring** (Low complexity, prevents failures)
 4. **Build Time Breakdown** (Low complexity, improves visibility)
 5. **Early Deduplication** (Low complexity, small impact: 1-2 min)
 6. **Multiple Checksums** (Low complexity, security improvement)
 
-**Total Potential Savings**: 11-15 additional minutes (on top of 12-13 min already saved)
+**Total Potential Savings**: 3-5 additional minutes (on top of 20 min already saved)
 
-**Final Target**: 61 min → 35-38 min (40% faster builds)
+**Final Target**: 61 min → 36-38 min (40% faster builds)
 
 ---
 
@@ -283,13 +263,14 @@ Track these metrics for each optimization:
 
 ## References
 
-- Current build time: ~61 minutes (v0.9.7.3)
-- Target build time: <40 minutes
-- Image size: 2.8GB uncompressed, 857MB compressed
+- Original build time: ~61 minutes (v0.9.7.3)
+- Current build time: ~41-43 minutes (v0.9.7.5+ with optimizations)
+- Target build time: <38 minutes
+- Image size: 2.8GB uncompressed, ~600-700MB compressed (.gz)
 - Disk usage: 50GB → 64GB (89% peak)
 
 ---
 
-**Last Updated**: October 25, 2025  
-**Version**: Post-v0.9.7.4 optimizations  
+**Last Updated**: October 25, 2025
+**Version**: Post-v0.9.7.5 optimizations
 **Next Review**: After implementing items 1-3
