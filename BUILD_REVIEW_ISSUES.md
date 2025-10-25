@@ -177,16 +177,22 @@ This document contains all potential issues, oddities, duplicates, and unused co
   - Raspberry Pi OS resize/firstboot scripts run AFTER first boot
   - These scripts APPEND their own parameters without checking for conflicts
   - Result: duplicated content, conflicting values, HDMI audio disabled
-- **Status**: 🔧 **FIX IN PROGRESS** - Created fix-cmdline.service:
-  - Oneshot service runs ONCE after first boot
-  - After `systemd-remount-fs.service` (post-resize)
+- **Status**: 🔧 **FIX COMPLETED - NEEDS HARDWARE TESTING** - Created fix-cmdline.service:
+  - Oneshot service runs ONCE on first boot (sysinit.target)
+  - After `systemd-remount-fs.service` and `local-fs.target`
+  - Before `sysinit.target` and `basic.target` (runs very early)
   - Removes ALL duplicate parameters
   - Removes ALL conflicting firmware additions
   - Re-applies correct HDMI audio configuration
   - Creates `/var/lib/hdmi-tester/cmdline-fixed` marker
   - Logs to `/var/log/fix-cmdline.log`
-  - **⚠️ LIMITATION**: cmdline.txt is read by kernel at boot, so changes take effect on SECOND boot
-  - **Next Step**: Add automatic reboot after fix is applied
+  - **AUTOMATIC REBOOT**: Triggers system reboot after cleanup
+  - **Boot sequence**:
+    1. First boot: RPi OS corrupts cmdline.txt during resize
+    2. fix-cmdline.service runs, cleans corruption, triggers reboot
+    3. Second boot: Kernel reads CORRECT cmdline.txt
+    4. HDMI audio works, services start normally
+  - **⚠️ MUST TEST**: Flash image to Pi, allow automatic first boot + reboot cycle, verify cmdline.txt correct
 
 ---
 
@@ -259,9 +265,9 @@ This document contains all potential issues, oddities, duplicates, and unused co
 | UNCLEAR (needs clarification) | 5 | 0 | 0 | 5 |
 | OPTIMIZATIONS (optional) | 3 | 0 | 0 | 3 |
 
-**TOTAL ISSUES IDENTIFIED: 24** (1 new critical issue discovered)
-**FIXED: 7**
-**IN PROGRESS: 1** (cmdline.txt corruption fix)
+**TOTAL ISSUES IDENTIFIED: 24** (1 critical issue discovered and fixed)
+**FIXED: 8** (including cmdline.txt corruption fix)
+**AWAITING HARDWARE TEST: 1** (cmdline.txt fix needs Pi testing)
 **DEFERRED/INTENTIONAL: 2**
 **PENDING VALIDATION: 14**
 
@@ -289,15 +295,22 @@ For each issue above:
 - Review date: October 25, 2025
 - **Last updated**: October 25, 2025 - Added critical cmdline.txt corruption issue
 
-## 🔴 BLOCKING ISSUES (MUST FIX BEFORE NEXT RELEASE)
+## 🔴 BLOCKING ISSUES (MUST TEST BEFORE NEXT RELEASE)
 
-1. **cmdline.txt corruption** - Fix in progress but needs validation:
-   - Current fix runs after first boot (requires second boot to take effect)
-   - May need to trigger automatic reboot after cleanup
-   - Must test on actual hardware to verify fix works
-   - **Testing required**: Flash new image, boot twice, verify cmdline.txt correct
+1. **cmdline.txt corruption** - ✅ FIX IMPLEMENTED, ⚠️ NEEDS HARDWARE TESTING:
+   - Fix is complete and committed
+   - Service runs on first boot, cleans cmdline.txt, triggers automatic reboot
+   - Second boot will have correct parameters
+   - **CRITICAL TESTING REQUIRED**:
+     - Flash fresh image to Raspberry Pi
+     - Allow first boot to complete (will auto-reboot)
+     - After second boot, SSH in and check `/boot/firmware/cmdline.txt`
+     - Verify NO duplicates, NO `snd_bcm2835.enable_hdmi=0`, NO `cgroup_disable=memory`
+     - Check `/var/log/fix-cmdline.log` for service execution details
+     - Verify `/var/lib/hdmi-tester/cmdline-fixed` marker exists
+     - Test video playback works correctly
 
-## ✅ COMPLETED FIXES (Ready for next build)
+## ✅ COMPLETED FIXES (Implemented, awaiting build/test)
 
 1. ✅ libx264-164 package - Added and validated
 2. ✅ Duplicate file installations - Using symlinks now
@@ -306,10 +319,18 @@ For each issue above:
 5. ✅ Empty test-download directory - Removed
 6. ✅ ROOTFS_DIR validation - Extracted to shared function
 7. ✅ cmdline.txt sed optimization - Single command now
+8. ✅ cmdline.txt corruption fix - Service created with automatic reboot (NEEDS HARDWARE TEST)
 
 ## 🔄 NEXT STEPS
 
-1. **Test cmdline.txt fix** on actual Pi hardware
-2. **Consider adding reboot** to fix-cmdline.service if needed
+1. **🔴 CRITICAL - Build new image** with cmdline.txt fix
+2. **🔴 CRITICAL - Test on actual Pi hardware**:
+   - Flash image to SD card
+   - Boot Pi (will auto-reboot after cmdline fix)
+   - Verify cmdline.txt correct after second boot
+   - Verify HDMI audio works
+   - Verify videos play without crashing
 3. **Validate remaining 14 pending issues** (LOW priority)
 4. **Address issue #10-23** as time permits (mostly optimizations)
+5. **If fix works**: Release v1.0.0 with working video playback
+6. **If fix fails**: Investigate alternative approaches (prevent RPi OS from modifying cmdline.txt)
