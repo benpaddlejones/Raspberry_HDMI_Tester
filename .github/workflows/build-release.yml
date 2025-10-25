@@ -645,11 +645,12 @@ jobs:
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
 
-          # Find the built image (check for .img first, then .zip)
-          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+          # Find the built image - ONLY the hdmi-tester version (NOT the lite version)
+          # First try to find extracted .img file with hdmi-tester in the name
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.img" -type f | head -n 1)
 
           if [ -z "$IMAGE_FILE" ]; then
-            echo "⚠️  No .img file found, checking for .zip files..."
+            echo "⚠️  No extracted hdmi-tester .img file found, checking for .zip files..."
             ZIP_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.zip" -type f | head -n 1)
 
             if [ -z "$ZIP_FILE" ]; then
@@ -665,7 +666,8 @@ jobs:
             # Extract the .img file from the zip
             if unzip -o "${ZIP_FILE}" -d "${DEPLOY_DIR}/" "*.img"; then
               echo "✅ ZIP extraction successful"
-              IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+              # Get the hdmi-tester image (NOT the lite version)
+              IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.img" -type f | head -n 1)
 
               if [ -z "$IMAGE_FILE" ]; then
                 echo "❌ No .img file found after extraction!"
@@ -761,9 +763,10 @@ jobs:
 
           log_section "STEP 1: Locating Image File"
           log_verbose "Deploy directory: ${DEPLOY_DIR}"
-          log_verbose "Searching for .img files..."
+          log_verbose "Searching for hdmi-tester .img files (NOT lite version)..."
 
-          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+          # Only use the hdmi-tester image, NOT the lite version
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.img" -type f | head -n 1)
 
           if [ -z "$IMAGE_FILE" ]; then
             log_verbose "❌ No image file found for QEMU testing"
@@ -1149,8 +1152,8 @@ jobs:
             exit 1
           }
 
-          # Find the built image using proper quoting and find command
-          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*.img" -type f | head -n 1)
+          # Find the built image - ONLY the hdmi-tester version (NOT the lite version)
+          IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.img" -type f | head -n 1)
 
           if [ -z "$IMAGE_FILE" ]; then
             echo "❌ Error: No image file found!"
