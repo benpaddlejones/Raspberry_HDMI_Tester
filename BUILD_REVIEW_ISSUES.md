@@ -22,14 +22,14 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Issue**: All test scripts installed TWICE - once to `/opt/hdmi-tester/` and once to `/usr/local/bin/`
 - **Impact**: Wastes ~200KB disk space, creates maintenance burden (two copies to update)
 - **Question**: Are both locations actually needed? Services only use `/opt/hdmi-tester/`
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: 🔧 **FIXED** - Scripts now installed ONCE to `/opt/hdmi-tester/` (canonical location used by services) with symlinks created in `/usr/local/bin/` for PATH convenience. Saves ~200KB disk space, eliminates dual maintenance burden.
 
 ### 3. MP4 files are deployed but never validated
 - **Location**: `build/stage3/01-test-image/files/` contains both `.webm` AND `.mp4` versions
 - **Issue**: MP4 files (`image-test.mp4`, `color-test.mp4`) are copied to image but build-time validation only checks WebM files
 - **Impact**: Corrupted MP4 files wouldn't be detected until runtime
 - **Evidence**: `scripts/build-image.sh` lines 91-92 only validate `.webm` files
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: 🔧 **FIXED** - Added comprehensive validation for both MP4 and WebM files in build script. Now validates file existence, size, and codec format (H.264 for MP4, VP9 for WebM). Warns if wrong codec detected but allows build to continue.
 
 ### 4. audio.mp3 file exists but uses outdated audio system
 - **Location**: `build/stage3/01-test-image/files/audio.mp3`

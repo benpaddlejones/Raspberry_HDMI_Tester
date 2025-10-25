@@ -176,47 +176,97 @@ if [ ! -d "${PI_GEN_DIR}" ]; then
 fi
 log_info "✓ pi-gen directory found"
 
-# HIGH PRIORITY FIX: Validate asset files (WebM videos with embedded audio)
+# HIGH PRIORITY FIX: Validate asset files (WebM and MP4 videos with embedded audio)
 log_subsection "Validating Asset Files"
-IMAGE_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
-COLOR_TEST_VIDEO="${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm"
+IMAGE_TEST_WEBM="${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.webm"
+COLOR_TEST_WEBM="${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.webm"
+IMAGE_TEST_MP4="${PROJECT_ROOT}/build/stage3/01-test-image/files/image-test.mp4"
+COLOR_TEST_MP4="${PROJECT_ROOT}/build/stage3/01-test-image/files/color-test.mp4"
 
-log_info "Checking image test video: ${IMAGE_TEST_VIDEO}"
-if [ ! -f "${IMAGE_TEST_VIDEO}" ]; then
-    log_event "❌" "Image test video not found: ${IMAGE_TEST_VIDEO}"
+# Validate WebM files (used by Pi 4+)
+log_info "Checking WebM test videos (Pi 4+ format)..."
+if [ ! -f "${IMAGE_TEST_WEBM}" ]; then
+    log_event "❌" "Image test video not found: ${IMAGE_TEST_WEBM}"
     end_stage_timer "Prerequisites Check" 1
     finalize_log "failure" "Missing image-test.webm"
     exit 1
 fi
-log_info "✓ Image test video exists ($(stat -c%s "${IMAGE_TEST_VIDEO}" | numfmt --to=iec-i --suffix=B))"
+log_info "✓ image-test.webm exists ($(stat -c%s "${IMAGE_TEST_WEBM}" | numfmt --to=iec-i --suffix=B))"
 
-log_info "Checking color test video: ${COLOR_TEST_VIDEO}"
-if [ ! -f "${COLOR_TEST_VIDEO}" ]; then
-    log_event "❌" "Color test video not found: ${COLOR_TEST_VIDEO}"
-    end_stage_timer "Video Validation" 1
+if [ ! -f "${COLOR_TEST_WEBM}" ]; then
+    log_event "❌" "Color test video not found: ${COLOR_TEST_WEBM}"
+    end_stage_timer "Prerequisites Check" 1
     finalize_log "failure" "Missing color-test.webm"
     exit 1
 fi
-log_info "✓ Color test video exists ($(stat -c%s "${COLOR_TEST_VIDEO}" | numfmt --to=iec-i --suffix=B))"
+log_info "✓ color-test.webm exists ($(stat -c%s "${COLOR_TEST_WEBM}" | numfmt --to=iec-i --suffix=B))"
+
+# Validate MP4 files (used by Pi 3 and earlier)
+log_info "Checking MP4 test videos (Pi 3 and earlier format)..."
+if [ ! -f "${IMAGE_TEST_MP4}" ]; then
+    log_event "❌" "Image test video not found: ${IMAGE_TEST_MP4}"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Missing image-test.mp4"
+    exit 1
+fi
+log_info "✓ image-test.mp4 exists ($(stat -c%s "${IMAGE_TEST_MP4}" | numfmt --to=iec-i --suffix=B))"
+
+if [ ! -f "${COLOR_TEST_MP4}" ]; then
+    log_event "❌" "Color test video not found: ${COLOR_TEST_MP4}"
+    end_stage_timer "Prerequisites Check" 1
+    finalize_log "failure" "Missing color-test.mp4"
+    exit 1
+fi
+log_info "✓ color-test.mp4 exists ($(stat -c%s "${COLOR_TEST_MP4}" | numfmt --to=iec-i --suffix=B))"
 
 # Validate codecs if ffprobe is available
 if command -v ffprobe &>/dev/null; then
-    log_info "Validating image-test.webm..."
-    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_VIDEO}" >> "${BUILD_LOG_FILE}" 2>&1; then
-        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_VIDEO}" 2>/dev/null | tr '\n' ' ')
-        log_info "✓ Video validated: ${VIDEO_INFO}"
+    log_info "Validating WebM codecs (VP9/Vorbis/Opus)..."
+    
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_WEBM}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_WEBM}" 2>/dev/null | tr '\n' ' ')
+        log_info "✓ image-test.webm validated: ${VIDEO_INFO}"
     else
         log_event "⚠️" "Warning: Could not validate image-test.webm (file may be corrupted)"
-        log_info "Build will continue, but runtime playback may fail"
+        log_info "Build will continue, but runtime playback may fail on Pi 4+"
     fi
 
-    log_info "Validating color-test.webm..."
-    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_VIDEO}" >> "${BUILD_LOG_FILE}" 2>&1; then
-        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_VIDEO}" 2>/dev/null | tr '\n' ' ')
-        log_info "✓ Video validated: ${VIDEO_INFO}"
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_WEBM}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_WEBM}" 2>/dev/null | tr '\n' ' ')
+        log_info "✓ color-test.webm validated: ${VIDEO_INFO}"
     else
         log_event "⚠️" "Warning: Could not validate color-test.webm (file may be corrupted)"
-        log_info "Build will continue, but runtime playback may fail"
+        log_info "Build will continue, but runtime playback may fail on Pi 4+"
+    fi
+    
+    log_info "Validating MP4 codecs (H.264)..."
+    
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_MP4}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_MP4}" 2>/dev/null | tr '\n' ' ')
+        # Verify it's H.264
+        if echo "${VIDEO_INFO}" | grep -q "h264"; then
+            log_info "✓ image-test.mp4 validated: ${VIDEO_INFO}"
+        else
+            log_event "⚠️" "Warning: image-test.mp4 is not H.264 format (found: ${VIDEO_INFO})"
+            log_info "Pi 3 and earlier may not play this file correctly"
+        fi
+    else
+        log_event "⚠️" "Warning: Could not validate image-test.mp4 (file may be corrupted)"
+        log_info "Build will continue, but runtime playback may fail on Pi 3 and earlier"
+    fi
+    
+    if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_MP4}" >> "${BUILD_LOG_FILE}" 2>&1; then
+        VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_MP4}" 2>/dev/null | tr '\n' ' ')
+        # Verify it's H.264
+        if echo "${VIDEO_INFO}" | grep -q "h264"; then
+            log_info "✓ color-test.mp4 validated: ${VIDEO_INFO}"
+        else
+            log_event "⚠️" "Warning: color-test.mp4 is not H.264 format (found: ${VIDEO_INFO})"
+            log_info "Pi 3 and earlier may not play this file correctly"
+        fi
+    else
+        log_event "⚠️" "Warning: Could not validate color-test.mp4 (file may be corrupted)"
+        log_info "Build will continue, but runtime playback may fail on Pi 3 and earlier"
     fi
 else
     log_info "ℹ️  ffprobe not available, skipping codec validation"

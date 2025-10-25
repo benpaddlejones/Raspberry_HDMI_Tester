@@ -47,28 +47,32 @@ done
 
 echo "  ✓ All ${#SCRIPTS[@]} scripts validated"
 
-# Install test scripts to /opt/hdmi-tester (for services) and /usr/local/bin (for manual use)
-echo "Installing test scripts..."
+# Install test scripts to /opt/hdmi-tester (canonical location)
+# Create symlinks in /usr/local/bin for PATH convenience
+echo "Installing test scripts to /opt/hdmi-tester..."
 mkdir -p "${ROOTFS_DIR}/opt/hdmi-tester"
+mkdir -p "${ROOTFS_DIR}/usr/local/bin"
 
 for script in "${SCRIPTS[@]}"; do
-    # Install to /opt/hdmi-tester for services
+    # Install to /opt/hdmi-tester (canonical location used by services)
     install -m 755 "files/${script}" "${ROOTFS_DIR}/opt/hdmi-tester/"
+
+    # Verify installation
     if [ ! -f "${ROOTFS_DIR}/opt/hdmi-tester/${script}" ]; then
         echo "❌ Error: Failed to install ${script} to /opt/hdmi-tester"
         exit 1
     fi
-    
+
     # Verify deployed file is not empty
     if [ ! -s "${ROOTFS_DIR}/opt/hdmi-tester/${script}" ]; then
-        echo "❌ Error: Deployed ${script} in /opt/hdmi-tester is empty"
+        echo "❌ Error: Deployed ${script} is empty"
         exit 1
     fi
-    
+
     # Verify file size matches
     source_size=$(stat -c%s "files/${script}")
     target_size=$(stat -c%s "${ROOTFS_DIR}/opt/hdmi-tester/${script}")
-    
+
     if [ "${source_size}" -ne "${target_size}" ]; then
         echo "❌ Error: File size mismatch for ${script}"
         echo "   Source: ${source_size} bytes"
@@ -76,33 +80,19 @@ for script in "${SCRIPTS[@]}"; do
         exit 1
     fi
 
-    # Also install to /usr/local/bin for manual command-line use (in PATH)
-    install -m 755 "files/${script}" "${ROOTFS_DIR}/usr/local/bin/"
-    if [ ! -f "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
-        echo "❌ Error: Failed to install ${script} to /usr/local/bin"
-        exit 1
-    fi
-    
-    # Verify deployed file is not empty
-    if [ ! -s "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
-        echo "❌ Error: Deployed ${script} in /usr/local/bin is empty"
-        exit 1
-    fi
-    
-    # Verify file size matches
-    target_size_bin=$(stat -c%s "${ROOTFS_DIR}/usr/local/bin/${script}")
-    
-    if [ "${source_size}" -ne "${target_size_bin}" ]; then
-        echo "❌ Error: File size mismatch for ${script} in /usr/local/bin"
-        echo "   Source: ${source_size} bytes"
-        echo "   Target: ${target_size_bin} bytes"
+    # Create symlink in /usr/local/bin for PATH convenience
+    ln -sf "/opt/hdmi-tester/${script}" "${ROOTFS_DIR}/usr/local/bin/${script}"
+
+    # Verify symlink was created
+    if [ ! -L "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
+        echo "❌ Error: Failed to create symlink for ${script} in /usr/local/bin"
         exit 1
     fi
 
-    echo "  • ${script} installed and validated (${source_size} bytes)"
+    echo "  • ${script} installed (${source_size} bytes, symlinked to PATH)"
 done
 
-echo "✅ Test scripts installed successfully"
+echo "✅ Test scripts installed to /opt/hdmi-tester with PATH symlinks"
 
 # Install systemd service files (for future use, but NOT enabled)
 echo "Installing systemd service files (disabled)..."
@@ -117,32 +107,32 @@ for service in "${SERVICES[@]}"; do
             echo "❌ Error: ${service} is empty"
             exit 1
         fi
-        
+
         install -m 644 "files/${service}" "${ROOTFS_DIR}/etc/systemd/system/"
-        
+
         # Verify deployed service file exists
         if [ ! -f "${ROOTFS_DIR}/etc/systemd/system/${service}" ]; then
             echo "❌ Error: Failed to install ${service}"
             exit 1
         fi
-        
+
         # Verify deployed file is not empty
         if [ ! -s "${ROOTFS_DIR}/etc/systemd/system/${service}" ]; then
             echo "❌ Error: Deployed ${service} is empty"
             exit 1
         fi
-        
+
         # Verify file size matches
         source_size=$(stat -c%s "files/${service}")
         target_size=$(stat -c%s "${ROOTFS_DIR}/etc/systemd/system/${service}")
-        
+
         if [ "${source_size}" -ne "${target_size}" ]; then
             echo "❌ Error: File size mismatch for ${service}"
             echo "   Source: ${source_size} bytes"
             echo "   Target: ${target_size} bytes"
             exit 1
         fi
-        
+
         echo "  • ${service} installed and validated (${source_size} bytes)"
     else
         echo "⚠️  Warning: ${service} not found"
