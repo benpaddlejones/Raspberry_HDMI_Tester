@@ -86,9 +86,14 @@ This document contains all potential issues, oddities, duplicates, and unused co
 
 ### 8. cmdline.txt modifications are overly aggressive
 - **Location**: `build/stage3/04-boot-config/00-run.sh` (lines 105-120)
-- **Issue**: Uses multiple `sed` passes to remove parameters, which is inefficient
-- **Suggestion**: Single `sed` command could handle all removals
-- **Status**: ❓ PENDING VALIDATION
+- **Issue**: Uses multiple sed passes to remove parameters, which is inefficient
+- **Suggestion**: Single sed command could handle all removals
+- **Status**: 🔧 **FIXED** - Optimized sed operations:
+  - Combined 13 separate `sed -i` invocations into single command
+  - Uses multiple `-e` expressions for efficiency
+  - Reduces file I/O from 13 operations to 1
+  - Maintains same functionality (remove parameters, normalize whitespace)
+  - Improves build performance and reduces disk wear
 
 ### 9. Stage3 prerun.sh is minimal but unclear
 - **Location**: `build/stage3/prerun.sh`

@@ -116,26 +116,21 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         exit 1
     fi
 
-    # Remove ALL existing audio parameters to avoid conflicts
-    # Must remove ALL instances, including duplicates and conflicting values
-    # Using global replacement to catch all occurrences
-    sed -i 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' "${CMDLINE_FILE}"
-    sed -i 's/snd_bcm2835\.enable_headphones=[^ ]*//g' "${CMDLINE_FILE}"
-    sed -i 's/noswap//g' "${CMDLINE_FILE}"
-    sed -i 's/quiet//g' "${CMDLINE_FILE}"
-    sed -i 's/splash//g' "${CMDLINE_FILE}"
-    sed -i 's/loglevel=[^ ]*//g' "${CMDLINE_FILE}"
-    sed -i 's/fastboot//g' "${CMDLINE_FILE}"
-
-    # Remove cgroup_disable=memory (causes issues with modern kernels)
-    sed -i 's/cgroup_disable=[^ ]*//g' "${CMDLINE_FILE}"
-
-    # Remove ALL extra spaces (multiple passes to collapse all duplicate spaces)
-    sed -i 's/  */ /g' "${CMDLINE_FILE}"
-    sed -i 's/  */ /g' "${CMDLINE_FILE}"
-
-    # Trim leading/trailing spaces
-    sed -i 's/^ *//;s/ *$//' "${CMDLINE_FILE}"
+    # Remove ALL existing audio/boot parameters to avoid conflicts
+    # Single sed command with multiple expressions for efficiency
+    sed -i \
+        -e 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' \
+        -e 's/snd_bcm2835\.enable_headphones=[^ ]*//g' \
+        -e 's/noswap//g' \
+        -e 's/quiet//g' \
+        -e 's/splash//g' \
+        -e 's/loglevel=[^ ]*//g' \
+        -e 's/fastboot//g' \
+        -e 's/cgroup_disable=[^ ]*//g' \
+        -e 's/  */ /g' \
+        -e 's/  */ /g' \
+        -e 's/^ *//;s/ *$//' \
+        "${CMDLINE_FILE}"
 
     # Append audio parameters and boot optimizations (on same line, space-separated)
     sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
