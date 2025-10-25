@@ -18,7 +18,8 @@ CPUQuota=80%
 MemoryLimit=512M
 
 # Security
-User=root
+User=pi
+SupplementaryGroups=audio video render
 NoNewPrivileges=true
 PrivateTmp=true
 
