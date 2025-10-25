@@ -150,16 +150,16 @@ Method 1: Automatic Verification (Linux/macOS)
    cd ~/Downloads
 
 3. Run verification (choose one):
-   
+
    SHA256 (recommended):
    sha256sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha256
-   
+
    SHA1:
    sha1sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha1
-   
+
    MD5:
    md5sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.md5
-   
+
    BLAKE2:
    b2sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.blake2
 
