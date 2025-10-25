@@ -34,6 +34,12 @@
 - Logs all checks with timestamps for post-build analysis
 - **Impact**: Early warning system prevents late-stage failures (89% usage observed previously)
 
+✅ **Build Time Breakdown Metrics** - Visibility into build performance
+- Extracts stage timing data from build logs
+- Displays formatted breakdown in GitHub Actions summary
+- Shows duration and status for each build stage
+- **Impact**: Better visibility into where time is spent, aids future optimization
+
 **Expected Total Impact**: 61 min → 39-41 min (33% faster), 400-500MB smaller
 
 ---
@@ -59,34 +65,6 @@ apt-get install -y $(cat 00-packages) -o APT::Install-Recommends=0
 - Consider using `apt-fast` package for parallel downloads
 
 **Risks**: Network bandwidth limitations, dependency conflicts
-
----
-
-### 2. Build Time Breakdown Metrics
-**Estimated Savings**: None (visibility only)
-**Complexity**: Low
-
-Current: Only total build time logged
-
-**Implementation**:
-```bash
-# Already partially implemented in logging-utils.sh
-# Enhance to show breakdown in GitHub Actions summary
-
-# In scripts/build-image.sh, add summary at end:
-{
-  echo "## 📊 Build Time Breakdown"
-  echo "| Stage | Duration |"
-  echo "|-------|----------|"
-  grep "Stage Timer" "${BUILD_LOG_FILE}" | awk '{print "| " $3 " | " $5 " |"}'
-} >> $GITHUB_STEP_SUMMARY
-```
-
-**Files to modify**:
-- `scripts/build-image.sh` (add timing summary)
-- `.github/workflows/build-release.yml` (display in summary)
-
-**Impact**: Better visibility into where time is spent
 
 ---
 
@@ -183,8 +161,8 @@ Set up apt-cacher-ng or similar for package caching across builds.
 1. ~~**Faster Compression**~~ ✅ **COMPLETED** (saves 8-10 min)
 2. ~~**Early Deduplication**~~ ✅ **COMPLETED** (saves 1-2 min)
 3. ~~**Disk Space Monitoring**~~ ✅ **COMPLETED** (prevents failures)
-4. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
-5. **Build Time Breakdown** (Low complexity, improves visibility)
+4. ~~**Build Time Breakdown**~~ ✅ **COMPLETED** (improves visibility)
+5. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
 6. **Multiple Checksums** (Low complexity, security improvement)
 
 **Total Potential Savings**: 2-3 additional minutes (on top of 22 min already saved)

@@ -589,6 +589,44 @@ log_event "✅" "Cleanup complete - build artifacts removed"
 
 end_stage_timer "Build Cleanup" 0
 
+# Generate build time breakdown for GitHub Actions summary
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    log_info "Generating build time breakdown for GitHub Actions summary..."
+    
+    {
+        echo "## 📊 Build Time Breakdown"
+        echo ""
+        echo "| Stage | Duration | Status |"
+        echo "|-------|----------|--------|"
+        
+        # Extract stage timing from build log
+        # Format: STAGE line followed by Duration line a few lines later
+        awk '
+            /^  STAGE:/ {
+                stage = substr($0, index($0, "STAGE:") + 7)
+                gsub(/^[ \t]+|[ \t]+$/, "", stage)  # Trim whitespace
+            }
+            /^Duration:/ && stage != "" {
+                duration = $2
+                getline  # Read next line for status
+                if ($0 ~ /SUCCESS/) {
+                    status = "✅"
+                } else if ($0 ~ /FAILED/) {
+                    status = "❌"
+                } else {
+                    status = "⏸️"
+                }
+                printf "| %s | %s | %s |\n", stage, duration, status
+                stage = ""
+            }
+        ' "${BUILD_LOG_FILE}"
+        
+        echo ""
+    } >> "${GITHUB_STEP_SUMMARY}"
+    
+    log_info "✓ Build time breakdown added to GitHub Actions summary"
+fi
+
 # Success!
 finalize_log "success"
 
