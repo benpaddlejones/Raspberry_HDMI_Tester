@@ -82,7 +82,12 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Issue**: Script handles `/boot/config.txt` AND `/boot/firmware/config.txt` but doesn't validate which one pi-gen actually creates
 - **Impact**: Appends to both files if both exist (redundant, wastes space)
 - **Note**: Modern Raspberry Pi OS uses `/boot/firmware/config.txt`
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: ⏸️ **DEFERRED - INTENTIONAL** - This is defensive programming:
+  - Different Raspberry Pi OS versions use different locations
+  - Script checks if config already exists before appending (no duplication)
+  - Safe approach: handle both locations for compatibility
+  - No actual waste: only one file exists in practice
+  - **Conclusion**: Working as intended, provides compatibility
 
 ### 8. cmdline.txt modifications are overly aggressive
 - **Location**: `build/stage3/04-boot-config/00-run.sh` (lines 105-120)
@@ -99,7 +104,11 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Location**: `build/stage3/prerun.sh`
 - **Issue**: Only contains `copy_previous` if ROOTFS_DIR doesn't exist - no documentation why
 - **Impact**: Unclear if this is actually needed or leftover from pi-gen template
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: ⏸️ **DEFERRED - PI-GEN REQUIREMENT** - This is required by pi-gen:
+  - `copy_previous` ensures stage3 starts with stage2's filesystem
+  - Standard pi-gen pattern (all stages need prerun.sh)
+  - Removing would break the build
+  - **Conclusion**: Required infrastructure, leave as-is
 
 ---
 
@@ -144,6 +153,40 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Impact**: ~40MB duplicated (20MB each file x2 copies)
 - **Note**: Build uses files from `build/stage3/02-audio-test/files/`, assets/ copy seems unused
 - **Status**: ❓ PENDING VALIDATION
+
+---
+
+## 🚨 CRITICAL - NEWLY DISCOVERED
+
+### ❌ CMDLINE.TXT CORRUPTION BY RASPBERRY PI OS (CRITICAL ROOT CAUSE)
+- **Location**: `/boot/firmware/cmdline.txt` on deployed Pi
+- **Issue**: Raspberry Pi OS firmware/firstboot scripts MODIFY cmdline.txt AFTER our image boots
+- **Impact**: CATASTROPHIC - This is why videos crash:
+  1. **ENTIRE cmdline duplicated** (all parameters appear twice)
+  2. **HDMI audio DISABLED**: `snd_bcm2835.enable_hdmi=0` added by firmware
+  3. **Conflicting parameters**: `snd_bcm2835.enable_headphones=0` then `=1`
+  4. **Memory management broken**: `cgroup_disable=memory` re-added (we removed this)
+  5. **Firmware params added**: `coherent_pool`, `vc_mem.mem_base`, `vc_mem.mem_size`
+- **Evidence**: Diagnostic report from Pi 3 shows:
+  ```
+  Line 1: console=... snd_bcm2835.enable_hdmi=1 ... [CORRECT - from our build]
+  Line 2: coherent_pool=1M ... snd_bcm2835.enable_hdmi=0 ... [FIRMWARE ADDED - WRONG!]
+  ```
+- **Root Cause**:
+  - Our build script correctly configures cmdline.txt
+  - Raspberry Pi OS resize/firstboot scripts run AFTER first boot
+  - These scripts APPEND their own parameters without checking for conflicts
+  - Result: duplicated content, conflicting values, HDMI audio disabled
+- **Status**: 🔧 **FIX IN PROGRESS** - Created fix-cmdline.service:
+  - Oneshot service runs ONCE after first boot
+  - After `systemd-remount-fs.service` (post-resize)
+  - Removes ALL duplicate parameters
+  - Removes ALL conflicting firmware additions
+  - Re-applies correct HDMI audio configuration
+  - Creates `/var/lib/hdmi-tester/cmdline-fixed` marker
+  - Logs to `/var/log/fix-cmdline.log`
+  - **⚠️ LIMITATION**: cmdline.txt is read by kernel at boot, so changes take effect on SECOND boot
+  - **Next Step**: Add automatic reboot after fix is applied
 
 ---
 
@@ -207,17 +250,20 @@ This document contains all potential issues, oddities, duplicates, and unused co
 
 ## 📋 SUMMARY BY CATEGORY
 
-| Category | Count | Severity |
-|----------|-------|----------|
-| Package inconsistencies | 2 | HIGH |
-| File duplications | 4 | MEDIUM-HIGH |
-| Code duplication | 3 | MEDIUM |
-| Unused files/dirs | 3 | LOW |
-| Configuration oddities | 4 | MEDIUM |
-| Documentation gaps | 4 | LOW |
-| Potential optimizations | 3 | LOW |
+| Category | Count | Fixed | In Progress | Pending |
+|----------|-------|-------|-------------|---------|
+| CRITICAL (cmdline corruption) | 1 | 0 | 1 | 0 |
+| HIGH (package/validation) | 4 | 4 | 0 | 0 |
+| MEDIUM (duplications/config) | 5 | 3 | 0 | 2 |
+| LOW (informational) | 6 | 0 | 0 | 6 |
+| UNCLEAR (needs clarification) | 5 | 0 | 0 | 5 |
+| OPTIMIZATIONS (optional) | 3 | 0 | 0 | 3 |
 
-**TOTAL ISSUES IDENTIFIED: 23**
+**TOTAL ISSUES IDENTIFIED: 24** (1 new critical issue discovered)
+**FIXED: 7**
+**IN PROGRESS: 1** (cmdline.txt corruption fix)
+**DEFERRED/INTENTIONAL: 2**
+**PENDING VALIDATION: 14**
 
 ---
 
@@ -241,3 +287,29 @@ For each issue above:
 - Some "issues" may be intentional design decisions that need documentation
 - Priority levels are suggestions, adjust based on project needs
 - Review date: October 25, 2025
+- **Last updated**: October 25, 2025 - Added critical cmdline.txt corruption issue
+
+## 🔴 BLOCKING ISSUES (MUST FIX BEFORE NEXT RELEASE)
+
+1. **cmdline.txt corruption** - Fix in progress but needs validation:
+   - Current fix runs after first boot (requires second boot to take effect)
+   - May need to trigger automatic reboot after cleanup
+   - Must test on actual hardware to verify fix works
+   - **Testing required**: Flash new image, boot twice, verify cmdline.txt correct
+
+## ✅ COMPLETED FIXES (Ready for next build)
+
+1. ✅ libx264-164 package - Added and validated
+2. ✅ Duplicate file installations - Using symlinks now
+3. ✅ MP4 validation - Both WebM and MP4 validated
+4. ✅ Audio codec support - All formats verified
+5. ✅ Empty test-download directory - Removed
+6. ✅ ROOTFS_DIR validation - Extracted to shared function
+7. ✅ cmdline.txt sed optimization - Single command now
+
+## 🔄 NEXT STEPS
+
+1. **Test cmdline.txt fix** on actual Pi hardware
+2. **Consider adding reboot** to fix-cmdline.service if needed
+3. **Validate remaining 14 pending issues** (LOW priority)
+4. **Address issue #10-23** as time permits (mostly optimizations)
