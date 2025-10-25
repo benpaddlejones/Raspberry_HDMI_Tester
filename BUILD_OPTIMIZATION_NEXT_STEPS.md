@@ -40,6 +40,12 @@
 - Shows duration and status for each build stage
 - **Impact**: Better visibility into where time is spent, aids future optimization
 
+✅ **Multiple Checksum Formats** - Enhanced security and compatibility
+- Generates SHA256, SHA1, MD5, and BLAKE2 checksums
+- All formats uploaded to GitHub releases
+- Updated verification instructions support all formats
+- **Impact**: Better security (SHA256/BLAKE2), legacy tool compatibility (SHA1/MD5)
+
 **Expected Total Impact**: 61 min → 39-41 min (33% faster), 400-500MB smaller
 
 ---
@@ -69,27 +75,6 @@ apt-get install -y $(cat 00-packages) -o APT::Install-Recommends=0
 ---
 
 ## Medium Priority
-
-### 4. Multiple Checksum Formats
-**Estimated Savings**: None (security improvement)
-**Complexity**: Low
-
-Current: SHA256 only
-
-**Implementation**:
-```bash
-# In scripts/generate-checksums.sh
-sha256sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.sha256"
-sha1sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.sha1"
-md5sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.md5"
-b2sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.blake2"
-```
-
-**Files to modify**:
-- `scripts/generate-checksums.sh`
-- `.github/workflows/build-release.yml` (upload all checksum files)
-
----
 
 ### 5. Stage-Specific APT Cache
 **Estimated Savings**: 30-60 seconds
@@ -162,8 +147,9 @@ Set up apt-cacher-ng or similar for package caching across builds.
 2. ~~**Early Deduplication**~~ ✅ **COMPLETED** (saves 1-2 min)
 3. ~~**Disk Space Monitoring**~~ ✅ **COMPLETED** (prevents failures)
 4. ~~**Build Time Breakdown**~~ ✅ **COMPLETED** (improves visibility)
-5. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
-6. **Multiple Checksums** (Low complexity, security improvement)
+5. ~~**Multiple Checksums**~~ ✅ **COMPLETED** (security improvement)
+6. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
+7. **Stage-Specific APT Cache** (Medium complexity, minor impact: 30-60s)
 
 **Total Potential Savings**: 2-3 additional minutes (on top of 22 min already saved)
 

@@ -592,13 +592,13 @@ end_stage_timer "Build Cleanup" 0
 # Generate build time breakdown for GitHub Actions summary
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     log_info "Generating build time breakdown for GitHub Actions summary..."
-    
+
     {
         echo "## 📊 Build Time Breakdown"
         echo ""
         echo "| Stage | Duration | Status |"
         echo "|-------|----------|--------|"
-        
+
         # Extract stage timing from build log
         # Format: STAGE line followed by Duration line a few lines later
         awk '
@@ -620,10 +620,10 @@ if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
                 stage = ""
             }
         ' "${BUILD_LOG_FILE}"
-        
+
         echo ""
     } >> "${GITHUB_STEP_SUMMARY}"
-    
+
     log_info "✓ Build time breakdown added to GitHub Actions summary"
 fi
 

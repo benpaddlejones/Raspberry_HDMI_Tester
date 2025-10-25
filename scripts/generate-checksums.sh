@@ -24,13 +24,16 @@ cd "${DEPLOY_DIR}"
 
 VERSIONED_ZIP="RaspberryPi_HDMI_Tester_v${VERSION}.img.zip"
 TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
-CHECKSUM_FILE="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
+CHECKSUM_FILE_SHA256="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
+CHECKSUM_FILE_SHA1="RaspberryPi_HDMI_Tester_v${VERSION}.sha1"
+CHECKSUM_FILE_MD5="RaspberryPi_HDMI_Tester_v${VERSION}.md5"
+CHECKSUM_FILE_BLAKE2="RaspberryPi_HDMI_Tester_v${VERSION}.blake2"
 VERIFY_FILE="VERIFY_DOWNLOAD_v${VERSION}.txt"
 
-echo "🔐 Generating checksums..."
+echo "🔐 Generating checksums (SHA256, SHA1, MD5, BLAKE2)..."
 
-# Create checksum file with header
-cat > "${CHECKSUM_FILE}" << 'EOF'
+# Create SHA256 checksum file with header
+cat > "${CHECKSUM_FILE_SHA256}" << 'EOF'
 # SHA-256 Checksums for Raspberry Pi HDMI Tester vVERSION_PLACEHOLDER
 #
 # Verify downloads with:
@@ -44,20 +47,80 @@ cat > "${CHECKSUM_FILE}" << 'EOF'
 EOF
 
 # Replace version placeholder
-if [ ! -f "${CHECKSUM_FILE}" ]; then
-    echo "❌ Error: Checksum file was not created"
+if [ ! -f "${CHECKSUM_FILE_SHA256}" ]; then
+    echo "❌ Error: SHA256 checksum file was not created"
     exit 1
 fi
 
-sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE}"
+sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_SHA256}"
 
-# Add checksums
-sha256sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE}"
+# Add SHA256 checksums
+sha256sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_SHA256}"
 
 if [ -f "${TESTING_REPORT}" ]; then
-    sha256sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE}"
-    echo "✅ Testing report checksum added"
+    sha256sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_SHA256}"
+    echo "✅ Testing report SHA256 checksum added"
 fi
+
+# Create SHA1 checksum file
+cat > "${CHECKSUM_FILE_SHA1}" << 'EOF'
+# SHA-1 Checksums for Raspberry Pi HDMI Tester vVERSION_PLACEHOLDER
+#
+# Verify downloads with:
+#   sha1sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha1
+#
+
+EOF
+
+sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_SHA1}"
+
+sha1sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_SHA1}"
+
+if [ -f "${TESTING_REPORT}" ]; then
+    sha1sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_SHA1}"
+fi
+
+echo "✅ SHA1 checksums generated"
+
+# Create MD5 checksum file
+cat > "${CHECKSUM_FILE_MD5}" << 'EOF'
+# MD5 Checksums for Raspberry Pi HDMI Tester vVERSION_PLACEHOLDER
+#
+# Verify downloads with:
+#   md5sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.md5
+#
+
+EOF
+
+sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_MD5}"
+
+md5sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_MD5}"
+
+if [ -f "${TESTING_REPORT}" ]; then
+    md5sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_MD5}"
+fi
+
+echo "✅ MD5 checksums generated"
+
+# Create BLAKE2 checksum file
+cat > "${CHECKSUM_FILE_BLAKE2}" << 'EOF'
+# BLAKE2 Checksums for Raspberry Pi HDMI Tester vVERSION_PLACEHOLDER
+#
+# Verify downloads with:
+#   b2sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.blake2
+#
+
+EOF
+
+sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_BLAKE2}"
+
+b2sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_BLAKE2}"
+
+if [ -f "${TESTING_REPORT}" ]; then
+    b2sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_BLAKE2}"
+fi
+
+echo "✅ BLAKE2 checksums generated"
 
 # Create verification instructions file
 cat > "${VERIFY_FILE}" << 'EOF'
@@ -69,19 +132,36 @@ Raspberry Pi HDMI Tester vVERSION_PLACEHOLDER
 After downloading the release files, verify their integrity to ensure they
 haven't been corrupted or tampered with during download.
 
+Multiple checksum formats are provided for compatibility:
+- SHA256 (recommended): Strong cryptographic security
+- SHA1: Legacy compatibility
+- MD5: Legacy compatibility (less secure)
+- BLAKE2: Modern cryptographic security (faster than SHA256)
+
 --------------------------------------------------------------------------------
 Method 1: Automatic Verification (Linux/macOS)
 --------------------------------------------------------------------------------
 
-1. Download both files to the same directory:
+1. Download files to the same directory:
    - RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
-   - RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha256
+   - One of: .sha256, .sha1, .md5, or .blake2 checksum file
 
 2. Open Terminal and navigate to the download directory:
    cd ~/Downloads
 
-3. Run verification:
+3. Run verification (choose one):
+   
+   SHA256 (recommended):
    sha256sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha256
+   
+   SHA1:
+   sha1sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha1
+   
+   MD5:
+   md5sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.md5
+   
+   BLAKE2:
+   b2sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.blake2
 
 4. Expected output:
    RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip: OK
@@ -94,17 +174,22 @@ Method 1: Automatic Verification (Linux/macOS)
 Method 2: Manual Verification (All Platforms)
 --------------------------------------------------------------------------------
 
-1. Calculate the SHA-256 hash of your downloaded file:
+1. Calculate the hash of your downloaded file:
 
-   Linux/macOS:
+   Linux/macOS (choose one):
    sha256sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+   sha1sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+   md5sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+   b2sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
 
    Windows (PowerShell):
    Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm SHA256
+   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm SHA1
+   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm MD5
 
-2. Open the .sha256 file in a text editor
+2. Open the corresponding checksum file (.sha256, .sha1, .md5, or .blake2) in a text editor
 
-3. Compare the hash output with the hash in the .sha256 file
+3. Compare the hash output with the hash in the checksum file
 
 4. If they match exactly, your download is verified!
 
@@ -124,8 +209,11 @@ Verification ensures:
 - ✅ Authentic file (matches what was built and released)
 - ✅ No tampering (file hasn't been modified)
 
-SHA-256 is a cryptographic hash function that creates a unique "fingerprint"
-for each file. Even a single bit change results in a completely different hash.
+Cryptographic hash functions create a unique "fingerprint" for each file.
+Even a single bit change results in a completely different hash.
+
+SHA256 and BLAKE2 provide strong cryptographic security.
+SHA1 and MD5 are provided for legacy tool compatibility but are less secure.
 
 --------------------------------------------------------------------------------
 Still Having Issues?
@@ -143,10 +231,23 @@ EOF
 # Replace version placeholders
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${VERIFY_FILE}"
 
-echo "✅ Checksum file created: ${CHECKSUM_FILE}"
+echo "✅ Checksum files created:"
+echo "   - ${CHECKSUM_FILE_SHA256}"
+echo "   - ${CHECKSUM_FILE_SHA1}"
+echo "   - ${CHECKSUM_FILE_MD5}"
+echo "   - ${CHECKSUM_FILE_BLAKE2}"
 echo "✅ Verification instructions created: ${VERIFY_FILE}"
 
 # Display checksums
 echo ""
-echo "📄 Checksums:"
-cat "${CHECKSUM_FILE}"
+echo "📄 SHA256 Checksums:"
+cat "${CHECKSUM_FILE_SHA256}"
+echo ""
+echo "📄 SHA1 Checksums:"
+grep -v "^#" "${CHECKSUM_FILE_SHA1}"
+echo ""
+echo "📄 MD5 Checksums:"
+grep -v "^#" "${CHECKSUM_FILE_MD5}"
+echo ""
+echo "📄 BLAKE2 Checksums:"
+grep -v "^#" "${CHECKSUM_FILE_BLAKE2}"

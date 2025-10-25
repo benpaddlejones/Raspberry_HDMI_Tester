@@ -1194,11 +1194,18 @@ jobs:
 
           TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
           VERIFY_FILE="VERIFY_DOWNLOAD_v${VERSION}.txt"
+          CHECKSUM_SHA256="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
+          CHECKSUM_SHA1="RaspberryPi_HDMI_Tester_v${VERSION}.sha1"
+          CHECKSUM_MD5="RaspberryPi_HDMI_Tester_v${VERSION}.md5"
+          CHECKSUM_BLAKE2="RaspberryPi_HDMI_Tester_v${VERSION}.blake2"
 
           echo "image_size=$IMAGE_SIZE" >> $GITHUB_OUTPUT
           echo "archive_size=$ARCHIVE_SIZE" >> $GITHUB_OUTPUT
           echo "archive_path=${DEPLOY_DIR}/${VERSIONED_ARCHIVE}" >> $GITHUB_OUTPUT
-          echo "checksum_path=${DEPLOY_DIR}/${CHECKSUM_FILE}" >> $GITHUB_OUTPUT
+          echo "checksum_sha256=${DEPLOY_DIR}/${CHECKSUM_SHA256}" >> $GITHUB_OUTPUT
+          echo "checksum_sha1=${DEPLOY_DIR}/${CHECKSUM_SHA1}" >> $GITHUB_OUTPUT
+          echo "checksum_md5=${DEPLOY_DIR}/${CHECKSUM_MD5}" >> $GITHUB_OUTPUT
+          echo "checksum_blake2=${DEPLOY_DIR}/${CHECKSUM_BLAKE2}" >> $GITHUB_OUTPUT
           echo "testing_report=${DEPLOY_DIR}/${TESTING_REPORT}" >> $GITHUB_OUTPUT
           echo "verify_file=${DEPLOY_DIR}/${VERIFY_FILE}" >> $GITHUB_OUTPUT
 
@@ -1206,6 +1213,7 @@ jobs:
           echo "   Image size: $IMAGE_SIZE"
           echo "   Compressed: $ARCHIVE_SIZE (gzip format)"
           echo "   Compression time: ${COMPRESSION_TIME}s"
+          echo "   Checksums: SHA256, SHA1, MD5, BLAKE2"
           if [ -f "${DEPLOY_DIR}/${TESTING_REPORT}" ]; then
             echo "   Testing report: ${TESTING_REPORT}"
           fi
@@ -1310,7 +1318,10 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           files: |
             ${{ steps.assets.outputs.archive_path }}
-            ${{ steps.assets.outputs.checksum_path }}
+            ${{ steps.assets.outputs.checksum_sha256 }}
+            ${{ steps.assets.outputs.checksum_sha1 }}
+            ${{ steps.assets.outputs.checksum_md5 }}
+            ${{ steps.assets.outputs.checksum_blake2 }}
             ${{ steps.assets.outputs.testing_report }}
             ${{ steps.assets.outputs.verify_file }}
           draft: false
