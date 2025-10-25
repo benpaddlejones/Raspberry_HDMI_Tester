@@ -237,12 +237,20 @@ cp -r "${PI_GEN_DIR}"/* "${WORK_DIR}/"
 cp -r "${PI_GEN_DIR}"/.[!.]* "${WORK_DIR}/" 2>/dev/null || true
 log_info "✓ pi-gen copied"
 
-log_subsection "Removing original stage3, stage4, stage5"
+log_subsection "Removing original stage3, stage4, stage5 and stage2 EXPORT_IMAGE"
 log_info "Removing pi-gen's original stage3, stage4, stage5 directories to prevent conflicts..."
 rm -rf "${WORK_DIR}/stage3"
 rm -rf "${WORK_DIR}/stage4"
 rm -rf "${WORK_DIR}/stage5"
 log_info "✓ Original stage directories removed"
+
+log_info "Removing stage2/EXPORT_IMAGE to prevent building unwanted lite image..."
+if [ -f "${WORK_DIR}/stage2/EXPORT_IMAGE" ]; then
+    rm -f "${WORK_DIR}/stage2/EXPORT_IMAGE"
+    log_info "✓ stage2/EXPORT_IMAGE removed - only stage3 image will be built"
+else
+    log_info "⚠ stage2/EXPORT_IMAGE not found (already removed or doesn't exist)"
+fi
 
 end_stage_timer "Build Directory Setup" 0
 monitor_disk_space "After Build Directory Setup"
