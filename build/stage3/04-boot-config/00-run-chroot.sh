@@ -118,9 +118,10 @@ echo ""
 
 # Enable fix-cmdline service to clean up after Raspberry Pi OS firstboot
 echo "🔧 Enabling cmdline.txt cleanup service..."
-mkdir -p /etc/systemd/system/multi-user.target.wants
-ln -sf /etc/systemd/system/fix-cmdline.service /etc/systemd/system/multi-user.target.wants/fix-cmdline.service
-echo "  ✅ fix-cmdline.service enabled (will run once after first boot)"
+mkdir -p /etc/systemd/system/sysinit.target.wants
+ln -sf /etc/systemd/system/fix-cmdline.service /etc/systemd/system/sysinit.target.wants/fix-cmdline.service
+echo "  ✅ fix-cmdline.service enabled (will run once on first boot, then reboot)"
+echo "  ⚠️  First boot will take 2 boots: boot 1 = fix cmdline, boot 2 = normal operation"
 echo ""
 
 echo "Total boot optimizations save approximately 10-15 seconds"

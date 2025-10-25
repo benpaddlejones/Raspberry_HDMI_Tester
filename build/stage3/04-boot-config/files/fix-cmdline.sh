@@ -91,5 +91,10 @@ log "HDMI audio: ENABLED"
 log "Headphone audio: ENABLED"
 log "Duplicates: REMOVED"
 log "Conflicts: RESOLVED"
+log ""
+log "⚠️  IMPORTANT: System will reboot to apply cmdline.txt changes"
+log "⚠️  cmdline.txt is read by kernel at boot time, not runtime"
+log "⚠️  Reboot is REQUIRED for changes to take effect"
+log ""
 
 exit 0
