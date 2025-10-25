@@ -1,33 +1,13 @@
 #!/bin/bash -e
 # Install HDMI tester scripts (manual execution mode for testing)
 
-# Validate ROOTFS_DIR is set and exists
-if [ -z "${ROOTFS_DIR}" ]; then
-    echo "❌ Error: ROOTFS_DIR not set"
-    exit 1
-fi
+# Source common validation function
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+STAGE3_DIR="$(dirname "${SCRIPT_DIR}")"
+source "${STAGE3_DIR}/00-common/validate-rootfs.sh"
 
-# MEDIUM PRIORITY FIX #8: Safety check - ensure ROOTFS_DIR is not /
-ROOTFS_REAL=$(realpath "${ROOTFS_DIR}" 2>/dev/null || echo "${ROOTFS_DIR}")
-if [ "${ROOTFS_REAL}" = "/" ] || [ "${ROOTFS_DIR}" = "/" ]; then
-    echo "❌ Error: ROOTFS_DIR cannot be root directory (/)"
-    echo "   This would install files to the host system!"
-    echo "   Current ROOTFS_DIR: ${ROOTFS_DIR}"
-    exit 1
-fi
-
-if [[ "${ROOTFS_DIR}" =~ ^/(bin|boot|dev|etc|home|lib|opt|root|sbin|srv|sys|usr|var)$ ]]; then
-    echo "❌ Error: ROOTFS_DIR appears to be a system directory: ${ROOTFS_DIR}"
-    echo "   This looks like a host system path, not a build chroot!"
-    exit 1
-fi
-
-if [ ! -d "${ROOTFS_DIR}" ]; then
-    echo "❌ Error: ROOTFS_DIR does not exist: ${ROOTFS_DIR}"
-    exit 1
-fi
-
-echo "✅ ROOTFS_DIR validated: ${ROOTFS_DIR}"
+# Validate ROOTFS_DIR using common function
+validate_rootfs_dir || exit 1
 
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 

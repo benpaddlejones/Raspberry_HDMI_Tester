@@ -69,7 +69,13 @@ This document contains all potential issues, oddities, duplicates, and unused co
   - `build/stage3/04-boot-config/00-run.sh` (lines 11-30)
 - **Issue**: Same 20 lines of validation code duplicated in 3 files
 - **Suggestion**: Extract to shared function in common file
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: 🔧 **FIXED** - Safety checks ARE required and important:
+  - Prevents catastrophic damage if ROOTFS_DIR points to host system
+  - Validates ROOTFS_DIR is not `/`, system directories, exists, and is writable
+  - Created `build/stage3/00-common/validate-rootfs.sh` with shared validation function
+  - Updated all 4 stage scripts (01, 02, 03, 04) to source and use common function
+  - Reduced duplication from 60+ lines to single shared implementation
+  - stage 02 now has comprehensive validation (was minimal before)
 
 ### 7. Both config.txt locations handled but not validated
 - **Location**: `build/stage3/04-boot-config/00-run.sh` (lines 35-49)

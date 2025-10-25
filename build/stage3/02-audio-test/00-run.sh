@@ -1,16 +1,13 @@
 #!/bin/bash -e
 # Audio test deployment - FLAC files for audio testing
 
-# Validate ROOTFS_DIR
-if [ -z "${ROOTFS_DIR}" ]; then
-    echo "❌ Error: ROOTFS_DIR not set"
-    exit 1
-fi
+# Source common validation function
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+STAGE3_DIR="$(dirname "${SCRIPT_DIR}")"
+source "${STAGE3_DIR}/00-common/validate-rootfs.sh"
 
-if [ ! -d "${ROOTFS_DIR}" ]; then
-    echo "❌ Error: ROOTFS_DIR does not exist: ${ROOTFS_DIR}"
-    exit 1
-fi
+# Validate ROOTFS_DIR using common function
+validate_rootfs_dir || exit 1
 
 echo "📁 Deploying FLAC audio test files..."
 
