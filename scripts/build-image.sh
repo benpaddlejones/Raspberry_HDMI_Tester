@@ -222,7 +222,7 @@ log_info "✓ color-test.mp4 exists ($(stat -c%s "${COLOR_TEST_MP4}" | numfmt --
 # Validate codecs if ffprobe is available
 if command -v ffprobe &>/dev/null; then
     log_info "Validating WebM codecs (VP9/Vorbis/Opus)..."
-    
+
     if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_WEBM}" >> "${BUILD_LOG_FILE}" 2>&1; then
         VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_WEBM}" 2>/dev/null | tr '\n' ' ')
         log_info "✓ image-test.webm validated: ${VIDEO_INFO}"
@@ -238,9 +238,9 @@ if command -v ffprobe &>/dev/null; then
         log_event "⚠️" "Warning: Could not validate color-test.webm (file may be corrupted)"
         log_info "Build will continue, but runtime playback may fail on Pi 4+"
     fi
-    
+
     log_info "Validating MP4 codecs (H.264)..."
-    
+
     if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${IMAGE_TEST_MP4}" >> "${BUILD_LOG_FILE}" 2>&1; then
         VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${IMAGE_TEST_MP4}" 2>/dev/null | tr '\n' ' ')
         # Verify it's H.264
@@ -254,7 +254,7 @@ if command -v ffprobe &>/dev/null; then
         log_event "⚠️" "Warning: Could not validate image-test.mp4 (file may be corrupted)"
         log_info "Build will continue, but runtime playback may fail on Pi 3 and earlier"
     fi
-    
+
     if ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1 "${COLOR_TEST_MP4}" >> "${BUILD_LOG_FILE}" 2>&1; then
         VIDEO_INFO=$(ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1:nokey=1 "${COLOR_TEST_MP4}" 2>/dev/null | tr '\n' ' ')
         # Verify it's H.264

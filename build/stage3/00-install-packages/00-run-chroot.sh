@@ -48,7 +48,7 @@ for pkg in ${REQUIRED_PACKAGES}; do
 done
 
 # Check for codec libraries (these are critical for video playback)
-CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0 libmp3lame0 libmpg123-0"
+CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0 libvorbis0a libmp3lame0 libmpg123-0 libflac12"
 
 echo ""
 echo "🔍 Verifying codec libraries..."

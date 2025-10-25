@@ -36,7 +36,15 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Issue**: Old MP3 audio file still deployed alongside newer FLAC files (stereo.flac, surround51.flac)
 - **Impact**: Wastes space (~500KB+), creates confusion about which audio format to use
 - **Note**: Only `test-notvideo` script uses audio.mp3, all other services use FLAC
-- **Status**: ❓ PENDING VALIDATION
+- **Status**: ✅ **VALID - KEEPING** - Audio codecs verified and enhanced:
+  - **MP3**: Used by `test-notvideo` (203KB, mp3 32kHz stereo) - KEEPING for this specific test
+  - **FLAC**: Used by `audio-test` service (stereo.flac 95KB, surround51.flac 311KB, both 48kHz)
+  - **Opus**: Embedded in WebM videos for Pi 4+
+  - **AAC**: Embedded in MP4 videos for Pi 3
+  - **Added libflac12** to packages for explicit FLAC support
+  - **Added libvorbis0a** to validation for WebM Vorbis support
+  - All codec packages now validated: MP3, FLAC, AAC (via libavcodec-extra), Opus, Vorbis
+  - **Conclusion**: audio.mp3 serves a purpose (test-notvideo), not redundant
 
 ---
 

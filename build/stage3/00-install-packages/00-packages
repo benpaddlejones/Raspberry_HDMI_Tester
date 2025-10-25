@@ -15,9 +15,16 @@ libvpx7
 libvorbis0a
 libopus0
 
-# Audio codecs (REQUIRED for FLAC test files)
+# Audio codecs (REQUIRED for all audio formats used in test files)
+# MP3 (audio.mp3 standalone file)
 libmp3lame0
 libmpg123-0
+
+# FLAC (stereo.flac, surround51.flac standalone files)
+libflac12
+
+# AAC (embedded in MP4 video files for Pi 3)
+# Note: AAC support is included in libavcodec-extra, but we ensure it explicitly
 
 # H.264 codec (REQUIRED for MP4 playback on Pi 3 and earlier models)
 # Pi 4+ use WebM/VP9, but Pi 3 and earlier need MP4/H.264 for hardware acceleration
