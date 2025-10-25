@@ -490,6 +490,69 @@ log_checksum "${IMAGE_FILE}" "Final Image File"
 
 end_stage_timer "Deployment Validation" 0
 
+# Early deduplication - run zerofree to reduce image size before any further processing
+start_stage_timer "Early Deduplication"
+
+log_event "🔧" "Running early deduplication with zerofree..."
+log_info "This optimizes the image by zeroing free space, reducing file size"
+log_info "Benefits: Faster compression, smaller final archive, less disk usage"
+
+# Check if zerofree is available
+if ! command -v zerofree &> /dev/null; then
+    log_event "⚠️" "zerofree not found - installing..."
+    sudo apt-get update -qq 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null
+    sudo apt-get install -y zerofree 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null
+    log_info "✓ zerofree installed"
+fi
+
+# Setup loop device for the image
+log_info "Setting up loop device for image..."
+LOOP_DEVICE=$(sudo losetup -f)
+log_info "Using loop device: ${LOOP_DEVICE}"
+
+if sudo losetup -P "${LOOP_DEVICE}" "${IMAGE_FILE}" 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
+    log_info "✓ Loop device attached"
+else
+    log_event "⚠️" "Failed to attach loop device - skipping deduplication"
+    end_stage_timer "Early Deduplication" 1
+    # Non-fatal error - continue with build
+    LOOP_DEVICE=""
+fi
+
+if [ -n "${LOOP_DEVICE}" ]; then
+    # Find the root partition (usually partition 2)
+    ROOT_PARTITION="${LOOP_DEVICE}p2"
+    
+    if [ -b "${ROOT_PARTITION}" ]; then
+        log_info "Running zerofree on root partition: ${ROOT_PARTITION}"
+        
+        # Run zerofree (must be on unmounted or read-only partition)
+        DEDUP_START=$(date +%s)
+        if sudo zerofree -v "${ROOT_PARTITION}" 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
+            DEDUP_END=$(date +%s)
+            DEDUP_TIME=$((DEDUP_END - DEDUP_START))
+            
+            log_info "✓ Deduplication complete in ${DEDUP_TIME} seconds"
+            log_event "✅" "Deduplication successful - image optimized"
+        else
+            log_event "⚠️" "zerofree failed (non-fatal) - continuing build"
+        fi
+    else
+        log_event "⚠️" "Root partition ${ROOT_PARTITION} not found - skipping deduplication"
+    fi
+    
+    # Cleanup: detach loop device
+    log_info "Detaching loop device..."
+    if sudo losetup -d "${LOOP_DEVICE}" 2>&1 | tee -a "${BUILD_LOG_FILE}" > /dev/null; then
+        log_info "✓ Loop device detached"
+    else
+        log_event "⚠️" "Failed to detach loop device (may require manual cleanup)"
+    fi
+fi
+
+monitor_disk_space "After Early Deduplication"
+end_stage_timer "Early Deduplication" 0
+
 # Aggressive cleanup of intermediate build artifacts
 start_stage_timer "Build Cleanup"
 
