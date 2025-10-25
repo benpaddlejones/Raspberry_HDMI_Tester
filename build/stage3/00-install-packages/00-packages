@@ -19,12 +19,15 @@ libopus0
 libmp3lame0
 libmpg123-0
 
+# H.264 codec (REQUIRED for MP4 playback on Pi 3 and earlier models)
+# Pi 4+ use WebM/VP9, but Pi 3 and earlier need MP4/H.264 for hardware acceleration
+libx264-164
+
 # Audio system (ALSA for direct hardware access)
 alsa-utils
 
 # Conservative removals (codecs not needed for our specific test files):
 # - libwebm1 (WebM container - ffmpeg/libavformat-extra handles this)
-# - libx264-164 (H.264 encoder - not needed, we use VP9)
 # - libx265-199 (H.265/HEVC encoder - not needed)
 # - libtheora0 (Theora codec - not used in our test files)
 # - libaom3 (AV1 codec - not used in our test files)

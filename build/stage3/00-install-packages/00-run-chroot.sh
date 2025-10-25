@@ -35,7 +35,7 @@ echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
 # Core packages that must be installed
-REQUIRED_PACKAGES="alsa-utils ffmpeg"
+REQUIRED_PACKAGES="alsa-utils ffmpeg libx264-164"
 
 for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
@@ -48,7 +48,7 @@ for pkg in ${REQUIRED_PACKAGES}; do
 done
 
 # Check for codec libraries (these are critical for video playback)
-CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0 libx264-164 libmp3lame0 libmpg123-0"
+CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0 libmp3lame0 libmpg123-0"
 
 echo ""
 echo "🔍 Verifying codec libraries..."
@@ -57,7 +57,8 @@ for pkg in ${CODEC_PACKAGES}; do
         VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || echo "unknown")
         echo "  ✅ $pkg: Installed (${VERSION})"
     else
-        echo "  ⚠️  $pkg: NOT INSTALLED (optional but recommended)"
+        echo "  ❌ $pkg: NOT INSTALLED!"
+        PACKAGES_OK=false
     fi
 done
 
