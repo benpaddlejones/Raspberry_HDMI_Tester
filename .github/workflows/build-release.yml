@@ -85,25 +85,25 @@ jobs:
       - name: Install QEMU kernel for boot testing
         run: |
           echo "📥 Installing QEMU ARM kernel for testing..."
-          
+
           # Create QEMU directory
           sudo mkdir -p /usr/share/qemu
-          
+
           # Download versatilepb kernel from dhruvvyas90/qemu-rpi-kernel
           # This is a known-good kernel for QEMU ARM emulation
           KERNEL_URL="https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/master/kernel-qemu-4.19.50-buster"
           DTB_URL="https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/master/versatile-pb.dtb"
-          
+
           echo "Downloading QEMU ARM kernel..."
           sudo curl -L -o /usr/share/qemu/qemu-arm-kernel "${KERNEL_URL}"
-          
+
           echo "Downloading device tree blob..."
           sudo curl -L -o /usr/share/qemu/versatile-pb.dtb "${DTB_URL}"
-          
+
           # Set permissions
           sudo chmod 644 /usr/share/qemu/qemu-arm-kernel
           sudo chmod 644 /usr/share/qemu/versatile-pb.dtb
-          
+
           # Verify files exist and have content
           if [ -f /usr/share/qemu/qemu-arm-kernel ] && [ -s /usr/share/qemu/qemu-arm-kernel ]; then
             KERNEL_SIZE=$(stat -c%s /usr/share/qemu/qemu-arm-kernel)
@@ -112,7 +112,7 @@ jobs:
             echo "❌ Failed to install QEMU kernel"
             exit 1
           fi
-          
+
           echo "✅ QEMU kernel and DTB installed"
 
       - name: Enable binfmt_misc for ARM emulation
@@ -1057,15 +1057,22 @@ jobs:
 
           # Create versioned filename
           VERSIONED_IMAGE="RaspberryPi_HDMI_Tester_v${VERSION}.img"
-          VERSIONED_ZIP="RaspberryPi_HDMI_Tester_v${VERSION}.img.zip"
+          VERSIONED_ARCHIVE="RaspberryPi_HDMI_Tester_v${VERSION}.img.gz"
           CHECKSUM_FILE="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
 
           # Copy and rename image
           cp "$IMAGE_FILE" "${DEPLOY_DIR}/${VERSIONED_IMAGE}"
 
-          # Compress image (do this in deploy dir to avoid full paths in zip)
-          echo "🗜️  Compressing image..."
-          (cd "${DEPLOY_DIR}" && zip "${VERSIONED_ZIP}" "${VERSIONED_IMAGE}")
+          # Compress image using pigz (parallel gzip) for maximum speed
+          echo "🗜️  Compressing image with pigz (parallel gzip)..."
+          echo "   This is significantly faster than zip (~2 min vs ~10 min)"
+          
+          COMPRESSION_START=$(date +%s)
+          (cd "${DEPLOY_DIR}" && pigz -9 -k "${VERSIONED_IMAGE}")
+          COMPRESSION_END=$(date +%s)
+          COMPRESSION_TIME=$((COMPRESSION_END - COMPRESSION_START))
+          
+          echo "✅ Compression complete in ${COMPRESSION_TIME} seconds"
 
           # Generate SHA256 checksums and verification instructions
           echo "🔐 Generating checksums and verification instructions..."
@@ -1077,21 +1084,22 @@ jobs:
 
           # Get file sizes (from deploy directory)
           IMAGE_SIZE=$(ls -lh "${DEPLOY_DIR}/${VERSIONED_IMAGE}" | awk '{print $5}')
-          ZIP_SIZE=$(ls -lh "${DEPLOY_DIR}/${VERSIONED_ZIP}" | awk '{print $5}')
+          ARCHIVE_SIZE=$(ls -lh "${DEPLOY_DIR}/${VERSIONED_ARCHIVE}" | awk '{print $5}')
 
           TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
           VERIFY_FILE="VERIFY_DOWNLOAD_v${VERSION}.txt"
 
           echo "image_size=$IMAGE_SIZE" >> $GITHUB_OUTPUT
-          echo "zip_size=$ZIP_SIZE" >> $GITHUB_OUTPUT
-          echo "zip_path=${DEPLOY_DIR}/${VERSIONED_ZIP}" >> $GITHUB_OUTPUT
+          echo "archive_size=$ARCHIVE_SIZE" >> $GITHUB_OUTPUT
+          echo "archive_path=${DEPLOY_DIR}/${VERSIONED_ARCHIVE}" >> $GITHUB_OUTPUT
           echo "checksum_path=${DEPLOY_DIR}/${CHECKSUM_FILE}" >> $GITHUB_OUTPUT
           echo "testing_report=${DEPLOY_DIR}/${TESTING_REPORT}" >> $GITHUB_OUTPUT
           echo "verify_file=${DEPLOY_DIR}/${VERIFY_FILE}" >> $GITHUB_OUTPUT
 
           echo "✅ Assets prepared"
           echo "   Image size: $IMAGE_SIZE"
-          echo "   Compressed: $ZIP_SIZE"
+          echo "   Compressed: $ARCHIVE_SIZE (gzip format)"
+          echo "   Compression time: ${COMPRESSION_TIME}s"
           if [ -f "${DEPLOY_DIR}/${TESTING_REPORT}" ]; then
             echo "   Testing report: ${TESTING_REPORT}"
           fi
@@ -1142,9 +1150,12 @@ jobs:
 
           ### Quick Start (Windows 11)
 
-          1. **Download** \`RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.zip\`
-          2. **Extract** the \`.img\` file from the ZIP archive
+          1. **Download** \`RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz\`
+          2. **Extract** the \`.img\` file from the gzip archive
+             - Windows: Use [7-Zip](https://www.7-zip.org/) or extract via Raspberry Pi Imager directly
+             - macOS/Linux: \`gunzip RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz\`
           3. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+             - Note: Raspberry Pi Imager can read .gz files directly - no need to extract!
           4. **Insert** SD card into Raspberry Pi
           5. **Connect** HDMI to display
           6. **Power on** - it will boot automatically!
@@ -1170,7 +1181,8 @@ jobs:
           - **Base OS:** ${BASE_OS}
           - **Build System:** ${BUILD_SYSTEM}
           - **Image Size:** ${{ steps.assets.outputs.image_size }}
-          - **Compressed Size:** ${{ steps.assets.outputs.zip_size }}
+          - **Compressed Size:** ${{ steps.assets.outputs.archive_size }} (gzip format)
+          - **Compression:** Parallel gzip (pigz) for faster downloads
 
           ---
 
@@ -1191,7 +1203,7 @@ jobs:
           body_path: release_notes.md
           target_commitish: ${{ github.ref_name }}
           files: |
-            ${{ steps.assets.outputs.zip_path }}
+            ${{ steps.assets.outputs.archive_path }}
             ${{ steps.assets.outputs.checksum_path }}
             ${{ steps.assets.outputs.testing_report }}
             ${{ steps.assets.outputs.verify_file }}
@@ -1320,7 +1332,7 @@ jobs:
             echo "## 🎉 Release Build Complete!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Version:** v${{ steps.config.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Image (compressed): ${{ steps.assets.outputs.zip_size }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Image (compressed): ${{ steps.assets.outputs.archive_size }} (.gz format)" >> $GITHUB_STEP_SUMMARY
             echo "- Image (uncompressed): ${{ steps.assets.outputs.image_size }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
