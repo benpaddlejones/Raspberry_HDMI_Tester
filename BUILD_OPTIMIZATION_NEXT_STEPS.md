@@ -22,7 +22,13 @@
 - Output format: .img.gz instead of .img.zip
 - **Impact**: 8-10 minutes saved, Raspberry Pi Imager compatible
 
-**Expected Total Impact**: 61 min → 41-43 min (30% faster), 400-500MB smaller
+✅ **Early Image Deduplication (zerofree)** - 1-2 min savings
+- Runs zerofree on root partition after build, before compression
+- Zeros free space in ext4 filesystem (20-50MB reduction)
+- Speeds up subsequent compression step
+- **Impact**: 1-2 minutes saved, smaller final image
+
+**Expected Total Impact**: 61 min → 39-41 min (33% faster), 400-500MB smaller
 
 ---
 
@@ -50,30 +56,7 @@ apt-get install -y $(cat 00-packages) -o APT::Install-Recommends=0
 
 ---
 
-### 2. Early Image Deduplication
-**Estimated Savings**: 1-2 minutes during export
-**Complexity**: Low
-
-Current: Deduplication happens during export-image (20-24MB saved)
-
-**Implementation**:
-```bash
-# Run zerofree earlier in build process (after each stage)
-# In build-image.sh, add after each stage:
-if [ -f "${STAGE_DIR}/EXPORT_IMAGE" ]; then
-    log_event "🔧" "Running early deduplication..."
-    zerofree -v "${ROOT_PARTITION}"
-fi
-```
-
-**Files to modify**:
-- `scripts/build-image.sh` (add zerofree after stage2, stage3)
-
-**Impact**: Smaller intermediate images, faster final export
-
----
-
-### 3. Disk Space Monitoring & Alerts
+### 2. Disk Space Monitoring & Alerts
 **Estimated Savings**: Prevents failures, not time
 **Complexity**: Low
 
@@ -106,7 +89,7 @@ Current: Build fails if disk fills up (89% usage observed)
 
 ---
 
-### 4. Build Time Breakdown Metrics
+### 3. Build Time Breakdown Metrics
 **Estimated Savings**: None (visibility only)
 **Complexity**: Low
 
@@ -136,7 +119,7 @@ Current: Only total build time logged
 
 ## Medium Priority
 
-### 5. Multiple Checksum Formats
+### 4. Multiple Checksum Formats
 **Estimated Savings**: None (security improvement)
 **Complexity**: Low
 
@@ -157,7 +140,7 @@ b2sum "${IMAGE_FILE}" > "${CHECKSUM_FILE}.blake2"
 
 ---
 
-### 6. Stage-Specific APT Cache
+### 5. Stage-Specific APT Cache
 **Estimated Savings**: 30-60 seconds
 **Complexity**: Medium
 
@@ -179,7 +162,7 @@ Current: Global APT cache for all stages
 
 ---
 
-### 7. Incremental Build Support
+### 6. Incremental Build Support
 **Estimated Savings**: 40-50 minutes (for rebuilds)
 **Complexity**: High
 
@@ -196,7 +179,7 @@ Current: Every build starts from scratch
 
 ## Low Priority / Future
 
-### 8. Parallel Stage Execution
+### 7. Parallel Stage Execution
 **Estimated Savings**: 10-15 minutes
 **Complexity**: Very High
 
@@ -209,7 +192,7 @@ Some stages could run in parallel if dependencies allow.
 
 ---
 
-### 9. Local Build Cache Server
+### 8. Local Build Cache Server
 **Estimated Savings**: 2-3 minutes
 **Complexity**: High
 
@@ -225,13 +208,13 @@ Set up apt-cacher-ng or similar for package caching across builds.
 ## Recommended Implementation Order
 
 1. ~~**Faster Compression**~~ ✅ **COMPLETED** (saves 8-10 min)
-2. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
-3. **Disk Space Monitoring** (Low complexity, prevents failures)
-4. **Build Time Breakdown** (Low complexity, improves visibility)
-5. **Early Deduplication** (Low complexity, small impact: 1-2 min)
+2. ~~**Early Deduplication**~~ ✅ **COMPLETED** (saves 1-2 min)
+3. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
+4. **Disk Space Monitoring** (Low complexity, prevents failures)
+5. **Build Time Breakdown** (Low complexity, improves visibility)
 6. **Multiple Checksums** (Low complexity, security improvement)
 
-**Total Potential Savings**: 3-5 additional minutes (on top of 20 min already saved)
+**Total Potential Savings**: 2-3 additional minutes (on top of 22 min already saved)
 
 **Final Target**: 61 min → 36-38 min (40% faster builds)
 
@@ -264,13 +247,13 @@ Track these metrics for each optimization:
 ## References
 
 - Original build time: ~61 minutes (v0.9.7.3)
-- Current build time: ~41-43 minutes (v0.9.7.5+ with optimizations)
+- Current build time: ~39-41 minutes (v0.9.7.6+ with optimizations)
 - Target build time: <38 minutes
 - Image size: 2.8GB uncompressed, ~600-700MB compressed (.gz)
 - Disk usage: 50GB → 64GB (89% peak)
 
 ---
 
-**Last Updated**: October 25, 2025
-**Version**: Post-v0.9.7.5 optimizations
+**Last Updated**: October 25, 2025  
+**Version**: Post-v0.9.7.6 optimizations  
 **Next Review**: After implementing items 1-3
