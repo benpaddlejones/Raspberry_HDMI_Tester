@@ -115,6 +115,14 @@ echo "  ℹ️  tune2fs cannot run on mounted filesystems, deferred to first boo
 
 echo "✅ Filesystem optimizations complete"
 echo ""
+
+# Enable fix-cmdline service to clean up after Raspberry Pi OS firstboot
+echo "🔧 Enabling cmdline.txt cleanup service..."
+mkdir -p /etc/systemd/system/multi-user.target.wants
+ln -sf /etc/systemd/system/fix-cmdline.service /etc/systemd/system/multi-user.target.wants/fix-cmdline.service
+echo "  ✅ fix-cmdline.service enabled (will run once after first boot)"
+echo ""
+
 echo "Total boot optimizations save approximately 10-15 seconds"
 
 

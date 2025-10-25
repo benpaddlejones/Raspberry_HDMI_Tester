@@ -1,0 +1,19 @@
+[Unit]
+Description=Fix cmdline.txt after first boot resize
+Documentation=https://github.com/benpaddlejones/Raspberry_HDMI_Tester
+# Run AFTER systemd-remount-fs (which happens after resize)
+After=systemd-remount-fs.service
+# Only run once
+ConditionPathExists=!/var/lib/hdmi-tester/cmdline-fixed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fix-cmdline.sh
+ExecStartPost=/bin/mkdir -p /var/lib/hdmi-tester
+ExecStartPost=/bin/touch /var/lib/hdmi-tester/cmdline-fixed
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

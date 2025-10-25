@@ -164,3 +164,22 @@ done
 
 echo "✅ Audio parameters and boot optimizations (quiet splash loglevel=1 noswap fastboot) added to all cmdline.txt files"
 
+# Install fix-cmdline service to clean up after Raspberry Pi OS firstboot modifications
+# Raspberry Pi OS firmware and resize scripts modify cmdline.txt AFTER our image boots,
+# adding duplicate parameters and conflicts. This service runs ONCE after first boot to fix it.
+echo "Installing fix-cmdline cleanup service..."
+
+# Install cleanup script
+install -v -m 755 "${SCRIPT_DIR}/files/fix-cmdline.sh" "${ROOTFS_DIR}/usr/local/sbin/fix-cmdline.sh" || {
+    echo "❌ Error: Failed to install fix-cmdline.sh"
+    exit 1
+}
+
+# Install systemd service
+install -v -m 644 "${SCRIPT_DIR}/files/fix-cmdline.service" "${ROOTFS_DIR}/etc/systemd/system/fix-cmdline.service" || {
+    echo "❌ Error: Failed to install fix-cmdline.service"
+    exit 1
+}
+
+echo "✅ fix-cmdline cleanup service installed"
+
