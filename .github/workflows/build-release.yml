@@ -265,6 +265,63 @@ jobs:
           restore-keys: |
             apt-cache-${{ runner.os }}-
 
+      - name: Start disk space monitoring
+        run: |
+          echo "💾 Starting disk space monitoring..."
+
+          # Create monitoring script
+          cat > /tmp/disk-monitor.sh << 'EOF'
+          #!/bin/bash
+          # Disk space monitoring script - runs in background during build
+
+          LOG_FILE="/tmp/disk-monitor.log"
+          echo "Disk Space Monitor started at $(date)" > "${LOG_FILE}"
+          echo "Monitoring interval: 5 minutes" >> "${LOG_FILE}"
+          echo "Warning threshold: 85%" >> "${LOG_FILE}"
+          echo "Critical threshold: 90%" >> "${LOG_FILE}"
+          echo "" >> "${LOG_FILE}"
+
+          while true; do
+            # Get disk usage percentage for root filesystem
+            USAGE=$(df --output=pcent / | tail -1 | tr -d '% ')
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+            # Log current usage
+            echo "[${TIMESTAMP}] Disk usage: ${USAGE}%" >> "${LOG_FILE}"
+
+            # Check thresholds
+            if [ "${USAGE}" -gt 90 ]; then
+              echo "❌ CRITICAL: Disk usage at ${USAGE}% - Build cannot continue safely" | tee -a "${LOG_FILE}"
+              echo "" | tee -a "${LOG_FILE}"
+              echo "Current disk usage:" | tee -a "${LOG_FILE}"
+              df -h / | tee -a "${LOG_FILE}"
+              echo "" | tee -a "${LOG_FILE}"
+              echo "Largest directories:" | tee -a "${LOG_FILE}"
+              du -h --max-depth=2 /home/runner/work 2>/dev/null | sort -hr | head -10 | tee -a "${LOG_FILE}"
+              exit 1
+            elif [ "${USAGE}" -gt 85 ]; then
+              echo "⚠️  WARNING: Disk usage at ${USAGE}% - Approaching critical threshold" | tee -a "${LOG_FILE}"
+              df -h / | tee -a "${LOG_FILE}"
+            fi
+
+            # Wait 5 minutes before next check
+            sleep 300
+          done
+          EOF
+
+          chmod +x /tmp/disk-monitor.sh
+
+          # Start monitor in background
+          nohup /tmp/disk-monitor.sh &
+          MONITOR_PID=$!
+          echo "${MONITOR_PID}" > /tmp/disk-monitor.pid
+
+          echo "✅ Disk space monitor started (PID: ${MONITOR_PID})"
+          echo "📊 Initial disk status:"
+          df -h /
+          echo ""
+          echo "Monitor will check every 5 minutes and alert if usage exceeds 85%"
+
       - name: Build Raspberry Pi image
         timeout-minutes: 90
         run: |
@@ -412,6 +469,55 @@ jobs:
           echo ""
           echo "✅ Image build complete"
           echo "📝 Detailed log available at: build/pi-gen-work/build-detailed.log"
+
+      - name: Stop disk space monitoring
+        if: always()
+        run: |
+          echo "🛑 Stopping disk space monitor..."
+
+          # Stop the background monitor process
+          if [ -f /tmp/disk-monitor.pid ]; then
+            MONITOR_PID=$(cat /tmp/disk-monitor.pid)
+            if kill "${MONITOR_PID}" 2>/dev/null; then
+              echo "✅ Monitor stopped (PID: ${MONITOR_PID})"
+            else
+              echo "⚠️  Monitor process ${MONITOR_PID} not found (may have already exited)"
+            fi
+            rm -f /tmp/disk-monitor.pid
+          else
+            echo "⚠️  Monitor PID file not found"
+          fi
+
+          # Display monitor log summary
+          if [ -f /tmp/disk-monitor.log ]; then
+            echo ""
+            echo "📊 Disk Space Monitor Summary:"
+            echo "----------------------------------------"
+            cat /tmp/disk-monitor.log
+            echo "----------------------------------------"
+
+            # Check if there were any warnings
+            if grep -q "WARNING" /tmp/disk-monitor.log; then
+              echo ""
+              echo "⚠️  Disk space warnings were logged during build"
+            fi
+
+            # Check if critical threshold was hit
+            if grep -q "CRITICAL" /tmp/disk-monitor.log; then
+              echo ""
+              echo "❌ CRITICAL disk space threshold was exceeded"
+            fi
+          else
+            echo "⚠️  Monitor log file not found"
+          fi
+
+          # Final disk status
+          echo ""
+          echo "📊 Final disk status:"
+          df -h /
+          echo ""
+          echo "📁 Largest directories in workspace:"
+          du -h --max-depth=2 /home/runner/work 2>/dev/null | sort -hr | head -10 || echo "Could not analyze disk usage"
 
       - name: Upload build logs as artifacts
         if: always()

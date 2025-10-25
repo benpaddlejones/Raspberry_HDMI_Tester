@@ -28,6 +28,12 @@
 - Speeds up subsequent compression step
 - **Impact**: 1-2 minutes saved, smaller final image
 
+✅ **Disk Space Monitoring & Alerts** - Prevents build failures
+- Background monitoring checks disk usage every 5 minutes
+- Warns at 85%, aborts at 90% to prevent catastrophic failures
+- Logs all checks with timestamps for post-build analysis
+- **Impact**: Early warning system prevents late-stage failures (89% usage observed previously)
+
 **Expected Total Impact**: 61 min → 39-41 min (33% faster), 400-500MB smaller
 
 ---
@@ -56,40 +62,7 @@ apt-get install -y $(cat 00-packages) -o APT::Install-Recommends=0
 
 ---
 
-### 2. Disk Space Monitoring & Alerts
-**Estimated Savings**: Prevents failures, not time
-**Complexity**: Low
-
-Current: Build fails if disk fills up (89% usage observed)
-
-**Implementation**:
-```yaml
-# In .github/workflows/build-release.yml
-- name: Monitor disk space during build
-  run: |
-    # Check every 5 minutes in background
-    while true; do
-      USAGE=$(df --output=pcent / | tail -1 | tr -d '% ')
-      if [ $USAGE -gt 85 ]; then
-        echo "⚠️ WARNING: Disk usage at ${USAGE}%"
-      fi
-      if [ $USAGE -gt 90 ]; then
-        echo "❌ CRITICAL: Disk usage at ${USAGE}% - aborting"
-        exit 1
-      fi
-      sleep 300
-    done &
-    MONITOR_PID=$!
-```
-
-**Files to modify**:
-- `.github/workflows/build-release.yml` (new step before "Build Raspberry Pi image")
-
-**Impact**: Early warning system, prevents late-stage failures
-
----
-
-### 3. Build Time Breakdown Metrics
+### 2. Build Time Breakdown Metrics
 **Estimated Savings**: None (visibility only)
 **Complexity**: Low
 
@@ -209,8 +182,8 @@ Set up apt-cacher-ng or similar for package caching across builds.
 
 1. ~~**Faster Compression**~~ ✅ **COMPLETED** (saves 8-10 min)
 2. ~~**Early Deduplication**~~ ✅ **COMPLETED** (saves 1-2 min)
-3. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
-4. **Disk Space Monitoring** (Low complexity, prevents failures)
+3. ~~**Disk Space Monitoring**~~ ✅ **COMPLETED** (prevents failures)
+4. **Parallel Package Installation** (Medium complexity, medium impact: 2-3 min)
 5. **Build Time Breakdown** (Low complexity, improves visibility)
 6. **Multiple Checksums** (Low complexity, security improvement)
 
