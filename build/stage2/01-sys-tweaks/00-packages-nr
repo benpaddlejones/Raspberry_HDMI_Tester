@@ -1,0 +1,51 @@
+# Packages to EXCLUDE from installation (not required for HDMI tester)
+# Format: One package per line
+# These packages are normally installed in stage2 but bloat the image unnecessarily
+
+# Bluetooth stack (not needed - no wireless connectivity required)
+bluez
+bluez-firmware
+
+# mDNS/Zeroconf (network discovery not needed)
+avahi-daemon
+
+# Remote access service (not needed - SSH already available)
+rpi-connect-lite
+
+# Build tools (not needed on target system)
+build-essential
+manpages-dev
+gdb
+pkg-config
+
+# Python GPIO libraries (not using GPIO)
+python3-gpiozero
+python3-rpi-lgpio
+python3-libgpiod
+python3-spidev
+python3-smbus2
+
+# Additional utilities that add bloat
+strace
+ncdu
+ed
+bash-completion
+v4l-utils
+htop
+man-db
+rsync
+unzip
+zip
+p7zip-full
+ntfs-3g
+pciutils
+udisks2
+usbutils
+usb-modeswitch
+libmtp-runtime
+apt-listchanges
+ssh-import-id
+ethtool
+rpi-update
+lua5.1
+luajit

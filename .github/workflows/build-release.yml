@@ -82,6 +82,39 @@ jobs:
 
           echo "✅ Dependencies installed"
 
+      - name: Install QEMU kernel for boot testing
+        run: |
+          echo "📥 Installing QEMU ARM kernel for testing..."
+          
+          # Create QEMU directory
+          sudo mkdir -p /usr/share/qemu
+          
+          # Download versatilepb kernel from dhruvvyas90/qemu-rpi-kernel
+          # This is a known-good kernel for QEMU ARM emulation
+          KERNEL_URL="https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/master/kernel-qemu-4.19.50-buster"
+          DTB_URL="https://github.com/dhruvvyas90/qemu-rpi-kernel/raw/master/versatile-pb.dtb"
+          
+          echo "Downloading QEMU ARM kernel..."
+          sudo curl -L -o /usr/share/qemu/qemu-arm-kernel "${KERNEL_URL}"
+          
+          echo "Downloading device tree blob..."
+          sudo curl -L -o /usr/share/qemu/versatile-pb.dtb "${DTB_URL}"
+          
+          # Set permissions
+          sudo chmod 644 /usr/share/qemu/qemu-arm-kernel
+          sudo chmod 644 /usr/share/qemu/versatile-pb.dtb
+          
+          # Verify files exist and have content
+          if [ -f /usr/share/qemu/qemu-arm-kernel ] && [ -s /usr/share/qemu/qemu-arm-kernel ]; then
+            KERNEL_SIZE=$(stat -c%s /usr/share/qemu/qemu-arm-kernel)
+            echo "✅ QEMU kernel installed: ${KERNEL_SIZE} bytes"
+          else
+            echo "❌ Failed to install QEMU kernel"
+            exit 1
+          fi
+          
+          echo "✅ QEMU kernel and DTB installed"
+
       - name: Enable binfmt_misc for ARM emulation
         run: |
           echo "🔧 Enabling binfmt_misc kernel module for ARM emulation..."
@@ -220,6 +253,17 @@ jobs:
           restore-keys: |
             pi-gen-cache-${{ hashFiles('build/config', 'build/stage*/**') }}-
             pi-gen-cache-
+
+      - name: Cache APT packages
+        if: ${{ !inputs.force_rebuild }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            /var/cache/apt/archives/*.deb
+            /var/lib/apt/lists/*
+          key: apt-cache-${{ runner.os }}-${{ hashFiles('build/stage*/*/00-packages*') }}
+          restore-keys: |
+            apt-cache-${{ runner.os }}-
 
       - name: Build Raspberry Pi image
         timeout-minutes: 90
