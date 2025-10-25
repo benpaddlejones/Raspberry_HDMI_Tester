@@ -22,7 +22,8 @@ fi
 
 cd "${DEPLOY_DIR}"
 
-VERSIONED_ZIP="RaspberryPi_HDMI_Tester_v${VERSION}.img.zip"
+# Use .gz extension (workflow now uses pigz/gzip instead of zip)
+VERSIONED_ARCHIVE="RaspberryPi_HDMI_Tester_v${VERSION}.img.gz"
 TESTING_REPORT="TESTING_REPORT_v${VERSION}.md"
 CHECKSUM_FILE_SHA256="RaspberryPi_HDMI_Tester_v${VERSION}.sha256"
 CHECKSUM_FILE_SHA1="RaspberryPi_HDMI_Tester_v${VERSION}.sha1"
@@ -40,7 +41,7 @@ cat > "${CHECKSUM_FILE_SHA256}" << 'EOF'
 #   sha256sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.sha256
 #
 # Or verify individual files:
-#   sha256sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+#   sha256sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
 #   (compare output with hash below)
 #
 
@@ -55,7 +56,7 @@ fi
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_SHA256}"
 
 # Add SHA256 checksums
-sha256sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_SHA256}"
+sha256sum "${VERSIONED_ARCHIVE}" >> "${CHECKSUM_FILE_SHA256}"
 
 if [ -f "${TESTING_REPORT}" ]; then
     sha256sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_SHA256}"
@@ -74,7 +75,7 @@ EOF
 
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_SHA1}"
 
-sha1sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_SHA1}"
+sha1sum "${VERSIONED_ARCHIVE}" >> "${CHECKSUM_FILE_SHA1}"
 
 if [ -f "${TESTING_REPORT}" ]; then
     sha1sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_SHA1}"
@@ -94,7 +95,7 @@ EOF
 
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_MD5}"
 
-md5sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_MD5}"
+md5sum "${VERSIONED_ARCHIVE}" >> "${CHECKSUM_FILE_MD5}"
 
 if [ -f "${TESTING_REPORT}" ]; then
     md5sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_MD5}"
@@ -114,7 +115,7 @@ EOF
 
 sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" "${CHECKSUM_FILE_BLAKE2}"
 
-b2sum "${VERSIONED_ZIP}" >> "${CHECKSUM_FILE_BLAKE2}"
+b2sum "${VERSIONED_ARCHIVE}" >> "${CHECKSUM_FILE_BLAKE2}"
 
 if [ -f "${TESTING_REPORT}" ]; then
     b2sum "${TESTING_REPORT}" >> "${CHECKSUM_FILE_BLAKE2}"
@@ -143,7 +144,7 @@ Method 1: Automatic Verification (Linux/macOS)
 --------------------------------------------------------------------------------
 
 1. Download files to the same directory:
-   - RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+   - RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
    - One of: .sha256, .sha1, .md5, or .blake2 checksum file
 
 2. Open Terminal and navigate to the download directory:
@@ -164,7 +165,7 @@ Method 1: Automatic Verification (Linux/macOS)
    b2sum -c RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.blake2
 
 4. Expected output:
-   RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip: OK
+   RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz: OK
    TESTING_REPORT_vVERSION_PLACEHOLDER.md: OK
 
    ✅ If you see "OK" for all files, downloads are verified!
@@ -177,15 +178,15 @@ Method 2: Manual Verification (All Platforms)
 1. Calculate the hash of your downloaded file:
 
    Linux/macOS (choose one):
-   sha256sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
-   sha1sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
-   md5sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
-   b2sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip
+   sha256sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
+   sha1sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
+   md5sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
+   b2sum RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz
 
    Windows (PowerShell):
-   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm SHA256
-   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm SHA1
-   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.zip -Algorithm MD5
+   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz -Algorithm SHA256
+   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz -Algorithm SHA1
+   Get-FileHash RaspberryPi_HDMI_Tester_vVERSION_PLACEHOLDER.img.gz -Algorithm MD5
 
 2. Open the corresponding checksum file (.sha256, .sha1, .md5, or .blake2) in a text editor
 
