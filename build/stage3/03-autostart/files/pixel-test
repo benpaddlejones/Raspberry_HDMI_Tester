@@ -4,13 +4,17 @@
 #!/bin/bash
 # Test Script 2 (VLC): Loop color test pattern video (fullscreen stretched)
 
-LOG_FILE="/tmp/pixel-test.log"
+LOG_DIR="/logs"
+LOG_FILE="${LOG_DIR}/pixel-test.log"
+
+# Ensure log directory exists
+mkdir -p "${LOG_DIR}"
 
 # Log rotation: Keep only 10 most recent logs
 rotate_logs() {
     local base_log="$1"
     local max_logs=10
-
+    
     # If current log exists and is larger than 5MB, rotate it
     if [ -f "${base_log}" ]; then
         local size
@@ -21,7 +25,7 @@ rotate_logs() {
             mv "${base_log}" "${base_log}.${timestamp}"
         fi
     fi
-
+    
     # Remove old rotated logs, keep only most recent 10
     ls -t "${base_log}".* 2>/dev/null | tail -n +$((max_logs + 1)) | xargs -r rm -f
 }
@@ -29,9 +33,7 @@ rotate_logs() {
 rotate_logs "${LOG_FILE}"
 
 # Setup unbuffered logging (survives crashes)
-exec > >(tee -a "${LOG_FILE}") 2>&1
-
-# Trap handler to ensure logs are flushed on exit/error
+exec > >(tee -a "${LOG_FILE}") 2>&1# Trap handler to ensure logs are flushed on exit/error
 cleanup() {
     echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
     sync  # Flush filesystem buffers
