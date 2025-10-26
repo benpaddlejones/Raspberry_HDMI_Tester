@@ -6,6 +6,28 @@
 
 LOG_FILE="/tmp/pixel-test.log"
 
+# Log rotation: Keep only 10 most recent logs
+rotate_logs() {
+    local base_log="$1"
+    local max_logs=10
+    
+    # If current log exists and is larger than 5MB, rotate it
+    if [ -f "${base_log}" ]; then
+        local size
+        size=$(stat -f%z "${base_log}" 2>/dev/null || stat -c%s "${base_log}" 2>/dev/null || echo 0)
+        if [ "${size}" -gt 5242880 ]; then  # 5MB
+            local timestamp
+            timestamp=$(date '+%Y%m%d_%H%M%S')
+            mv "${base_log}" "${base_log}.${timestamp}"
+        fi
+    fi
+    
+    # Remove old rotated logs, keep only most recent 10
+    ls -t "${base_log}".* 2>/dev/null | tail -n +$((max_logs + 1)) | xargs -r rm -f
+}
+
+rotate_logs "${LOG_FILE}"
+
 # Setup unbuffered logging (survives crashes)
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
@@ -190,18 +212,18 @@ echo ""
         VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
     fi
 
-    echo "=== Starting VLC (Verbose Mode) ==="
+    echo "=== Starting VLC (Reduced Verbosity) ==="
     echo "Video Output: ${VOUT_METHOD}"
-    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -v ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
-    # Run VLC - fullscreen, stretched, looped
+    # Run VLC with reduced verbosity (use -v instead of -vv to reduce log size)
     # Use AUDIODEV environment variable to set ALSA device
     export AUDIODEV="${HDMI_DEVICE}"
     exec cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
         ${VOUT_FLAGS} --aout=alsa \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
+        --no-audio-time-stretch --audio-replay-gain-mode=none -v \
         "${VIDEO_FILE}" 2>&1
