@@ -207,18 +207,18 @@ echo ""
         VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
     fi
 
-    echo "=== Starting VLC (Reduced Verbosity) ==="
+    echo "=== Starting VLC (Verbose Mode) ==="
     echo "Video Output: ${VOUT_METHOD}"
-    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -v ${VIDEO_FILE}"
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
-    # Run VLC with reduced verbosity (use -v instead of -vv to reduce log size by ~50%)
+    # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Use AUDIODEV environment variable to set ALSA device
     export AUDIODEV="${HDMI_DEVICE}"
     exec cvlc --loop --no-video-title-show --no-osd \
         ${VOUT_FLAGS} --aout=alsa \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -v \
+        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1

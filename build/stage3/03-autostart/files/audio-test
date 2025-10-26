@@ -160,16 +160,16 @@ echo ""
     echo "Detected HDMI audio device: ${HDMI_DEVICE}"
     echo ""
 
-    echo "=== Starting VLC Audio Loop (Reduced Verbosity) ==="
-    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --no-video --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -v ${STEREO_FILE} ${SURROUND_FILE}"
+    echo "=== Starting VLC Audio Loop (Verbose Mode) ==="
+    echo "Command: AUDIODEV=${HDMI_DEVICE} cvlc --loop --no-video --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${STEREO_FILE} ${SURROUND_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
 
-    # Run VLC with reduced verbosity (use -v instead of -vv to reduce log size)
+    # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Use AUDIODEV environment variable to set ALSA device
     export AUDIODEV="${HDMI_DEVICE}"
     exec cvlc --loop --no-video --aout=alsa \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -v \
+        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1
