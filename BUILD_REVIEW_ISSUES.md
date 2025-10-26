@@ -49,11 +49,20 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Status**: ❓ PENDING VALIDATION
 
 ### 18. tune2fs deferred to first boot - will it actually run?
+
 - **Location**: `build/stage3/04-boot-config/00-run-chroot.sh` creates `tune-filesystem.service`
-- **Issue**: Service runs once on first boot to optimize filesystem
+- **Issue**: Service runs once on first boot to optimize filesystem (check frequency: 100 mounts, time interval: 6 months)
 - **Question**: Has this been tested? Does the service actually trigger?
-- **Impact**: If it fails silently, filesystem optimizations never applied
-- **Status**: ❓ PENDING VALIDATION
+- **Analysis**:
+  - ✅ Service is properly enabled via symlink in `/etc/systemd/system/multi-user.target.wants/`
+  - ✅ Uses `ConditionPathExists=!/var/lib/tune-filesystem-done` to run only once
+  - ✅ Service dependencies look correct: `After=local-fs.target, Before=multi-user.target`
+  - ❓ **POTENTIAL ISSUE**: Uses `DefaultDependencies=no` but doesn't wait for root remount read-write
+  - ❓ **POTENTIAL ISSUE**: May run while root filesystem is still read-only, causing tune2fs to fail
+  - ⚠️ **RECOMMENDATION**: Add `After=systemd-remount-fs.service` to ensure root is writable
+- **Impact**: If service fails silently due to read-only filesystem, optimizations never applied
+- **Status**: ⚠️ **NEEDS FIX** - Service timing may cause silent failure
+- **Validation**: Next diagnostic report will show service status, journal logs, and completion marker
 
 ### 19. Multiple logging locations
 - **Issue**: Scripts log to different locations:

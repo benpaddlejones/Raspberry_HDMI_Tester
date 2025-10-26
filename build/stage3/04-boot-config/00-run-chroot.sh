@@ -93,7 +93,7 @@ cat > /etc/systemd/system/tune-filesystem.service << 'EOF'
 [Unit]
 Description=Optimize filesystem check frequency (one-time)
 DefaultDependencies=no
-After=local-fs.target
+After=systemd-remount-fs.service local-fs.target
 Before=multi-user.target
 ConditionPathExists=!/var/lib/tune-filesystem-done
 
