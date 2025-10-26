@@ -17,6 +17,17 @@ if [ "${ENABLE_SSH}" == "1" ]; then
 else
 	systemctl disable ssh
 fi
+
+# Disable cloud-init services (not needed for dedicated HDMI tester)
+# This saves ~15 seconds of boot time
+systemctl disable cloud-init.service || true
+systemctl disable cloud-init-local.service || true
+systemctl disable cloud-config.service || true
+systemctl disable cloud-final.service || true
+systemctl mask cloud-init.service || true
+systemctl mask cloud-init-local.service || true
+systemctl mask cloud-config.service || true
+systemctl mask cloud-final.service || true
 EOF
 
 if [ "${USE_QEMU}" = "1" ]; then
