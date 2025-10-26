@@ -1,9 +1,10 @@
 [Unit]
 Description=Fix cmdline.txt after first boot resize
 Documentation=https://github.com/benpaddlejones/Raspberry_HDMI_Tester
-# Run VERY EARLY - before any services that need correct boot params
+# Run VERY EARLY - but AFTER boot partition is mounted
 DefaultDependencies=no
-After=systemd-remount-fs.service local-fs.target
+After=systemd-remount-fs.service local-fs.target boot-firmware.mount
+Requires=boot-firmware.mount
 Before=sysinit.target basic.target
 # Only run once
 ConditionPathExists=!/var/lib/hdmi-tester/cmdline-fixed
