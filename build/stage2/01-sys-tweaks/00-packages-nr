@@ -25,22 +25,15 @@ python3-libgpiod
 python3-spidev
 python3-smbus2
 
-# Additional utilities that add bloat
+# Additional utilities that add bloat (but keep debugging/USB tools)
 strace
 ncdu
 ed
-bash-completion
 v4l-utils
-htop
 man-db
-rsync
-unzip
-zip
-p7zip-full
 ntfs-3g
 pciutils
 udisks2
-usbutils
 usb-modeswitch
 libmtp-runtime
 apt-listchanges
@@ -49,3 +42,10 @@ ethtool
 rpi-update
 lua5.1
 luajit
+
+# Keep these for debugging and USB diagnostics export:
+# - bash-completion (useful for SSH debugging sessions)
+# - htop (system monitoring during troubleshooting)
+# - rsync (file transfer/backup)
+# - unzip/zip/p7zip-full (diagnostic archive extraction/creation)
+# - usbutils (lsusb for USB diagnostics)
