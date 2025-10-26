@@ -17,12 +17,7 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Note**: These ARE used by `image-test` script but that service is disabled by default
 - **Status**: ❓ PENDING VALIDATION
 
-### 11. Two video formats supported but build only validates one
-- **Location**: Scripts auto-detect Pi model to choose WebM (Pi 4+) vs MP4 (Pi 3)
-- **Issue**: WebM validated during build, MP4 assumed to work
-- **Impact**: Pi 3 users might get untested MP4 files
-- **Evidence**: `scripts/build-image.sh` doesn't validate MP4 codec compatibility
-- **Status**: ❓ PENDING VALIDATION
+### 10. Test images (PNG files) deployed but only image.png is actively used
 
 ### 12. Memory limit syntax deprecation warning
 - **Location**: All service files use `MemoryLimit=512M`
@@ -114,11 +109,11 @@ This document contains all potential issues, oddities, duplicates, and unused co
 
 | Category | Count | Pending |
 |----------|-------|---------|
-| LOW (informational) | 6 | 6 |
+| LOW (informational) | 5 | 5 |
 | UNCLEAR (needs clarification) | 5 | 5 |
 | OPTIMIZATIONS (optional) | 3 | 3 |
 
-**TOTAL ISSUES REMAINING: 14**
+**TOTAL ISSUES REMAINING: 13**
 **ALL PENDING VALIDATION** (low priority optimizations and clarifications)
 
 ---
