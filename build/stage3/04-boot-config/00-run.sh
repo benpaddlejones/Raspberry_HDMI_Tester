@@ -71,8 +71,25 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 
-# Conservative overclock for faster boot and better performance
+# Model-specific conservative overclock for faster boot and better performance
+# Pi 5 (BCM2712): Default 2400MHz, overclock to 2600MHz
+# Pi 4 (BCM2711): Default 1500MHz, overclock to 1800MHz  
+# Pi 3 (BCM2837): Default 1200MHz, keep at 1200MHz (stable)
+# Pi 2/Zero 2 (BCM2836/2837): Default 900MHz, overclock to 1000MHz
+
+[pi5]
+arm_freq=2600
+
+[pi4]
+arm_freq=1800
+
+[pi3]
+arm_freq=1200
+
+[pi2]
 arm_freq=1000
+
+[all]
 
 # Audio configuration for both outputs (dtparam=audio=on already set in base image)
 dtparam=audio_pwm_mode=2

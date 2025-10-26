@@ -42,12 +42,6 @@ This document contains all potential issues, oddities, duplicates, and unused co
 
 ## 🤔 UNCLEAR / NEEDS CLARIFICATION
 
-### 16. What is the purpose of arm_freq=1000 in config.txt?
-- **Location**: `build/stage3/04-boot-config/00-run.sh` appends `arm_freq=1000`
-- **Issue**: Called "conservative overclock" but 1000MHz is actually **UNDERCLOCK** for Pi 4 (default 1500MHz)
-- **Question**: Is this intentional for stability or an error?
-- **Status**: ❓ PENDING VALIDATION
-
 ### 17. Why are services disabled by default?
 - **Location**: `build/stage3/03-autostart/00-run.sh` line 128
 - **Issue**: Comment says "intentionally NOT enabled for manual testing phase"
@@ -103,10 +97,10 @@ This document contains all potential issues, oddities, duplicates, and unused co
 | Category | Count | Pending |
 |----------|-------|---------|
 | LOW (informational) | 5 | 5 |
-| UNCLEAR (needs clarification) | 4 | 4 |
+| UNCLEAR (needs clarification) | 3 | 3 |
 | OPTIMIZATIONS (optional) | 3 | 3 |
 
-**TOTAL ISSUES REMAINING: 12**
+**TOTAL ISSUES REMAINING: 11**
 **ALL PENDING VALIDATION** (low priority optimizations and clarifications)
 
 ---
