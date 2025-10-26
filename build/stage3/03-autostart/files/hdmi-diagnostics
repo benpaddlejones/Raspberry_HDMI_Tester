@@ -697,10 +697,12 @@ diagnostic-report.txt    - Complete system information report
 README.txt              - This file
 
 test-logs/              - Logs from test script executions
-  hdmi-test.log
-  pixel-test.log
-  audio-test.log
-  full-test.log
+  hdmi-test.log         - HDMI video loop test
+  pixel-test.log        - Pixel-perfect color test
+  audio-test.log        - Audio-only test
+  full-test.log         - Combined video test
+  image-test.log        - Image rotation test
+  test-notvideo.log     - Static image + audio test
 
 system-logs/            - System log files
   syslog
