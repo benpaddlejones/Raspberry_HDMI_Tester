@@ -4,7 +4,11 @@
 #!/bin/bash
 # Full Test: Combined image-test + color-test videos
 
-LOG_FILE="/tmp/full-test.log"
+LOG_DIR="/logs"
+LOG_FILE="${LOG_DIR}/full-test.log"
+
+# Ensure log directory exists
+mkdir -p "${LOG_DIR}"
 
 # Setup unbuffered logging (survives crashes)
 exec > >(tee -a "${LOG_FILE}") 2>&1

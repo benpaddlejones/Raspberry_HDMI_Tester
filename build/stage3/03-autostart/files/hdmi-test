@@ -1,7 +1,11 @@
 #!/bin/bash
 # Test Script 1 (VLC): Loop image test with optimized resolution (no OSD)
 
-LOG_FILE="/tmp/hdmi-test.log"
+LOG_DIR="/logs"
+LOG_FILE="${LOG_DIR}/hdmi-test.log"
+
+# Ensure log directory exists
+mkdir -p "${LOG_DIR}"
 
 # Log rotation: Keep only 10 most recent logs
 rotate_logs() {
