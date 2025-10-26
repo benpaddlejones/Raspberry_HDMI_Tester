@@ -35,7 +35,7 @@ echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
 # Core packages that must be installed
-REQUIRED_PACKAGES="alsa-utils ffmpeg libx264-164"
+REQUIRED_PACKAGES="alsa-utils ffmpeg libx264-164 pulseaudio pulseaudio-utils"
 
 for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
