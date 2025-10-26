@@ -4,36 +4,43 @@ This guide explains how to access logs and diagnostic information from the Raspb
 
 ## Quick Access Summary
 
-All logs are stored in `/tmp/` on the Raspberry Pi:
+All logs are stored in `/logs/` on the Raspberry Pi:
 
 | Log File | Description | Quick View |
 |----------|-------------|------------|
-| `/tmp/hdmi-test.log` | HDMI test (image loop) | `less /tmp/hdmi-test.log` |
-| `/tmp/pixel-test.log` | Pixel test (color fullscreen) | `less /tmp/pixel-test.log` |
-| `/tmp/audio-test.log` | Audio test (MP3 loop) | `less /tmp/audio-test.log` |
-| `/tmp/full-test.log` | Full test (both videos) | `less /tmp/full-test.log` |
+| `/logs/hdmi-test.log` | HDMI test (image loop) | `less /logs/hdmi-test.log` |
+| `/logs/pixel-test.log` | Pixel test (color fullscreen) | `less /logs/pixel-test.log` |
+| `/logs/audio-test.log` | Audio test (FLAC loop) | `less /logs/audio-test.log` |
+| `/logs/full-test.log` | Full test (both videos) | `less /logs/full-test.log` |
 | `/tmp/hdmi-diagnostics-*.tar.gz` | Complete diagnostic bundle | See below |
 
 ---
 
 ## Test Script Logs
 
-Each test script automatically logs everything to `/tmp/` with comprehensive details.
+Each test script automatically logs everything to `/logs/` with comprehensive details.
 
 ### Viewing Test Logs
 
 ```bash
 # View the most recent test log
-less /tmp/test-*.log
+less /logs/*.log
 
-# View specific test log
-less /tmp/test-image-loop.log
+## Log Content Examples
 
-# View live updates (follow mode)
-tail -f /tmp/test-image-loop.log
+### Sample HDMI Test Log
+
+```
+cat /logs/hdmi-test.log
+```
+
+1. **View complete log**:
+   ```bash
+   cat /logs/hdmi-test.log
+   ```
 
 # Search for errors in logs
-grep -i error /tmp/test-*.log
+grep -i error /logs/*.log
 ```
 
 ### What's in Test Logs
@@ -132,19 +139,21 @@ If you need to retrieve logs from the Raspberry Pi to another computer:
 ### Method 1: USB Drive
 
 ```bash
-# 1. Insert USB drive into Raspberry Pi
-# 2. Mount the drive
-sudo mount /dev/sda1 /mnt
+### 3. Copy to USB Drive (if mounted)
 
-# 3. Copy logs
+```bash
+# Mount USB drive (if not auto-mounted)
+sudo mkdir -p /mnt/usb
+sudo mount /dev/sda1 /mnt/usb
+
+# Copy logs
 sudo cp /tmp/hdmi-diagnostics-*.tar.gz /mnt/
-# Or copy individual logs
-sudo cp /tmp/test-*.log /mnt/
+# OR copy individual logs
+sudo cp /logs/*.log /mnt/
 
-# 4. Unmount
-sudo umount /mnt
-
-# 5. Remove USB drive and access on another computer
+# Unmount
+sudo umount /mnt/usb
+```
 ```
 
 ### Method 2: Network Transfer (SSH/SCP)
@@ -156,7 +165,7 @@ If SSH is enabled and the Pi is on the network:
 scp pi@raspberrypi.local:/tmp/hdmi-diagnostics-*.tar.gz ./
 
 # Or copy individual logs
-scp pi@raspberrypi.local:/tmp/test-*.log ./
+scp pi@raspberrypi.local:/logs/*.log ./
 
 # Default password is 'raspberry' (change this!)
 ```
@@ -167,7 +176,7 @@ If you have a serial console connected:
 
 ```bash
 # View logs directly on serial console
-cat /tmp/test-image-loop.log
+cat /logs/hdmi-test.log
 
 # Or use the diagnostic command
 hdmi-diagnostics
@@ -215,10 +224,10 @@ Monitor logs as they're being written:
 
 ```bash
 # Follow test log in real-time
-tail -f /tmp/test-image-loop.log
+tail -f /logs/hdmi-test.log
 
 # Follow multiple logs
-tail -f /tmp/test-*.log
+tail -f /logs/*.log
 
 # Follow system journal
 sudo journalctl -f
@@ -238,13 +247,13 @@ sudo dmesg -w
 
 ```bash
 # Search all test logs for errors
-grep -i error /tmp/test-*.log
+grep -i error /logs/*.log
 
 # Search with context (5 lines before/after)
-grep -i -C 5 error /tmp/test-image-loop.log
+grep -i -C 5 error /logs/hdmi-test.log
 
 # Search for specific keywords
-grep -E "error|fail|warning" /tmp/test-*.log
+grep -E "error|fail|warning" /logs/*.log
 
 # Search systemd journal for errors
 sudo journalctl -p err -b 0
@@ -273,45 +282,56 @@ sudo dmesg | grep -i usb
 
 ```bash
 # Filter VLC output from log
-grep "^\[" /tmp/test-image-loop.log
+grep "^\[" /logs/hdmi-test.log
 
 # Check for codec errors
-grep -i codec /tmp/test-*.log
+grep -i codec /logs/*.log
 
 # Check for audio device issues
-grep -i "audio" /tmp/test-*.log
+grep -i "audio" /logs/*.log
 
 # Check for display/DRM issues
-grep -i -E "drm|display|hdmi" /tmp/test-*.log
+grep -i -E "drm|display|hdmi" /logs/*.log
 ```
 
 ---
 
 ## Log Rotation and Cleanup
 
-Test logs are written to `/tmp/`, which is cleared on reboot.
+Test logs are written to `/logs/`, which persist across reboots and are managed by automatic rotation.
+
+### Automatic Log Rotation
+
+Logs automatically rotate to prevent disk exhaustion:
+- **Rotation Trigger**: When log file exceeds 5MB
+- **Retention**: Keep 10 most recent rotated logs
+- **Naming Format**: `YYYYMMDD_HHMMSS.log` (e.g., `20250119_143052.log`)
+- **Automatic Cleanup**: Logs beyond 10-count limit are deleted automatically
 
 ### Manual Cleanup
 
 ```bash
-# Remove all test logs
-rm /tmp/test-*.log
+# Remove all test logs (current + rotated)
+rm /logs/*.log
 
 # Remove old diagnostic bundles
 rm /tmp/hdmi-diagnostics-*.tar.gz
 
 # Keep only the latest diagnostic bundle
-ls -t /tmp/hdmi-diagnostics-*.tar.gz | tail -n +2 | xargs rm
+ls -t /tmp/hdmi-diagnostics-*.tar.gz | tail -n +2 | xargs rm -f
 ```
 
-### Automatic Cleanup
+### Preserving Important Logs
 
-Logs in `/tmp/` are automatically cleared on reboot. To preserve important logs:
+To preserve specific logs for analysis:
 
 ```bash
-# Copy to persistent storage before reboot
-cp /tmp/test-*.log /home/pi/
+# Copy to home directory for permanent storage
+cp /logs/*.log /home/pi/
 cp /tmp/hdmi-diagnostics-*.tar.gz /home/pi/
+
+# Download via SCP from another computer
+scp pi@raspberrypi.local:/logs/*.log ./
 ```
 
 ---
@@ -337,7 +357,10 @@ cp /tmp/hdmi-diagnostics-*.tar.gz /home/pi/
 
 4. **View display-related errors:**
    ```bash
-   grep -i -E "hdmi|display|drm" /tmp/test-*.log
+   1. **Check if HDMI is detected**:
+   ```bash
+   grep -i -E "hdmi|display|drm" /logs/*.log
+   ```
    sudo dmesg | grep -i hdmi
    ```
 
@@ -355,7 +378,7 @@ cp /tmp/hdmi-diagnostics-*.tar.gz /home/pi/
 
 3. **View audio errors:**
    ```bash
-   grep -i audio /tmp/test-*.log
+   grep -i audio /logs/*.log
    ```
 
 ### Service Not Starting
@@ -414,7 +437,7 @@ When reporting issues or requesting help, please include:
 2. **Test logs:**
    ```bash
    # Copy the specific test log that failed
-   cat /tmp/test-image-loop.log
+   cat /logs/hdmi-test.log
    ```
 
 3. **System information:**
@@ -450,7 +473,7 @@ When reporting issues or requesting help, please include:
 
 ```bash
 # View test log
-less /tmp/test-image-loop.log
+less /logs/hdmi-test.log
 
 # Create diagnostic bundle
 hdmi-diagnostics
@@ -462,7 +485,7 @@ sudo systemctl status hd-audio-test.service
 sudo journalctl -u hd-audio-test.service -f
 
 # Search for errors
-grep -i error /tmp/test-*.log
+grep -i error /logs/*.log
 
 # Check HDMI status
 tvservice -s

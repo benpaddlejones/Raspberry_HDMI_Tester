@@ -1,9 +1,9 @@
 # Raspberry Pi HDMI Tester - Build Review Issues
 
-**Total Issues**: 8 remaining (9→8)  
-**High Priority**: 0  
-**Medium Priority**: 0  
-**Low Priority / Questions**: 8  
+**Total Issues**: 8 remaining (9→8)
+**High Priority**: 0
+**Medium Priority**: 0
+**Low Priority / Questions**: 8
 
 **Last Updated**: October 26, 2025
 
