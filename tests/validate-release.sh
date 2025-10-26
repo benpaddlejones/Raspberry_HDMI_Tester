@@ -387,7 +387,66 @@ validate_service "audio-test.service" "Audio Test Service" "multi-user.target"
 validate_service "full-test.service" "Full Test Service" "multi-user.target"
 
 echo ""
-echo "📦 Required Packages:" | tee -a "${REPORT_FILE}"
+echo "� Test Script Contents (VLC Fixes):" | tee -a "${REPORT_FILE}"
+
+SCRIPT_CONTENT_CHECKS=(
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--alsa-audio-device=|ALSA audio device flag"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--alsa-audio-device=|ALSA audio device flag"
+    "/opt/hdmi-tester/image-test|Image Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/full-test|Full Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|--alsa-audio-device=|ALSA audio device flag"
+)
+
+for check_entry in "${SCRIPT_CONTENT_CHECKS[@]}"; do
+    IFS='|' read -r script_path script_name pattern description <<< "${check_entry}"
+    full_path="${ROOT_MOUNT}${script_path}"
+
+    if [ ! -f "${full_path}" ]; then
+        echo "⚠️  ${script_name}: File not found, skipping content check" | tee -a "${REPORT_FILE}"
+        continue
+    fi
+
+    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+        echo "✅ ${script_name}: ${description} configured" | tee -a "${REPORT_FILE}"
+    else
+        echo "❌ ${script_name}: Missing ${description} (expected '${pattern}')" | tee -a "${REPORT_FILE}"
+        ((VALIDATION_ERRORS++))
+    fi
+done
+
+echo ""
+echo "🔍 Checking for Deprecated Flags:" | tee -a "${REPORT_FILE}"
+
+BAD_FLAG_CHECKS=(
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|export AUDIODEV=|AUDIODEV env var"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|export AUDIODEV=|AUDIODEV env var"
+    "/opt/hdmi-tester/image-test|Image Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/full-test|Full Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|export AUDIODEV=|AUDIODEV env var"
+)
+
+for check_entry in "${BAD_FLAG_CHECKS[@]}"; do
+    IFS='|' read -r script_path script_name pattern description <<< "${check_entry}"
+    full_path="${ROOT_MOUNT}${script_path}"
+
+    if [ ! -f "${full_path}" ]; then
+        continue  # Already reported above
+    fi
+
+    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+        echo "❌ ${script_name}: Still contains ${description} - NOT FIXED!" | tee -a "${REPORT_FILE}"
+        ((VALIDATION_ERRORS++))
+    else
+        echo "✅ ${script_name}: No deprecated ${description}" | tee -a "${REPORT_FILE}"
+    fi
+done
+
+echo ""
+echo "�📦 Required Packages:" | tee -a "${REPORT_FILE}"
 
 check_package() {
     local package="$1"

@@ -297,6 +297,72 @@ done
 
 echo ""
 
+# Check test script contents for correct VLC flags
+echo "🔍 Checking test script contents (VLC fixes)..."
+echo ""
+
+SCRIPT_CONTENT_CHECKS=(
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--alsa-audio-device=|ALSA audio device flag"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--alsa-audio-device=|ALSA audio device flag"
+    "/opt/hdmi-tester/image-test|Image Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/full-test|Full Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|--alsa-audio-device=|ALSA audio device flag"
+)
+
+for check_entry in "${SCRIPT_CONTENT_CHECKS[@]}"; do
+    IFS='|' read -r script_path script_name pattern description <<< "${check_entry}"
+    full_path="${MOUNT_POINT}${script_path}"
+
+    if [ ! -f "${full_path}" ]; then
+        echo "  ⚠️  ${script_name}: File not found, skipping content check"
+        continue
+    fi
+
+    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+        echo "  ✅ ${script_name}: ${description} configured correctly"
+    else
+        echo "  ❌ ${script_name}: Missing ${description} (expected '${pattern}')"
+        VALIDATION_ERRORS+=("${script_name}: Missing ${description}")
+        ALL_OK=false
+    fi
+done
+
+# Check that OLD broken flags are NOT present
+echo ""
+echo "🔍 Checking for deprecated/broken flags..."
+echo ""
+
+BAD_FLAG_CHECKS=(
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
+    "/opt/hdmi-tester/image-test|Image Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/full-test|Full Test Script|--vout=fbdev|fbdev (deprecated)"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
+)
+
+for check_entry in "${BAD_FLAG_CHECKS[@]}"; do
+    IFS='|' read -r script_path script_name pattern description <<< "${check_entry}"
+    full_path="${MOUNT_POINT}${script_path}"
+
+    if [ ! -f "${full_path}" ]; then
+        continue  # Already reported as missing above
+    fi
+
+    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+        echo "  ❌ ${script_name}: Still contains ${description} - NOT FIXED!"
+        VALIDATION_ERRORS+=("${script_name}: Contains deprecated ${description}")
+        ALL_OK=false
+    else
+        echo "  ✅ ${script_name}: No deprecated ${description}"
+    fi
+done
+
+echo ""
+
 # Check for required packages
 echo "🔍 Checking for required packages..."
 echo ""
