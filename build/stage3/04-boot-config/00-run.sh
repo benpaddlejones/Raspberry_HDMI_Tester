@@ -72,10 +72,10 @@ disable_splash=1
 boot_delay=0
 
 # Model-specific conservative overclock for faster boot and better performance
-# Pi 5 (BCM2712): Default 2400MHz, overclock to 2600MHz
-# Pi 4 (BCM2711): Default 1500MHz, overclock to 1800MHz  
-# Pi 3 (BCM2837): Default 1200MHz, keep at 1200MHz (stable)
-# Pi 2/Zero 2 (BCM2836/2837): Default 900MHz, overclock to 1000MHz
+# Pi 5 (BCM2712): Default 2400MHz, overclock to 2600MHz (+8%)
+# Pi 4 (BCM2711): Default 1500MHz, overclock to 1800MHz (+20%)
+# Pi 3 (BCM2837): Default 1200MHz, overclock to 1350MHz (+12.5%, safe and tested)
+# Pi 2/Zero 2 (BCM2836/2837): Default 900MHz, overclock to 1000MHz (+11%)
 
 [pi5]
 arm_freq=2600
@@ -84,7 +84,7 @@ arm_freq=2600
 arm_freq=1800
 
 [pi3]
-arm_freq=1200
+arm_freq=1350
 
 [pi2]
 arm_freq=1000
