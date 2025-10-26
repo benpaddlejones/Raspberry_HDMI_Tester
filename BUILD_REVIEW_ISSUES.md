@@ -19,13 +19,6 @@ This document contains all potential issues, oddities, duplicates, and unused co
 
 ### 10. Test images (PNG files) deployed but only image.png is actively used
 
-### 12. Memory limit syntax deprecation warning
-- **Location**: All service files use `MemoryLimit=512M`
-- **Issue**: `MemoryLimit=` is deprecated in favor of `MemoryMax=`
-- **Impact**: Works but generates systemd warnings in logs
-- **Fix**: Replace `MemoryLimit=` with `MemoryMax=` in all .service files
-- **Status**: ❓ PENDING VALIDATION
-
 ### 13. GitHub Actions workflow duplicates image search logic
 - **Location**: `.github/workflows/build-release.yml`
 - **Issue**: Lines 649-668 (validation) and lines 760+ (QEMU test) have nearly identical image file search code
@@ -110,10 +103,10 @@ This document contains all potential issues, oddities, duplicates, and unused co
 | Category | Count | Pending |
 |----------|-------|---------|
 | LOW (informational) | 5 | 5 |
-| UNCLEAR (needs clarification) | 5 | 5 |
+| UNCLEAR (needs clarification) | 4 | 4 |
 | OPTIMIZATIONS (optional) | 3 | 3 |
 
-**TOTAL ISSUES REMAINING: 13**
+**TOTAL ISSUES REMAINING: 12**
 **ALL PENDING VALIDATION** (low priority optimizations and clarifications)
 
 ---
