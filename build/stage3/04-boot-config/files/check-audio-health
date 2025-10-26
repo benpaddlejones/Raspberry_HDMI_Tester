@@ -1,0 +1,64 @@
+#!/bin/bash
+# Audio Health Check - Detect common audio driver issues
+# This script runs on boot to log audio subsystem status
+
+LOG_FILE="/var/log/audio-health.log"
+
+{
+    echo "=========================================="
+    echo "Audio Health Check - $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "=========================================="
+    echo ""
+
+    # Check for PulseAudio (should NOT be running)
+    echo "=== PulseAudio Check ==="
+    if pgrep -x pulseaudio >/dev/null; then
+        echo "❌ WARNING: PulseAudio is running (should be disabled)"
+        echo "   Process: $(pgrep -a pulseaudio)"
+    else
+        echo "✅ PulseAudio is not running (correct)"
+    fi
+    echo ""
+
+    # Check ALSA devices
+    echo "=== ALSA Devices ==="
+    aplay -l 2>&1
+    echo ""
+
+    # Check for kernel audio errors
+    echo "=== Recent Audio Errors (dmesg) ==="
+    dmesg | grep -iE "(bcm2835|vchi|audio|timeout)" | tail -20
+    echo ""
+
+    # Check bcm2835 audio module status
+    echo "=== Audio Modules ==="
+    lsmod | grep -E "snd|bcm2835"
+    echo ""
+
+    # Check throttling/undervoltage
+    echo "=== Throttling Status ==="
+    vcgencmd get_throttled
+    echo ""
+
+    # Check system uptime and load
+    echo "=== System Status ==="
+    echo "Uptime: $(uptime -p)"
+    echo "Load: $(cat /proc/loadavg)"
+    echo "Temp: $(vcgencmd measure_temp)"
+    echo ""
+
+    echo "=========================================="
+    echo ""
+} >> "${LOG_FILE}"
+
+# Rotate log if too large (keep last 100KB)
+if [ -f "${LOG_FILE}" ]; then
+    SIZE=$(stat -c%s "${LOG_FILE}" 2>/dev/null || echo 0)
+    if [ "${SIZE}" -gt 102400 ]; then
+        tail -c 51200 "${LOG_FILE}" > "${LOG_FILE}.tmp"
+        mv "${LOG_FILE}.tmp" "${LOG_FILE}"
+    fi
+fi
+
+# Exit successfully
+exit 0

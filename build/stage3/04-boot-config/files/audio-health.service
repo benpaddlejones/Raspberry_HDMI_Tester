@@ -1,0 +1,14 @@
+[Unit]
+Description=Audio Health Check (Diagnostic)
+After=sound.target systemd-user-sessions.service
+ConditionPathExists=/opt/hdmi-tester/check-audio-health
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hdmi-tester/check-audio-health
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

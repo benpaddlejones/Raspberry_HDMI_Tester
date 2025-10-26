@@ -200,3 +200,22 @@ install -v -m 644 "${SCRIPT_DIR}/files/fix-cmdline.service" "${ROOTFS_DIR}/etc/s
 
 echo "✅ fix-cmdline cleanup service installed"
 
+# Install audio health check diagnostic tool
+echo "Installing audio health check diagnostic..."
+
+install -v -m 755 "${SCRIPT_DIR}/files/check-audio-health" "${ROOTFS_DIR}/opt/hdmi-tester/check-audio-health" || {
+    echo "❌ Error: Failed to install check-audio-health script"
+    exit 1
+}
+
+install -v -m 644 "${SCRIPT_DIR}/files/audio-health.service" "${ROOTFS_DIR}/etc/systemd/system/audio-health.service" || {
+    echo "❌ Error: Failed to install audio-health.service"
+    exit 1
+}
+
+# Enable audio health check service
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants"
+ln -sf /etc/systemd/system/audio-health.service "${ROOTFS_DIR}/etc/systemd/system/multi-user.target.wants/audio-health.service"
+
+echo "✅ Audio health check diagnostic installed"
+

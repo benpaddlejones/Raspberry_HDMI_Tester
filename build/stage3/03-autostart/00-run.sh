@@ -140,6 +140,10 @@ cat > "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << 
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
+# Prevent restart loop - keep session alive
+Type=idle
+TTYVHangup=no
+TTYReset=no
 AUTOLOGIN_EOF
 
 # Verify autologin was configured

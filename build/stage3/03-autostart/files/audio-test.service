@@ -1,7 +1,12 @@
 [Unit]
 Description=HDMI Audio Test - Stereo and 5.1 Surround FLAC Loop
-After=local-fs.target sound.target
+After=local-fs.target sound.target systemd-user-sessions.service
 Wants=sound.target
+
+# CRITICAL: Wait for ALSA/bcm2835 driver initialization to complete
+# The bcm2835 audio driver needs time to communicate with VideoCore firmware
+# Starting too early causes VCHI timeouts and kernel crashes
+Requires=systemd-user-sessions.service
 
 [Service]
 Type=simple
@@ -11,6 +16,8 @@ SupplementaryGroups=audio video render
 # Pre-flight checks
 ExecStartPre=/bin/bash -c 'echo "=== Audio Test Service Starting ===" && \
     echo "Timestamp: $(date)" && \
+    echo "Waiting 3 seconds for ALSA driver initialization..." && \
+    sleep 3 && \
     echo "Checking test audio files..." && \
     if [ ! -f /opt/hdmi-tester/stereo.flac ]; then \
         echo "ERROR: Stereo FLAC not found at /opt/hdmi-tester/stereo.flac" && \
