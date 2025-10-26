@@ -373,6 +373,11 @@ validate_file "${ROOT_MOUNT}/opt/hdmi-tester/hdmi-diagnostics" "HDMI diagnostics
 validate_file "${ROOT_MOUNT}/opt/hdmi-tester/detect-hdmi-audio" "Detect HDMI audio script"
 
 echo ""
+echo "🔊 ALSA Audio Configuration:" | tee -a "${REPORT_FILE}"
+validate_file "${ROOT_MOUNT}/etc/asound.conf" "ALSA system configuration"
+validate_file "${ROOT_MOUNT}/var/lib/alsa/asound.state" "ALSA state file"
+
+echo ""
 echo "⚙️  Systemd Services:" | tee -a "${REPORT_FILE}"
 validate_service "hdmi-test.service" "HDMI Test Service" "multi-user.target"
 validate_service "pixel-test.service" "Pixel Test Service" "multi-user.target"

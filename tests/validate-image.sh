@@ -155,6 +155,8 @@ FILES_TO_CHECK=(
     "/opt/hdmi-tester/full-test|Full Test Script"
     "/opt/hdmi-tester/hdmi-diagnostics|HDMI Diagnostics Script"
     "/opt/hdmi-tester/detect-hdmi-audio|Detect HDMI Audio Script"
+    "/etc/asound.conf|ALSA System Configuration"
+    "/var/lib/alsa/asound.state|ALSA State File"
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
     "/etc/systemd/system/image-test.service|Image Rotation Test Service"
