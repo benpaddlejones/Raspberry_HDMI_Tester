@@ -10,7 +10,7 @@
 set -e
 
 LOG_FILE="/var/log/fix-cmdline.log"
-MARKER_FILE="/var/lib/cmdline-fixed"
+MARKER_FILE="/var/lib/hdmi-tester/cmdline-fixed"
 
 # Log with timestamp
 log() {
@@ -224,6 +224,7 @@ log "✅ File written and verified successfully"
 log ""
 
 # STEP 7: Create marker to prevent re-running
+mkdir -p "$(dirname "${MARKER_FILE}")"
 touch "${MARKER_FILE}"
 log "📌 Created marker file: ${MARKER_FILE}"
 log ""
@@ -242,8 +243,14 @@ log ""
 log "📋 Backup saved to: ${BACKUP_FILE}"
 log "📋 Full log saved to: ${LOG_FILE}"
 log ""
-log "⚠️  REBOOT REQUIRED"
-log "   cmdline.txt changes take effect at next boot"
+log "🔄 REBOOT WILL OCCUR AUTOMATICALLY"
+log "   cmdline.txt changes require reboot to take effect"
+log "   systemd will trigger reboot after this service completes"
 log ""
+log "   System will reboot in a few seconds..."
+log ""
+
+# Flush logs before reboot
+sync
 
 exit 0
