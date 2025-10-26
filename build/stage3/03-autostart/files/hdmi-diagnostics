@@ -173,16 +173,29 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     echo "=== HDMI Status ==="
-    tvservice -s 2>&1 || echo "tvservice not available"
-    tvservice -n 2>&1 || echo "Display name not available"
+    if command -v tvservice &> /dev/null; then
+        tvservice -s 2>&1 || echo "tvservice command failed"
+        tvservice -n 2>&1 || echo "Display name not available"
+    else
+        echo "tvservice not available (modern Pi OS uses DRM instead)"
+        echo "Check DRM devices below for display status"
+    fi
     echo ""
 
     echo "=== Available HDMI Modes (CEA) ==="
-    tvservice -m CEA 2>&1 || echo "CEA modes not available"
+    if command -v tvservice &> /dev/null; then
+        tvservice -m CEA 2>&1 || echo "CEA modes not available"
+    else
+        echo "tvservice not available (modern Pi OS uses DRM instead)"
+    fi
     echo ""
 
     echo "=== Available HDMI Modes (DMT) ==="
-    tvservice -m DMT 2>&1 || echo "DMT modes not available"
+    if command -v tvservice &> /dev/null; then
+        tvservice -m DMT 2>&1 || echo "DMT modes not available"
+    else
+        echo "tvservice not available (modern Pi OS uses DRM instead)"
+    fi
     echo ""
 
     echo "=== DRM Devices ==="
@@ -249,15 +262,28 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     echo "=== PulseAudio Status ==="
-    pactl info 2>&1 || echo "PulseAudio not available"
+    if command -v pactl &> /dev/null; then
+        pactl info 2>&1 || echo "PulseAudio not running"
+    else
+        echo "PulseAudio not installed (ALSA-only audio configuration)"
+        echo "This is expected - VLC uses ALSA directly for lower latency"
+    fi
     echo ""
 
     echo "=== PulseAudio Sinks ==="
-    pactl list sinks 2>&1 || echo "No sinks available"
+    if command -v pactl &> /dev/null; then
+        pactl list sinks 2>&1 || echo "No sinks available"
+    else
+        echo "PulseAudio not installed (using ALSA directly)"
+    fi
     echo ""
 
     echo "=== PulseAudio Sources ==="
-    pactl list sources 2>&1 || echo "No sources available"
+    if command -v pactl &> /dev/null; then
+        pactl list sources 2>&1 || echo "No sources available"
+    else
+        echo "PulseAudio not installed (using ALSA directly)"
+    fi
     echo ""
 
     echo "=== Audio Mixer Settings ==="
@@ -316,7 +342,17 @@ echo ""
     echo ""
 
     echo "=== VLC Version ==="
-    cvlc --version 2>&1 || echo "VLC not installed"
+    if command -v cvlc &> /dev/null; then
+        # Don't run VLC as root to avoid misleading warning
+        if [ "$EUID" -eq 0 ]; then
+            echo "VLC installed (version check skipped - running as root)"
+            dpkg -l | grep -E "^ii.*vlc" | head -5 || echo "VLC packages not found in dpkg"
+        else
+            cvlc --version 2>&1 | head -10 || echo "VLC version check failed"
+        fi
+    else
+        echo "VLC not installed"
+    fi
     echo ""
 
     echo "=== FFmpeg Version ==="

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Fix cmdline.txt - ROBUST cleanup of duplicates and conflicts
 # This runs ONCE after first boot to clean up firmware/resize modifications
-# 
-# PROBLEM: Raspberry Pi OS firmware and resize scripts modify cmdline.txt AFTER our 
+#
+# PROBLEM: Raspberry Pi OS firmware and resize scripts modify cmdline.txt AFTER our
 # image builds, adding duplicates, conflicts, and unwanted parameters
 #
 # SOLUTION: Complete rebuild of cmdline.txt with ONLY required parameters
