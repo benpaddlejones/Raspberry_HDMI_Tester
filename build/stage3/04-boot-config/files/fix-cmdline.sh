@@ -1,11 +1,18 @@
 #!/bin/bash
 # Fix cmdline.txt - ROBUST cleanup of duplicates and conflicts
-# This runs ONCE after first boot to clean up firmware/resize modifications
+# This runs ONCE after first boot - AFTER all system first-boot scripts complete
 #
-# PROBLEM: Raspberry Pi OS firmware and resize scripts modify cmdline.txt AFTER our
-# image builds, adding duplicates, conflicts, and unwanted parameters
+# DEBIAN-COMPLIANT APPROACH:
+# - Runs AFTER multi-user.target (when all first-boot scripts are done)
+# - Lets userconf-pi, resize, and other system scripts complete first
+# - Cleans up any duplicates/conflicts they created
+# - Makes file immutable (chattr +i) to prevent future corruption
 #
-# SOLUTION: Complete rebuild of cmdline.txt with ONLY required parameters
+# PROBLEM: Raspberry Pi OS firmware and first-boot scripts modify cmdline.txt,
+# adding duplicates, conflicts, and unwanted parameters
+#
+# SOLUTION: Complete rebuild of cmdline.txt with ONLY required parameters,
+# then make it immutable
 
 set -e
 
@@ -246,9 +253,13 @@ log ""
 log "📋 Backup saved to: ${BACKUP_FILE}"
 log "📋 Full log saved to: ${LOG_FILE}"
 log ""
-log "🔄 REBOOT WILL OCCUR AUTOMATICALLY"
+log "� File will be made IMMUTABLE (chattr +i) by systemd service"
+log "   This prevents future corruption from firmware or scripts"
+log "   To modify in future: chattr -i ${CMDLINE_FILE}, edit, then chattr +i"
+log ""
+log "�🔄 REBOOT WILL OCCUR AUTOMATICALLY"
 log "   cmdline.txt changes require reboot to take effect"
-log "   systemd will trigger reboot after this service completes"
+log "   systemd will trigger reboot after making file immutable"
 log ""
 log "   System will reboot in a few seconds..."
 log ""

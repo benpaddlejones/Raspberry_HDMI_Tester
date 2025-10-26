@@ -60,11 +60,8 @@ detect_vout_method() {
 VOUT_METHOD=$(detect_vout_method)
 
 # Set video output flags based on method
-if [ "${VOUT_METHOD}" = "drm" ]; then
-    VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
-else
-    VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
-fi
+# NOTE: Modern Raspbian (Bookworm+) uses DRM/KMS for all models, fbdev is deprecated
+VOUT_FLAGS="--vout=drm"
 
 # Define image sequence
 IMAGES=(
