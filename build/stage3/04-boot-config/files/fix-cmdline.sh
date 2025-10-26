@@ -29,11 +29,17 @@ if [ -f "${MARKER_FILE}" ]; then
 
     if [ -n "${CMDLINE_FILE}" ]; then
         CURRENT=$(cat "${CMDLINE_FILE}")
-        # Check for conflicts
+        LINE_COUNT=$(wc -l < "${CMDLINE_FILE}")
+        
+        # Check for conflicts or multi-line corruption
         if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_hdmi=0" || \
            echo "${CURRENT}" | grep -q "cgroup_disable=memory" || \
-           [ "$(echo "${CURRENT}" | grep -o "snd_bcm2835.enable_hdmi" | wc -l)" -gt 1 ]; then
-            log "⚠️  WARNING: Marker exists but cmdline still has conflicts - re-running"
+           echo "${CURRENT}" | grep -q "8250.nr_uarts=0" || \
+           [ "$(echo "${CURRENT}" | grep -o "snd_bcm2835.enable_hdmi" | wc -l)" -gt 1 ] || \
+           [ "${LINE_COUNT}" -gt 1 ]; then
+            log "⚠️  WARNING: Marker exists but cmdline has issues (conflicts or multi-line) - re-running"
+            log "   Line count: ${LINE_COUNT} (should be 1)"
+            log "   First 200 chars: $(echo "${CURRENT}" | head -c 200)"
             rm -f "${MARKER_FILE}"
         else
             log "cmdline.txt already fixed and verified clean, skipping"
