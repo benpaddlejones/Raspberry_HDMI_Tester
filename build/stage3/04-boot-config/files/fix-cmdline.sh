@@ -29,7 +29,7 @@ if [ -f "${MARKER_FILE}" ]; then
 
     if [ -n "${CMDLINE_FILE}" ]; then
         CURRENT=$(cat "${CMDLINE_FILE}")
-        LINE_COUNT=$(wc -l < "${CMDLINE_FILE}")
+        LINE_COUNT=$(grep -c "." "${CMDLINE_FILE}" || echo "0")
         
         # Check for conflicts or multi-line corruption
         if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_hdmi=0" || \
@@ -80,7 +80,8 @@ log "   ${CURRENT}"
 log ""
 
 # Count lines (should be 1, but firmware sometimes creates 2+)
-LINE_COUNT=$(wc -l < "${CMDLINE_FILE}")
+# Need to count actual lines, not just newline chars
+LINE_COUNT=$(grep -c "." "${CMDLINE_FILE}" || echo "0")
 log "📊 Line count: ${LINE_COUNT}"
 if [ "${LINE_COUNT}" -gt 1 ]; then
     log "⚠️  WARNING: cmdline.txt has multiple lines (corrupt!)"
@@ -95,7 +96,8 @@ log ""
 # We'll rebuild the entire line from scratch to ensure no conflicts
 
 # Extract root partition (CRITICAL - don't lose this!)
-ROOT_PARAM=$(echo "${FLATTENED}" | grep -oP 'root=\S+' | head -1)
+# Use POSIX-compliant grep -oE instead of -oP for compatibility
+ROOT_PARAM=$(echo "${FLATTENED}" | grep -oE 'root=[^ ]+' | head -1)
 if [ -z "${ROOT_PARAM}" ]; then
     log "❌ CRITICAL ERROR: Could not find root= parameter!"
     log "   This would make the system unbootable. Aborting!"
@@ -104,19 +106,20 @@ fi
 log "✅ Root partition: ${ROOT_PARAM}"
 
 # Extract PARTUUID if present (fallback to root=)
-PARTUUID=$(echo "${ROOT_PARAM}" | grep -oP 'PARTUUID=\S+' || echo "")
+PARTUUID=$(echo "${ROOT_PARAM}" | grep -oE 'PARTUUID=[^ ]+' || echo "")
 if [ -n "${PARTUUID}" ]; then
     log "✅ Using PARTUUID: ${PARTUUID}"
 fi
 
 # Extract rootfstype
-ROOTFSTYPE=$(echo "${FLATTENED}" | grep -oP 'rootfstype=\S+' | head -1)
+ROOTFSTYPE=$(echo "${FLATTENED}" | grep -oE 'rootfstype=[^ ]+' | head -1)
 ROOTFSTYPE=${ROOTFSTYPE:-rootfstype=ext4}  # Default to ext4 if not found
 log "✅ Filesystem: ${ROOTFSTYPE}"
 
 # Extract console settings (we want serial console for debugging)
-CONSOLE_SERIAL=$(echo "${FLATTENED}" | grep -oP 'console=serial[^ ]*' | head -1)
-CONSOLE_TTY=$(echo "${FLATTENED}" | grep -oP 'console=tty[^ ]*' | head -1)
+# Match console=serial0,115200 or console=ttyS0,115200 etc.
+CONSOLE_SERIAL=$(echo "${FLATTENED}" | grep -oE 'console=(serial|ttyS)[0-9]+,[0-9]+' | head -1)
+CONSOLE_TTY=$(echo "${FLATTENED}" | grep -oE 'console=tty[0-9]+' | head -1)
 CONSOLE_SERIAL=${CONSOLE_SERIAL:-console=serial0,115200}  # Default
 CONSOLE_TTY=${CONSOLE_TTY:-console=tty1}  # Default
 log "✅ Console: ${CONSOLE_SERIAL} ${CONSOLE_TTY}"
