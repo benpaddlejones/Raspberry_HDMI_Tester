@@ -30,7 +30,7 @@ if [ -f "${MARKER_FILE}" ]; then
     if [ -n "${CMDLINE_FILE}" ]; then
         CURRENT=$(cat "${CMDLINE_FILE}")
         LINE_COUNT=$(grep -c "." "${CMDLINE_FILE}" || echo "0")
-        
+
         # Check for conflicts or multi-line corruption
         if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_hdmi=0" || \
            echo "${CURRENT}" | grep -q "cgroup_disable=memory" || \
