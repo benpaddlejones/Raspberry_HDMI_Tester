@@ -615,9 +615,9 @@ echo "✓ System information captured"
 # ============================================
 echo "Collecting log files..."
 
-# Test script logs
+# Test script logs (stored in /logs/)
 mkdir -p "${DIAG_DIR}/test-logs"
-cp /tmp/test-*.log "${DIAG_DIR}/test-logs/" 2>/dev/null && echo "✓ Test logs copied" || echo "  No test logs found"
+cp /logs/*.log "${DIAG_DIR}/test-logs/" 2>/dev/null && echo "✓ Test logs copied" || echo "  No test logs found"
 
 # System logs
 mkdir -p "${DIAG_DIR}/system-logs"
