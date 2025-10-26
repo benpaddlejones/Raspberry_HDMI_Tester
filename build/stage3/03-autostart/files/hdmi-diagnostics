@@ -556,6 +556,56 @@ echo ""
     journalctl -u fix-cmdline.service --no-pager 2>&1 || echo "No journal entries"
     echo ""
 
+    # ============================================
+    # TUNE-FILESYSTEM SERVICE STATUS
+    # ============================================
+    echo "==========================================="
+    echo "TUNE-FILESYSTEM SERVICE DIAGNOSTICS"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Service Status ==="
+    systemctl status tune-filesystem.service --no-pager 2>&1 || echo "tune-filesystem.service not found"
+    echo ""
+
+    echo "=== Service File ==="
+    if [ -f /etc/systemd/system/tune-filesystem.service ]; then
+        echo "Service file exists:"
+        cat /etc/systemd/system/tune-filesystem.service 2>&1
+    else
+        echo "❌ Service file NOT FOUND at /etc/systemd/system/tune-filesystem.service"
+    fi
+    echo ""
+
+    echo "=== Completion Marker ==="
+    if [ -f /var/lib/tune-filesystem-done ]; then
+        echo "✅ Marker exists - tune-filesystem has completed"
+        ls -lh /var/lib/tune-filesystem-done 2>&1
+    else
+        echo "❌ Marker NOT FOUND - tune-filesystem has not run or failed"
+    fi
+    echo ""
+
+    echo "=== Systemd Enable Status ==="
+    systemctl is-enabled tune-filesystem.service 2>&1 || echo "Service not enabled"
+    echo ""
+
+    echo "=== Journal Entries ==="
+    journalctl -u tune-filesystem.service --no-pager 2>&1 || echo "No journal entries"
+    echo ""
+
+    echo "=== Current Filesystem Tune Settings ==="
+    ROOT_DEV=$(findmnt -n -o SOURCE / 2>/dev/null)
+    if [ -n "$ROOT_DEV" ]; then
+        echo "Root device: $ROOT_DEV"
+        echo ""
+        echo "Current tune2fs settings:"
+        tune2fs -l "$ROOT_DEV" 2>&1 | grep -E "Maximum mount count|Check interval" || echo "Unable to read tune2fs settings"
+    else
+        echo "❌ Unable to determine root device"
+    fi
+    echo ""
+
 } > "${REPORT_FILE}" 2>&1
 
 echo "✓ System information captured"
