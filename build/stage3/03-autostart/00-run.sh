@@ -27,6 +27,11 @@ done
 
 echo "  ✓ All ${#SCRIPTS[@]} scripts validated"
 
+# Create log directory for runtime test logs
+echo "Creating /logs directory for runtime test logs..."
+mkdir -p "${ROOTFS_DIR}/logs"
+chmod 777 "${ROOTFS_DIR}/logs"  # Allow all users to write logs
+
 # Install test scripts to /opt/hdmi-tester (canonical location)
 # Create symlinks in /usr/local/bin for PATH convenience
 echo "Installing test scripts to /opt/hdmi-tester..."

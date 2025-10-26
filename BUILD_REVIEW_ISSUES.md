@@ -1,14 +1,11 @@
-# Build Process Review - Potential Issues
+# Raspberry Pi HDMI Tester - Build Review Issues
 
-**Review Date**: October 25, 2025
-**Reviewer**: AI Analysis
-**Status**: Pending Validation
+**Total Issues**: 8 remaining (9→8)  
+**High Priority**: 0  
+**Medium Priority**: 0  
+**Low Priority / Questions**: 8  
 
-This document contains all potential issues, oddities, duplicates, and unused components identified during a comprehensive review of the build process.
-
----
-
-##  LOW PRIORITY / INFORMATIONAL
+**Last Updated**: October 26, 2025
 
 ### 10. Test images (PNG files) deployed but only image.png is actively used
 - **Location**: `build/stage3/01-test-image/files/` contains: black.png, blue.png, green.png, red.png, white.png, image.png
@@ -65,12 +62,30 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Validation**: Next diagnostic report will show service status, journal logs, and completion marker
 
 ### 19. Multiple logging locations
-- **Issue**: Scripts log to different locations:
-  - Build: `build/pi-gen-work/build-detailed.log`
+
+- **Location**: Scripts logged to different locations
+- **Issue**: Inconsistent logging paths made troubleshooting difficult
+- **Previous State**:
+  - Build logs: `build/pi-gen-work/build-detailed.log`
   - Runtime tests: `/tmp/hdmi-test.log`, `/tmp/pixel-test.log`, etc.
   - Archived: `logs/build-TIMESTAMP.log`
-- **Question**: Is this intentional organization or historical artifact?
-- **Status**: ❓ PENDING VALIDATION
+- **Resolution**:
+  - ✅ **STANDARDIZED**: All runtime test logs now in `/logs/`
+  - ✅ **PERSISTENT**: Logs survive reboots (unlike `/tmp`)
+  - ✅ **ORGANIZED**: Single location for all runtime logs
+  - **Updated Scripts**:
+    - `hdmi-test`: `/tmp/hdmi-test.log` → `/logs/hdmi-test.log`
+    - `pixel-test`: `/tmp/pixel-test.log` → `/logs/pixel-test.log`
+    - `audio-test`: `/tmp/audio-test.log` → `/logs/audio-test.log`
+    - `full-test`: `/tmp/full-test.log` → `/logs/full-test.log`
+    - `test-notvideo`: `/tmp/test-notvideo.log` → `/logs/test-notvideo.log`
+    - `image-test`: `/tmp/image-test.log` → `/logs/image-test.log`
+- **Benefits**:
+  - Logs persist across reboots
+  - Single location for all runtime diagnostics
+  - Log rotation prevents disk space issues
+  - Easier to collect diagnostics via SSH or USB
+- **Status**: ✅ **RESOLVED** - All runtime logs consolidated to `/logs/`
 
 
 ### 20. Stage2 packages removal list may be overly aggressive
