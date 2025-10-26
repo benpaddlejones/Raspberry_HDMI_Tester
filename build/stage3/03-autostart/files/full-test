@@ -125,6 +125,16 @@ echo ""
     # Loop counter
     LOOP_COUNT=0
 
+    # Build VLC command arguments for Pi 3 compatibility
+    # Pi 3 needs simpler flags - avoid DRM modeset issues
+    if [ "${VIDEO_FORMAT}" = "mp4" ]; then
+        # Pi 3: Use simple framebuffer with hardware H.264 decoder
+        VIDEO_FLAGS="--codec h264_mmal --vout=fb --fbdev=/dev/fb0"
+    else
+        # Pi 4+: Use DRM
+        VIDEO_FLAGS="${VOUT_FLAGS}"
+    fi
+
     # Loop forever with Raspberry Pi optimized flags using VLC
     while true; do
         LOOP_COUNT=$((LOOP_COUNT + 1))
@@ -141,21 +151,26 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: image-test.${VIDEO_FORMAT} (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        export AUDIODEV="${HDMI_DEVICE}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${IMAGE_VIDEO}"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            ${VOUT_FLAGS} --aout=alsa \
-            --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
+            ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+            --no-audio-time-stretch --audio-replay-gain-mode=none -vvv \
             "${IMAGE_VIDEO}" 2>&1
+        VLC_EXIT=$?
+        echo "Exit code: ${VLC_EXIT}"
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""
 
         echo "[${LOOP_COUNT}] Playing: color-test.${VIDEO_FORMAT} (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${COLOR_VIDEO}"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            ${VOUT_FLAGS} --aout=alsa \
-            --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
+            ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+            --no-audio-time-stretch --audio-replay-gain-mode=none -vvv \
             "${COLOR_VIDEO}" 2>&1
+        VLC_EXIT=$?
+        echo "Exit code: ${VLC_EXIT}"
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
         echo ""
 

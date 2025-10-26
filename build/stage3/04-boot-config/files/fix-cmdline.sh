@@ -17,10 +17,32 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "${LOG_FILE}"
 }
 
-# Check if already run
+# Check if already run - but verify cmdline is actually clean
 if [ -f "${MARKER_FILE}" ]; then
-    log "cmdline.txt already fixed (marker exists), skipping"
-    exit 0
+    # Check if cmdline has conflicts despite marker existing
+    CMDLINE_FILE=""
+    if [ -f "/boot/firmware/cmdline.txt" ]; then
+        CMDLINE_FILE="/boot/firmware/cmdline.txt"
+    elif [ -f "/boot/cmdline.txt" ]; then
+        CMDLINE_FILE="/boot/cmdline.txt"
+    fi
+
+    if [ -n "${CMDLINE_FILE}" ]; then
+        CURRENT=$(cat "${CMDLINE_FILE}")
+        # Check for conflicts
+        if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_hdmi=0" || \
+           echo "${CURRENT}" | grep -q "cgroup_disable=memory" || \
+           [ "$(echo "${CURRENT}" | grep -o "snd_bcm2835.enable_hdmi" | wc -l)" -gt 1 ]; then
+            log "⚠️  WARNING: Marker exists but cmdline still has conflicts - re-running"
+            rm -f "${MARKER_FILE}"
+        else
+            log "cmdline.txt already fixed and verified clean, skipping"
+            exit 0
+        fi
+    else
+        log "cmdline.txt already fixed (marker exists), skipping"
+        exit 0
+    fi
 fi
 
 log "=========================================="
