@@ -500,6 +500,62 @@ echo ""
     groups 2>&1
     echo ""
 
+    # ============================================
+    # FIX-CMDLINE SERVICE STATUS
+    # ============================================
+    echo "==========================================="
+    echo "FIX-CMDLINE SERVICE DIAGNOSTICS"
+    echo "==========================================="
+    echo ""
+
+    echo "=== Service Status ==="
+    systemctl status fix-cmdline.service --no-pager 2>&1 || echo "fix-cmdline.service not found"
+    echo ""
+
+    echo "=== Service File ==="
+    if [ -f /etc/systemd/system/fix-cmdline.service ]; then
+        echo "Service file exists:"
+        cat /etc/systemd/system/fix-cmdline.service 2>&1
+    else
+        echo "❌ Service file NOT FOUND at /etc/systemd/system/fix-cmdline.service"
+    fi
+    echo ""
+
+    echo "=== Fix Script ==="
+    if [ -f /usr/local/sbin/fix-cmdline.sh ]; then
+        echo "Fix script exists at /usr/local/sbin/fix-cmdline.sh"
+        ls -lh /usr/local/sbin/fix-cmdline.sh 2>&1
+    else
+        echo "❌ Fix script NOT FOUND at /usr/local/sbin/fix-cmdline.sh"
+    fi
+    echo ""
+
+    echo "=== Service Log ==="
+    if [ -f /var/log/fix-cmdline.log ]; then
+        echo "Log file exists:"
+        cat /var/log/fix-cmdline.log 2>&1
+    else
+        echo "No log file at /var/log/fix-cmdline.log (service may not have run yet)"
+    fi
+    echo ""
+
+    echo "=== Completion Marker ==="
+    if [ -f /var/lib/hdmi-tester/cmdline-fixed ]; then
+        echo "✅ Marker exists - fix-cmdline has completed"
+        ls -lh /var/lib/hdmi-tester/cmdline-fixed 2>&1
+    else
+        echo "❌ Marker NOT FOUND - fix-cmdline has not run or failed"
+    fi
+    echo ""
+
+    echo "=== Systemd Enable Status ==="
+    systemctl is-enabled fix-cmdline.service 2>&1 || echo "Service not enabled"
+    echo ""
+
+    echo "=== Journal Entries ==="
+    journalctl -u fix-cmdline.service --no-pager 2>&1 || echo "No journal entries"
+    echo ""
+
 } > "${REPORT_FILE}" 2>&1
 
 echo "✓ System information captured"
