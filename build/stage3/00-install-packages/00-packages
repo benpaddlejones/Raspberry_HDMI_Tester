@@ -30,8 +30,14 @@ libflac12
 # Pi 4+ use WebM/VP9, but Pi 3 and earlier need MP4/H.264 for hardware acceleration
 libx264-164
 
-# Audio system (ALSA for direct hardware access)
+# Audio system
+# ALSA for direct hardware access
 alsa-utils
+
+# PulseAudio (REQUIRED for VLC audio output)
+# VLC refuses to run without PulseAudio or requires complex ALSA configuration
+pulseaudio
+pulseaudio-utils
 
 # Conservative removals (codecs not needed for our specific test files):
 # - libwebm1 (WebM container - ffmpeg/libavformat-extra handles this)
