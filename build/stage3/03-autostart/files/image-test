@@ -3,6 +3,29 @@
 # Displays each image for 10 seconds in fullscreen
 
 LOG_FILE="/tmp/image-test.log"
+
+# Log rotation: Keep only 10 most recent logs
+rotate_logs() {
+    local base_log="$1"
+    local max_logs=10
+    
+    # If current log exists and is larger than 5MB, rotate it
+    if [ -f "${base_log}" ]; then
+        local size
+        size=$(stat -f%z "${base_log}" 2>/dev/null || stat -c%s "${base_log}" 2>/dev/null || echo 0)
+        if [ "${size}" -gt 5242880 ]; then  # 5MB
+            local timestamp
+            timestamp=$(date '+%Y%m%d_%H%M%S')
+            mv "${base_log}" "${base_log}.${timestamp}"
+        fi
+    fi
+    
+    # Remove old rotated logs, keep only most recent 10
+    ls -t "${base_log}".* 2>/dev/null | tail -n +$((max_logs + 1)) | xargs -r rm -f
+}
+
+rotate_logs "${LOG_FILE}"
+
 IMAGE_DIR="/opt/hdmi-tester"
 DISPLAY_TIME=10  # seconds per image
 
