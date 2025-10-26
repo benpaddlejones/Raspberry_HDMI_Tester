@@ -1,61 +1,55 @@
 #!/bin/bash
 # Detect HDMI audio device dynamically
 # Returns the correct ALSA device string for HDMI audio output
+#
+# NOTE: As of v1.0.0, /etc/asound.conf provides intelligent HDMI routing
+# This script is kept for explicit device selection and logging purposes
 
 # Function to find HDMI audio device
 find_hdmi_audio() {
-    # Try multiple methods to find HDMI audio device
+    # STRATEGY: Try multiple detection methods in order of reliability
+    # This handles all Pi models: Pi 3 (bcm2835), Pi 4/5 (vc4-hdmi)
 
-    # Method 1: Look for vc4hdmi or hdmi in card name
-    local hdmi_card=$(aplay -l 2>/dev/null | grep -iE "(vc4-hdmi|hdmi)" | head -1 | grep -oP "card \K[0-9]+")
+    # Method 1: Parse aplay -l for HDMI/vc4 cards (most reliable, works across all models)
+    local hdmi_card
+    hdmi_card=$(aplay -l 2>/dev/null | grep -iE "(vc4-hdmi|hdmi)" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${hdmi_card}" ]; then
+        # Found HDMI card via aplay listing
         echo "hw:${hdmi_card},0"
+        logger -t hdmi-audio-detect "Method 1: Found HDMI via aplay -l: hw:${hdmi_card},0"
         return 0
     fi
 
-    # Method 2: Check proc/asound for HDMI cards
-    for card in /proc/asound/card*; do
-        if [ -f "${card}/id" ]; then
-            card_id=$(cat "${card}/id")
+    # Method 2: Check /proc/asound/cards for HDMI identifiers
+    # This works when aplay might not show friendly names
+    local card_dir card_id card_num
+    for card_dir in /proc/asound/card[0-9]*; do
+        if [ -f "${card_dir}/id" ]; then
+            card_id=$(cat "${card_dir}/id" 2>/dev/null)
             if echo "${card_id}" | grep -iqE "(hdmi|vc4)"; then
-                card_num=$(basename "${card}" | grep -oP "\d+")
-                echo "hw:${card_num},0"
-                return 0
+                card_num=$(basename "${card_dir}" | grep -oP "[0-9]+")
+                if [ -n "${card_num}" ]; then
+                    echo "hw:${card_num},0"
+                    logger -t hdmi-audio-detect "Method 2: Found HDMI via /proc/asound: hw:${card_num},0 (${card_id})"
+                    return 0
+                fi
             fi
         fi
     done
 
-    # Method 3: Try default HDMI device names
-    for device in "hw:vc4hdmi,0" "hw:HDMI,0" "hw:b1,0" "hw:2,0" "hw:1,0"; do
-        if aplay -D "${device}" /dev/zero -f S16_LE -d 0 -q 2>/dev/null &
-        then
-            local pid=$!
-            sleep 0.1
-            kill -9 ${pid} 2>/dev/null
-            wait ${pid} 2>/dev/null
-            echo "${device}"
-            return 0
-        fi
-    done
-
-    # Fallback: use hw:0,0 (first card, first device)
-    # This is safer than "default" which might route to headphones
-    echo "hw:0,0"
-    return 1
+    # Method 3: Fallback to "default" PCM (uses /etc/asound.conf intelligent routing)
+    # This leverages Debian's standard ALSA configuration which handles multi-model support
+    echo "default"
+    logger -t hdmi-audio-detect "Method 3: Using 'default' PCM (ALSA auto-routing via /etc/asound.conf)"
+    return 0
 }
 
 # Main execution
 HDMI_DEVICE=$(find_hdmi_audio)
-EXIT_CODE=$?
 
+# Output the device for scripts to use
 echo "${HDMI_DEVICE}"
 
-# Log the detection for debugging
-if [ ${EXIT_CODE} -eq 0 ]; then
-    logger -t hdmi-audio-detect "Successfully detected HDMI audio device: ${HDMI_DEVICE}"
-else
-    logger -t hdmi-audio-detect "WARNING: Could not detect HDMI device, using fallback: ${HDMI_DEVICE}"
-fi
-
+# Always succeeds - either explicit device or "default" with ALSA config routing
 exit 0
