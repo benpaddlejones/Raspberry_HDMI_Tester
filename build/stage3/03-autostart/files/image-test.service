@@ -15,7 +15,7 @@ SyslogIdentifier=image-test
 
 # Resource limits
 CPUQuota=80%
-MemoryLimit=512M
+MemoryMax=512M
 
 # Security
 User=pi
