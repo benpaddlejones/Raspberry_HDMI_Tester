@@ -72,11 +72,29 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Question**: Is this intentional organization or historical artifact?
 - **Status**: ❓ PENDING VALIDATION
 
+
 ### 20. Stage2 packages removal list may be overly aggressive
-- **Location**: `build/stage2/01-sys-tweaks/00-packages-nr`
-- **Issue**: Removes 40+ packages including some that might be useful (htop, rsync, man-db)
-- **Question**: Has this been tested to ensure nothing breaks? Some removed packages might be dependencies
-- **Status**: ❓ PENDING VALIDATION
+
+- **Location**: `build/stage2/01-sys-tweaks/00-packages-nr` and `build/stage2/01-sys-tweaks/00-packages`
+- **Issue**: Removes 40+ packages including some that might be useful for debugging
+- **Analysis**:
+  - ✅ **VALIDATED**: Removal list reviewed for VLC/HDMI/audio dependencies
+  - ✅ **RETAINED**: Essential debugging tools moved to required packages:
+    - `bash-completion`: Tab completion for SSH sessions
+    - `htop`: Interactive process viewer (system monitoring)
+    - `rsync`: Efficient file transfer/backup
+    - `unzip/zip/p7zip-full`: Archive handling for diagnostic bundles
+    - `usbutils` (lsusb): USB device detection for auto-save diagnostics
+  - ✅ **REMOVED**: Bloat packages not needed for HDMI testing:
+    - `v4l-utils` (webcam/video capture - not used)
+    - `man-db` (manual pages - saves ~20MB)
+    - `ntfs-3g` (NTFS filesystem - not needed)
+    - `pciutils/udisks2/usb-modeswitch/libmtp-runtime` (device management - not needed)
+    - `strace/ncdu/ed` (advanced debugging - not needed)
+- **Impact**: Debugging tools support USB diagnostic export, SSH troubleshooting, and diagnostic archive creation (~5-10MB overhead acceptable)
+- **Status**: ✅ **RESOLVED** - Package list optimized, debugging tools retained
+
+
 
 ---
 
