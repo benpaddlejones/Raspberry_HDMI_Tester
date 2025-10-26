@@ -4,7 +4,8 @@
 
 IMAGE_FILE="/opt/hdmi-tester/image.png"
 AUDIO_FILE="/opt/hdmi-tester/audio.mp3"
-LOG_FILE="/tmp/test-notvideo.log"
+LOG_DIR="/logs"
+LOG_FILE="${LOG_DIR}/test-notvideo.log"
 
 #!/bin/bash
 #!/bin/bash
@@ -13,7 +14,9 @@ LOG_FILE="/tmp/test-notvideo.log"
 
 # NOTE: Override conflicts with main hdmi-test script
 # Both try to start VLC at the same time. Disabled by default.
-LOG_FILE="/tmp/test-notvideo.log"
+
+# Ensure log directory exists
+mkdir -p "${LOG_DIR}"
 
 # Log rotation: Keep only 10 most recent logs
 rotate_logs() {

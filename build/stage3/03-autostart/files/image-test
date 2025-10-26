@@ -2,7 +2,11 @@
 # Image Rotation Test: Cycle through color test images using VLC
 # Displays each image for 10 seconds in fullscreen
 
-LOG_FILE="/tmp/image-test.log"
+LOG_DIR="/logs"
+LOG_FILE="${LOG_DIR}/image-test.log"
+
+# Ensure log directory exists
+mkdir -p "${LOG_DIR}"
 
 # Log rotation: Keep only 10 most recent logs
 rotate_logs() {
