@@ -112,10 +112,28 @@ This document contains all potential issues, oddities, duplicates, and unused co
 - **Status**: ❓ PENDING VALIDATION
 
 ### 23. Validation script creates large log files
-- **Location**: Test scripts use verbose VLC output (`-vv`)
-- **Impact**: Log files can grow to 10MB+ during extended testing
-- **Suggestion**: Add log rotation or size limits
-- **Status**: ❓ PENDING VALIDATION
+
+- **Location**: All test scripts use VLC with verbose output
+- **Issue**: Log files can grow to 10MB+ during extended testing
+- **Analysis**:
+  - ✅ **IMPLEMENTED**: Automatic log rotation for all test scripts
+  - ✅ **SIZE LIMIT**: Logs auto-rotate when exceeding 5MB
+  - ✅ **RETENTION**: Keep only 10 most recent rotated logs (~50MB total max)
+  - ✅ **REDUCED VERBOSITY**: Changed VLC from `-vv` (very verbose) to `-v` (verbose)
+  - **Scripts Updated**:
+    - `hdmi-test` - Log rotation + reduced verbosity
+    - `pixel-test` - Log rotation + reduced verbosity
+    - `audio-test` - Log rotation + reduced verbosity
+    - `test-notvideo` - Log rotation + reduced verbosity
+    - `image-test` - Log rotation
+- **Rotation Logic**:
+  ```bash
+  # Triggers when log > 5MB
+  # Renames to: /tmp/hdmi-test.log.20251026_143022
+  # Removes logs beyond 10 most recent
+  ```
+- **Impact**: Prevents /tmp from filling up, maintains diagnostic history
+- **Status**: ✅ **RESOLVED** - Automatic log management implemented
 
 ---
 
