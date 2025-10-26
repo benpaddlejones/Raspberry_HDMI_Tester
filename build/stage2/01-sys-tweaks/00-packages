@@ -1,3 +1,18 @@
+# Stage2 system packages (required for basic system functionality)
+# These packages are installed in addition to the base Raspberry Pi OS Lite image
+
+# NOTE: This stage uses a BASE image approach - stage0/stage1 already have core packages
+# We only add what's absolutely necessary for HDMI testing functionality
+
+# Debugging and diagnostics tools (small overhead, critical for troubleshooting)
+bash-completion
+htop
+rsync
+unzip
+zip
+p7zip-full
+usbutils
+
 # Core system utilities (essential)
 ssh less fbset sudo psmisc
 console-setup keyboard-configuration debconf-utils parted
