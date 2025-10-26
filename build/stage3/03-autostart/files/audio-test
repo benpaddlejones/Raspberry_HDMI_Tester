@@ -9,7 +9,7 @@ LOG_FILE="/tmp/audio-test.log"
 rotate_logs() {
     local base_log="$1"
     local max_logs=10
-    
+
     # If current log exists and is larger than 5MB, rotate it
     if [ -f "${base_log}" ]; then
         local size
@@ -20,7 +20,7 @@ rotate_logs() {
             mv "${base_log}" "${base_log}.${timestamp}"
         fi
     fi
-    
+
     # Remove old rotated logs, keep only most recent 10
     ls -t "${base_log}".* 2>/dev/null | tail -n +$((max_logs + 1)) | xargs -r rm -f
 }
