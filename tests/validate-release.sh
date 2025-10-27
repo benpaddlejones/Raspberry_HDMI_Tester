@@ -408,7 +408,7 @@ for check_entry in "${SCRIPT_CONTENT_CHECKS[@]}"; do
         continue
     fi
 
-    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+    if grep -qF -- "${pattern}" "${full_path}" 2>/dev/null; then
         echo "✅ ${script_name}: ${description} configured" | tee -a "${REPORT_FILE}"
     else
         echo "❌ ${script_name}: Missing ${description} (expected '${pattern}')" | tee -a "${REPORT_FILE}"
@@ -437,7 +437,7 @@ for check_entry in "${BAD_FLAG_CHECKS[@]}"; do
         continue  # Already reported above
     fi
 
-    if grep -q "${pattern}" "${full_path}" 2>/dev/null; then
+    if grep -qF -- "${pattern}" "${full_path}" 2>/dev/null; then
         echo "❌ ${script_name}: Still contains ${description} - NOT FIXED!" | tee -a "${REPORT_FILE}"
         ((VALIDATION_ERRORS++))
     else
