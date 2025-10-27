@@ -15,34 +15,71 @@ This guide shows you how to customize the Raspberry Pi HDMI Tester in GitHub Cod
 
 ### Requirements
 - **Resolution**: 1920x1080 (Full HD) recommended
-- **Format**: PNG, JPEG, or video (WebM, MP4, FLV)
+- **Format**: PNG, JPEG, or video (see below)
 - **Size**: < 10MB recommended (images), < 50MB (videos)
 - **Color**: Any (RGB, RGBA)
 - **Location**: `assets/image.png` (or video file)
 
+### Video Format Requirements (Pi Model Specific)
+
+The system uses **different video formats based on Raspberry Pi model** for optimal hardware acceleration:
+
+**Raspberry Pi 3B and below:**
+- **Format**: MP4 container
+- **Video Codec**: H.264 (hardware accelerated)
+- **Audio Codec**: AAC
+- **Files**: `image-test.mp4`, `color-test.mp4`
+
+**Raspberry Pi 4 and above:**
+- **Format**: WebM container
+- **Video Codec**: VP9 (hardware accelerated)
+- **Audio Codec**: Opus
+- **Files**: `image-test.webm`, `color-test.webm`
+
+**IMPORTANT**: Both formats must be provided in `assets/` directory. The system auto-detects the Pi model at runtime and selects the optimal format. Do NOT convert formats - provide both pre-encoded versions.
+
 ### Supported Video Codecs
 The image includes comprehensive codec support for video files:
-- **VP9** - Modern, efficient (used in WebM files: `color-test.webm`, `image-test.webm`)
+- **VP9** - Modern, efficient with hardware support on Pi 4+ (used in WebM files)
+- **H.264** - Universal compatibility with hardware support on all Pi models (used in MP4 files)
 - **VP8** - Older WebM codec
-- **H.264** - Universal compatibility (MP4)
 - **H.265/HEVC** - High-efficiency compression
 - **AV1** - Next-generation codec
 - **Theora** - Open-source video
 - **FLV** - Flash Video format
 
 ### Using Video Instead of Static Image
-You can replace the static test pattern with a looping video:
+You can replace the static test pattern with a looping video. **You must provide BOTH formats** for compatibility with all Pi models:
 
-1. **Prepare your video** (WebM recommended):
+1. **Prepare your video in BOTH formats**:
+
    ```bash
-   # Convert to VP9/Opus WebM
-   ffmpeg -i your-video.mp4 -c:v libvpx-vp9 -b:v 2M -c:a libopus -b:a 128k assets/test-video.webm
+   # For Pi 4 and above - WebM with VP9/Opus
+   ffmpeg -i your-video.mp4 \
+     -c:v libvpx-vp9 -b:v 2M -crf 30 \
+     -c:a libopus -b:a 128k \
+     assets/custom-test.webm
+
+   # For Pi 3B and below - MP4 with H.264/AAC
+   ffmpeg -i your-video.mp4 \
+     -c:v libx264 -preset medium -crf 23 -b:v 2M \
+     -c:a aac -b:a 128k \
+     assets/custom-test.mp4
    ```
 
-2. **Update the display service** to use video:
-   Edit `build/stage3/03-autostart/files/hdmi-display.service`:
-   ```ini
-   ExecStart=/usr/bin/vlc --loop --fullscreen /opt/hdmi-tester/test-video.webm
+2. **Update the test scripts** to use your new video files:
+
+   Edit `build/stage3/03-autostart/files/hdmi-test` (around line 63):
+   ```bash
+   VIDEO_FORMAT=$(detect_video_format)
+   VIDEO_FILE="/opt/hdmi-tester/custom-test.${VIDEO_FORMAT}"  # Change filename here
+   ```
+
+3. **Add your video files to the build**:
+
+   Edit `build/stage3/01-test-image/00-run.sh` to include your files:
+   ```bash
+   TEST_VIDEOS=("custom-test.webm" "custom-test.mp4")  # Add your files
    ```
 
 3. **Rebuild the image**

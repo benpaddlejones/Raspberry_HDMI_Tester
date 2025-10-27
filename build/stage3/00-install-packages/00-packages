@@ -1,6 +1,7 @@
 # Audio/Video playback (console mode)
 vlc-bin
 vlc-plugin-base
+vlc-plugin-video-output
 
 # Video codecs and FFmpeg libraries (required for VLC video playback)
 # NOTE: libavcodec-extra includes codecs, libavformat-extra includes formats
@@ -33,6 +34,10 @@ libx264-164
 # Audio system
 # ALSA for direct hardware access (VLC uses ALSA directly via --aout=alsa)
 alsa-utils
+libasound2-plugins
+
+# Raspberry Pi specific audio/hardware configurations
+raspberrypi-sys-mods
 
 # NOTE: PulseAudio is REMOVED - it causes race conditions with bcm2835 audio driver
 # resulting in VCHI timeouts and system crashes. VLC works perfectly with ALSA-only

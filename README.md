@@ -164,23 +164,34 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 
 ### Video & Audio Codecs
 
-**WebM Test Files** (`color-test.webm`, `image-test.webm`):
-- **Video Codec**: VP9 (Google VP9) - Modern, efficient compression
-- **Audio Codec**: Opus (Opus Interactive Audio Codec) - High-quality audio
-- **Container**: WebM (Matroska-based)
+**Dual-Format System** - Auto-selects based on Pi model for hardware optimization:
 
-**Supported Formats**:
+**Raspberry Pi 3B and below** uses **MP4** files:
+- **Video Codec**: H.264 (hardware accelerated decoder)
+- **Audio Codec**: AAC
+- **Container**: MP4
+- **Files**: `image-test.mp4`, `color-test.mp4`
+
+**Raspberry Pi 4 and above** uses **WebM** files:
+- **Video Codec**: VP9 (hardware accelerated decoder)
+- **Audio Codec**: Opus
+- **Container**: WebM (Matroska-based)
+- **Files**: `image-test.webm`, `color-test.webm`
+
+The system **automatically detects** the Pi model at runtime and selects the optimal format for best performance. Both formats are included in the image.
+
+**Supported Formats** (additional codecs available):
 - ✅ WebM (VP8/VP9 video, Vorbis/Opus audio)
+- ✅ MP4 (H.264/H.265 video, AAC audio)
 - ✅ FLV (Flash Video)
-- ✅ MP4 (H.264/H.265 video)
 - ✅ Theora video
 - ✅ AV1 video (via libaom3)
 
 **Installed Codec Libraries**:
-- `libvpx9` - VP8/VP9 video codec
-- `libopus0` - Opus audio codec
-- `libvorbis0a` - Vorbis audio codec
-- `libx264-164` - H.264 video codec
+- `libvpx9` - VP8/VP9 video codec (WebM - Pi 4+)
+- `libx264-164` - H.264 video codec (MP4 - all Pi models)
+- `libopus0` - Opus audio codec (WebM)
+- `libvorbis0a` - Vorbis audio codec (WebM)
 - `libx265-199` - H.265/HEVC video codec
 - `libtheora0` - Theora video codec
 - `libaom3` - AV1 video codec
