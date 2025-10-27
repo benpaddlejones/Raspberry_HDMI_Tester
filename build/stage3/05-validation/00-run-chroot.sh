@@ -77,10 +77,11 @@ echo "=== VLC Module Validation ==="
 echo ""
 
 echo "VLC Video Output Modules:"
-# Note: Video output modules (DRM, fbdev) are included in vlc-plugin-base and vlc-plugin-video-output
-# but don't always show up in cvlc --list. We verify the packages are installed instead.
-echo "  ℹ️  Video output modules (DRM, fbdev) included in vlc-plugin-base and vlc-plugin-video-output"
-echo "  ℹ️  Module validation skipped (modules don't reliably appear in --list)"
+# Video output modules are included in vlc-plugin-base (fb, vdummy) and vlc-plugin-video-output (egl, x11, etc.)
+# Module names don't reliably appear in cvlc --list, so we validate package installation instead
+echo "  ℹ️  Video output modules included in vlc-plugin-base and vlc-plugin-video-output packages"
+echo "  ℹ️  VLC will auto-detect best available output (fb, x11, egl, etc.)"
+echo "  ℹ️  Module validation skipped - package installation confirms availability"
 echo ""
 
 echo "VLC Audio Output Modules:"

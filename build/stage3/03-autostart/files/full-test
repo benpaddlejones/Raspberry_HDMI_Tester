@@ -39,17 +39,15 @@ VIDEO_FORMAT=$(detect_video_format)
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.${VIDEO_FORMAT}"
 COLOR_VIDEO="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
 
-# Detect video output method based on Pi model
-# NOTE: Modern Raspbian (Bookworm+) uses DRM/KMS for all models, fbdev is deprecated
-VOUT_METHOD="drm"
-VOUT_FLAGS="--vout=drm"
+# Use VLC auto-detect for video output
+# VLC will automatically select the best available output
 
 # Log startup info
 echo "==========================================="
 echo "Combined Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
 echo "==========================================="
 echo "Video Format: ${VIDEO_FORMAT} (auto-detected)"
-echo "Video Output: ${VOUT_METHOD}"
+echo "Video Output: auto-detect (VLC will choose best available)"
 echo "Files:"
 echo "  - ${IMAGE_VIDEO}"
 echo "  - ${COLOR_VIDEO}"
@@ -119,15 +117,9 @@ echo ""
     # Loop counter
     LOOP_COUNT=0
 
-    # Build VLC command arguments for Pi 3 compatibility
-    # Pi 3 needs simpler flags - avoid DRM modeset issues
-    if [ "${VIDEO_FORMAT}" = "mp4" ]; then
-        # Pi 3: Use simple framebuffer with hardware H.264 decoder
-        VIDEO_FLAGS="--codec h264_mmal --vout=fb --fbdev=/dev/fb0"
-    else
-        # Pi 4+: Use DRM
-        VIDEO_FLAGS="${VOUT_FLAGS}"
-    fi
+    # VLC will auto-detect best video output
+    # No need for model-specific flags
+    VIDEO_FLAGS=""
 
     # Loop forever with Raspberry Pi optimized flags using VLC
     while true; do

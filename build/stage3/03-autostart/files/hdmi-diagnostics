@@ -355,6 +355,24 @@ echo ""
     fi
     echo ""
 
+    echo "=== VLC Available Video Outputs ==="
+    if command -v cvlc &> /dev/null && [ "$EUID" -ne 0 ]; then
+        echo "Checking available vout modules..."
+        cvlc --list 2>&1 | grep -A 100 "vout\|video output" | head -150 || echo "Could not list video outputs"
+    else
+        echo "VLC list check skipped (not available or running as root)"
+    fi
+    echo ""
+
+    echo "=== VLC Available Audio Outputs ==="
+    if command -v cvlc &> /dev/null && [ "$EUID" -ne 0 ]; then
+        echo "Checking available aout modules..."
+        cvlc --list 2>&1 | grep -A 50 "aout\|audio output" | head -100 || echo "Could not list audio outputs"
+    else
+        echo "VLC list check skipped (not available or running as root)"
+    fi
+    echo ""
+
     echo "=== FFmpeg Version ==="
     ffmpeg -version 2>&1 || echo "FFmpeg not installed"
     echo ""

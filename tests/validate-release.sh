@@ -390,12 +390,12 @@ echo ""
 echo "� Test Script Contents (VLC Fixes):" | tee -a "${REPORT_FILE}"
 
 SCRIPT_CONTENT_CHECKS=(
-    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|auto-detect|VLC auto-detect video output"
     "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--alsa-audio-device=|ALSA audio device flag"
-    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|auto-detect|VLC auto-detect video output"
     "/opt/hdmi-tester/pixel-test|Pixel Test Script|--alsa-audio-device=|ALSA audio device flag"
-    "/opt/hdmi-tester/image-test|Image Test Script|--vout=drm|DRM video output"
-    "/opt/hdmi-tester/full-test|Full Test Script|--vout=drm|DRM video output"
+    "/opt/hdmi-tester/image-test|Image Test Script|auto-detect|VLC auto-detect video output"
+    "/opt/hdmi-tester/full-test|Full Test Script|auto-detect|VLC auto-detect video output"
     "/opt/hdmi-tester/audio-test|Audio Test Script|--alsa-audio-device=|ALSA audio device flag"
 )
 

@@ -44,10 +44,9 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# NOTE: Modern Raspbian (Bookworm+) uses DRM/KMS for all Pi models
-# No need for model detection - DRM works on Pi 3, 4, 5, Zero 2W, etc.
-VOUT_METHOD="drm"
-VOUT_FLAGS="--vout=drm"
+# Use VLC auto-detect for video output
+# VLC will automatically select the best available output
+# No --vout flag needed - VLC chooses fb, drm, x11, etc. automatically
 
 # Define image sequence
 IMAGES=(
@@ -162,8 +161,9 @@ echo "User: $(whoami)"
             # Display image for specified time using VLC
             # Use timeout to kill VLC after display time
             # Capture exit code to detect failures
+            # VLC auto-detects video output (no --vout needed)
             if timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
-                --no-osd ${VOUT_FLAGS} --play-and-exit --no-audio \
+                --no-osd --play-and-exit --no-audio \
                 --image-duration=${DISPLAY_TIME} "${img}" 2>&1; then
                 echo "✓ Finished displaying ${IMAGE_NAME}"
             else

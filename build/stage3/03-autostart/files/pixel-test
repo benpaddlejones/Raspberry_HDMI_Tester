@@ -203,14 +203,12 @@ echo ""
     echo "Detected HDMI audio device: ${HDMI_DEVICE}"
     echo ""
 
-    # Detect video output method based on Pi model
-    # NOTE: Modern Raspbian (Bookworm+) uses DRM/KMS for all models, fbdev is deprecated
-    VOUT_METHOD="drm"
-    VOUT_FLAGS="--vout=drm"
+    # Use VLC auto-detect for video output
+    # VLC will automatically select the best available output
 
     echo "=== Starting VLC (Verbose Mode) ==="
-    echo "Video Output: ${VOUT_METHOD}"
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd ${VOUT_FLAGS} --aout=alsa --alsa-audio-device=${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Video Output: auto-detect (VLC will choose best available)"
+    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --aout=alsa --alsa-audio-device=${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
@@ -218,7 +216,8 @@ echo ""
 
     # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Use --alsa-audio-device to explicitly set HDMI device (AUDIODEV env var doesn't work)
+    # Let VLC auto-detect video output
     exec cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
-        ${VOUT_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+        --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
         --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
         "${VIDEO_FILE}" 2>&1
