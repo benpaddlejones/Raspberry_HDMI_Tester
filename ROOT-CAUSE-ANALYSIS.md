@@ -1,7 +1,7 @@
 # Outstanding Issues - HDMI Tester
 
-**Date**: 2025-10-27  
-**Current Build**: v0.9.7.9 (BROKEN - do not use)  
+**Date**: 2025-10-27
+**Current Build**: v0.9.7.9 (BROKEN - do not use)
 **Next Build**: v0.9.8.0 (pending rebuild)
 
 ---
