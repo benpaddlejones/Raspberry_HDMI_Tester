@@ -50,27 +50,10 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Detect Raspberry Pi model and choose appropriate video output
-detect_vout_method() {
-    local model_info
-    model_info=$(cat /proc/cpuinfo | grep "Model" | head -1)
-
-    # Extract Pi version (look for "Raspberry Pi 4" or "Raspberry Pi 5", etc.)
-    if echo "${model_info}" | grep -qE "Raspberry Pi [45678]"; then
-        echo "drm"  # Pi 4+ use DRM
-    else
-        echo "fbdev"   # Pi 3 and earlier: use framebuffer
-    fi
-}
-
-VOUT_METHOD=$(detect_vout_method)
-
-# Set video output flags based on method
-if [ "${VOUT_METHOD}" = "drm" ]; then
-    VOUT_FLAGS="--vout=drm --drm-vout-no-modeset"
-else
-    VOUT_FLAGS="--vout=fbdev --fbdev=/dev/fb0"
-fi
+# Modern Raspberry Pi OS (Bookworm+) uses DRM/KMS for all models
+# fbdev is deprecated and incompatible with vc4-kms-v3d driver
+# Use DRM video output for all Raspberry Pi models
+VOUT_FLAGS="--vout=drm"
 
 # System information
 echo "=== System Information ==="

@@ -7,11 +7,6 @@ on:
         description: 'Release version (from release-config.json or override)'
         required: false
         default: ''
-      force_rebuild:
-        description: 'Force rebuild (ignore cache)'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -154,23 +149,25 @@ jobs:
           sudo git clone https://github.com/RPi-Distro/pi-gen /opt/pi-gen
           echo "✅ pi-gen installed at /opt/pi-gen"
 
-      - name: Clean build directory
+      - name: Clean build directory and cache
         run: |
-          echo "🧹 Cleaning build directory..."
+          echo "🧹 Cleaning build directory and clearing all caches..."
 
           # Ensure directories exist before cleaning
           mkdir -p build/pi-gen-work
           mkdir -p logs/successful-builds
           mkdir -p logs/failed-builds
 
-          # Clean previous build artifacts (use sudo in case files were created with elevated permissions)
+          # ALWAYS clear ALL build artifacts and caches to prevent deploying stale scripts
+          # This ensures the latest version of all scripts (hdmi-test, etc.) are copied to the image
           if [ -d "build/pi-gen-work" ]; then
-            echo "Removing previous build artifacts..."
+            echo "Removing ALL previous build artifacts and caches..."
             sudo rm -rf build/pi-gen-work/* || {
               echo "❌ Failed to clean build directory"
               echo "Attempting to continue anyway..."
             }
-            echo "✅ Build directory cleaned"
+            echo "✅ Build directory and cache completely cleared"
+            echo "   This ensures fresh deployment of all scripts with latest changes"
           else
             echo "⚠️  Build directory did not exist, created it"
           fi
@@ -241,29 +238,6 @@ jobs:
           else
             echo "✅ Sufficient memory available"
           fi
-
-      - name: Cache pi-gen downloads
-        if: ${{ !inputs.force_rebuild }}
-        uses: actions/cache@v3
-        with:
-          path: |
-            build/pi-gen-work/work
-            build/pi-gen-work/deploy
-          key: pi-gen-cache-${{ hashFiles('build/config', 'build/stage*/**', 'assets/**', 'scripts/build-image.sh', 'scripts/configure-boot.sh') }}
-          restore-keys: |
-            pi-gen-cache-${{ hashFiles('build/config', 'build/stage*/**') }}-
-            pi-gen-cache-
-
-      - name: Cache APT packages
-        if: ${{ !inputs.force_rebuild }}
-        uses: actions/cache@v3
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists/*
-          key: apt-cache-${{ runner.os }}-${{ hashFiles('build/stage*/*/00-packages*') }}
-          restore-keys: |
-            apt-cache-${{ runner.os }}-
 
       - name: Start disk space monitoring
         run: |
