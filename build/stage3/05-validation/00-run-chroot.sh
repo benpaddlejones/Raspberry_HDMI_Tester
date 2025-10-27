@@ -14,7 +14,8 @@ validate_package() {
     local package="$1"
     local description="$2"
 
-    if dpkg -l | grep -q "^ii  ${package} "; then
+    # Check for package with or without architecture suffix (e.g., vlc-plugin-base or vlc-plugin-base:armhf)
+    if dpkg -l | grep -qE "^ii  ${package}(:[^ ]+)? "; then
         echo "  ✓ ${package} - ${description}"
         return 0
     else
