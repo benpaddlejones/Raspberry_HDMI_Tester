@@ -1,14 +1,14 @@
 # Outstanding Issues - HDMI Tester
 
 **Date**: 2025-10-27
-**Current Build**: v0.9.7.9 (BROKEN - do not use)
-**Next Build**: v0.9.8.0 (pending rebuild)
+**Current Build**: v0.9.8.0 (pending rebuild with validation fix)
+**Previous Build**: v0.9.7.9 (build 81 - validation failure)
 
 ---
 
-## Status: ✅ ALL FIXES APPLIED - REBUILD REQUIRED
+## Status: ✅ VALIDATION FIX APPLIED - REBUILD IN PROGRESS
 
-All root cause issues have been identified and fixed in the build configuration. No code changes remain - only rebuild and testing required.
+Recent fix applied to validation script to handle architecture suffixes correctly. Build #81 failed because validation script couldn't detect installed ARM packages.
 
 ---
 
@@ -54,11 +54,26 @@ timeout 10s cvlc --no-video --aout=alsa /opt/hdmi-tester/stereo.flac
 - **Problem**: VLC had no video output plugins (0 vout modules)
 - **Fix**: Added `vlc-plugin-video-output` to package list
 - **Location**: `build/stage3/00-install-packages/00-packages` line 4
+- **Status**: ✅ Applied in commit 3baa6ba
 
 ### Fixed Issue #2: ALSA Missing BCM2835 Card Definitions
 - **Problem**: ALSA couldn't resolve device names (bcm2835_hdmi not found)
 - **Fix**: Added `raspberrypi-sys-mods` and `libasound2-plugins` to package list
 - **Location**: `build/stage3/00-install-packages/00-packages` lines 37, 40
+- **Status**: ✅ Applied in commit 3baa6ba
+
+### Fixed Issue #3: Validation Script Architecture Suffix Bug (Build #81 Failure)
+- **Problem**: Validation script failed to detect installed ARM packages
+  - dpkg shows packages as `vlc-plugin-base:armhf` on ARM systems
+  - Validation grep pattern only matched `vlc-plugin-base ` (without suffix)
+  - Caused false negatives: packages installed but validation reported NOT INSTALLED
+- **Fix**: Updated `validate_package()` function to use regex matching with optional architecture suffix
+  - Pattern changed from: `^ii  ${package} `
+  - Pattern changed to: `^ii  ${package}(:[^ ]+)? `
+  - Now correctly matches both `vlc-plugin-base` and `vlc-plugin-base:armhf`
+- **Location**: `build/stage3/05-validation/00-run-chroot.sh` line 15
+- **Status**: ✅ Applied in commit 227c6f0
+- **Impact**: Build will now pass validation stage and proceed to image creation
 
 ### Not an Issue: Video Format Selection
 - **System working correctly**: Auto-detects Pi model and uses optimal format
