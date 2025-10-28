@@ -84,7 +84,6 @@ mkdir -p "${DIAG_DIR}"
     echo ""
     cat /proc/meminfo 2>&1
     echo ""
-
     # ============================================
     # RASPBERRY PI SPECIFIC
     # ============================================
@@ -249,8 +248,40 @@ mkdir -p "${DIAG_DIR}"
     echo "==========================================="
     echo ""
 
-    echo "=== ALSA Devices ==="
-    aplay -l 2>&1
+    echo "=== ALSA Version ==="
+    if command -v aplay &> /dev/null; then
+        aplay --version 2>&1 || echo "Unable to query aplay version"
+    else
+        echo "aplay not installed"
+    fi
+    echo ""
+
+    echo "=== ALSA Devices (Playback) ==="
+    if command -v aplay &> /dev/null; then
+        aplay -l 2>&1 || echo "No playback devices reported"
+    else
+        echo "aplay not installed"
+    fi
+    echo ""
+
+    echo "=== ALSA Devices (Capture) ==="
+    if command -v arecord &> /dev/null; then
+        arecord -l 2>&1 || echo "No capture devices reported"
+    else
+        echo "arecord not installed"
+    fi
+    echo ""
+
+    echo "=== ALSA Device Map (Logical) ==="
+    if command -v aplay &> /dev/null; then
+        aplay -L 2>&1 || echo "Unable to enumerate logical devices"
+    else
+        echo "aplay not installed"
+    fi
+    echo ""
+
+    echo "=== ALSA Kernel Version ==="
+    cat /proc/asound/version 2>&1 || echo "Unable to read /proc/asound/version"
     echo ""
 
     echo "=== ALSA Card Information ==="
@@ -259,6 +290,30 @@ mkdir -p "${DIAG_DIR}"
 
     echo "=== ALSA PCM Information ==="
     cat /proc/asound/pcm 2>&1 || echo "No PCM info"
+    echo ""
+
+    echo "=== ALSA Module Mapping ==="
+    cat /proc/asound/modules 2>&1 || echo "No module information"
+    echo ""
+
+    echo "=== /dev/snd Device Nodes ==="
+    if ls /dev/snd > /dev/null 2>&1; then
+        ls -lah /dev/snd 2>&1
+    else
+        echo "/dev/snd not present"
+    fi
+    echo ""
+
+    echo "=== Loaded Kernel Modules (Audio Related) ==="
+    lsmod | grep -Ei "snd|vc4|bcm2835" 2>&1 || echo "No audio modules loaded"
+    echo ""
+
+    echo "=== Detected HDMI Audio Device ==="
+    if [ -x /opt/hdmi-tester/detect-hdmi-audio ]; then
+        /opt/hdmi-tester/detect-hdmi-audio 2>&1
+    else
+        echo "detect-hdmi-audio helper not found"
+    fi
     echo ""
 
     echo "=== PulseAudio Status ==="
@@ -288,6 +343,37 @@ mkdir -p "${DIAG_DIR}"
 
     echo "=== Audio Mixer Settings ==="
     amixer 2>&1 || echo "amixer not available"
+    echo ""
+
+    echo "=== ALSA Global Configuration ==="
+    if [ -f /etc/asound.conf ]; then
+        echo "-- /etc/asound.conf --"
+        cat /etc/asound.conf 2>&1
+    else
+        echo "/etc/asound.conf not found"
+    fi
+    echo ""
+
+    echo "=== ALSA User Configuration ==="
+    if [ -f "${HOME}/.asoundrc" ]; then
+        echo "-- ${HOME}/.asoundrc --"
+        cat "${HOME}/.asoundrc" 2>&1
+    else
+        echo "${HOME}/.asoundrc not found"
+    fi
+    echo ""
+
+    echo "=== ALSA Saved State ==="
+    if [ -f /var/lib/alsa/asound.state ]; then
+        echo "-- /var/lib/alsa/asound.state (first 200 lines) --"
+        head -200 /var/lib/alsa/asound.state 2>&1
+    else
+        echo "/var/lib/alsa/asound.state not found"
+    fi
+    echo ""
+
+    echo "=== Kernel Log (Audio/HDMI Extract) ==="
+    dmesg | grep -Ei "(snd|alsa|hdmi|vc4|audio)" | tail -100 2>&1 || echo "No relevant kernel messages"
     echo ""
 
     # ============================================

@@ -31,13 +31,8 @@ ExecStartPre=/bin/bash -c 'echo "=== Audio Test Service Starting ===" && \
     echo "✓ 5.1 Surround FLAC exists ($(stat -c%%s /opt/hdmi-tester/surround51.flac) bytes)" && \
     echo "Launching audio-test..."'
 
-# Run audio-test command (loop both FLAC files) using VLC
-# Use AUDIODEV environment variable to specify ALSA device for HDMI audio
-ExecStart=/bin/bash -c 'HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio) && \
-    export AUDIODEV=${HDMI_DEVICE} && \
-    cvlc --loop --no-video --aout=alsa \
-    --quiet --no-audio-time-stretch --audio-replay-gain-mode=none \
-    /opt/hdmi-tester/stereo.flac /opt/hdmi-tester/surround51.flac'
+# Run the dedicated audio-test wrapper (handles device detection and logging)
+ExecStart=/opt/hdmi-tester/audio-test
 
 # Log exit status
 ExecStopPost=/bin/bash -c 'echo "=== Audio Test Service Stopped ===" && \

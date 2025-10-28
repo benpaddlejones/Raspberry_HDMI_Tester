@@ -15,9 +15,10 @@ find_hdmi_audio() {
     vc4_card=$(aplay -l 2>/dev/null | grep -i "vc4-hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${vc4_card}" ]; then
-        # vc4-hdmi found - this is the correct device for DRM systems
-        echo "hw:${vc4_card},0"
-        logger -t hdmi-audio-detect "Method 1a: Found vc4-hdmi (DRM): hw:${vc4_card},0"
+        # vc4-hdmi found - prefer plughw to keep format conversion in path
+        local device="plughw:${vc4_card},0"
+        echo "${device}"
+        logger -t hdmi-audio-detect "Method 1a: Found vc4-hdmi (DRM): ${device}"
         return 0
     fi
 
@@ -27,8 +28,9 @@ find_hdmi_audio() {
 
     if [ -n "${bcm_card}" ]; then
         # Found legacy bcm2835 HDMI card
-        echo "hw:${bcm_card},0"
-        logger -t hdmi-audio-detect "Method 1b: Found bcm2835 HDMI (legacy): hw:${bcm_card},0"
+        local device="plughw:${bcm_card},0"
+        echo "${device}"
+        logger -t hdmi-audio-detect "Method 1b: Found bcm2835 HDMI (legacy): ${device}"
         return 0
     fi
 
@@ -38,8 +40,9 @@ find_hdmi_audio() {
 
     if [ -n "${hdmi_card}" ]; then
         # Found HDMI card via aplay listing
-        echo "hw:${hdmi_card},0"
-        logger -t hdmi-audio-detect "Method 1c: Found generic HDMI: hw:${hdmi_card},0"
+        local device="plughw:${hdmi_card},0"
+        echo "${device}"
+        logger -t hdmi-audio-detect "Method 1c: Found generic HDMI: ${device}"
         return 0
     fi
 
@@ -52,8 +55,9 @@ find_hdmi_audio() {
             if echo "${card_id}" | grep -iqE "(hdmi|vc4)"; then
                 card_num=$(basename "${card_dir}" | grep -oP "[0-9]+")
                 if [ -n "${card_num}" ]; then
-                    echo "hw:${card_num},0"
-                    logger -t hdmi-audio-detect "Method 2: Found HDMI via /proc/asound: hw:${card_num},0 (${card_id})"
+                    local device="plughw:${card_num},0"
+                    echo "${device}"
+                    logger -t hdmi-audio-detect "Method 2: Found HDMI via /proc/asound: ${device} (${card_id})"
                     return 0
                 fi
             fi
