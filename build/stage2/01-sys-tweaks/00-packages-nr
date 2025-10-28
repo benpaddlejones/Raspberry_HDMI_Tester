@@ -1,74 +1,12 @@
-# Packages to EXCLUDE from installation (not required for HDMI tester)
-# Format: One package per line
-# These packages are normally installed in stage2 but bloat the image unnecessarily
-
-# NETWORKING (SECURITY: Completely disabled for HDMI tester)
-# Ethernet drivers and tools
-ethtool
-ifupdown
-isc-dhcp-client
-dhcpcd5
-dhcpcd
-wpasupplicant
-wireless-tools
-iw
-crda
-wireless-regdb
-firmware-atheros
-firmware-brcm80211
-firmware-libertas
-firmware-misc-nonfree
-firmware-realtek
-
-# Network management
-network-manager
-network-manager-gnome
-wpagui
-
-# Bluetooth stack (not needed - no wireless connectivity required)
-bluez
-bluez-firmware
-
-# mDNS/Zeroconf (network discovery not needed)
-avahi-daemon
-
-# Remote access service (not needed - SSH already available)
-rpi-connect-lite
-
-# Build tools (not needed on target system)
-build-essential
-manpages-dev
-gdb
-pkg-config
-
-# Python GPIO libraries (not using GPIO)
-python3-gpiozero
-python3-rpi-lgpio
-python3-libgpiod
-python3-spidev
-python3-smbus2
-
-# Additional utilities that add bloat (but keep debugging/USB tools)
-strace
-ncdu
-ed
-v4l-utils
-man-db
-ntfs-3g
-pciutils
-udisks2
-usb-modeswitch
-libmtp-runtime
-apt-listchanges
-ssh-import-id
-ethtool
-rpi-update
-lua5.1
-luajit
-
-# Keep these for debugging and USB diagnostics export:
-# - bash-completion (useful for SSH debugging sessions)
-# - htop (system monitoring during troubleshooting)
-# - rsync (file transfer/backup)
-# - unzip/zip/p7zip-full (diagnostic archive extraction/creation)
-# - usbutils (lsusb for USB diagnostics)
+# Packages to install WITHOUT recommended dependencies
+#
+# IMPORTANT: Pi-gen INSTALLS packages listed in XX-packages-nr files
+# (NOT exclude them - that was the previous misunderstanding)
+#
+# This file previously contained a list thinking it would exclude packages,
+# but pi-gen was actually trying to INSTALL them all. Build succeeded before
+# because those packages existed, but failed when 'crda' was removed from
+# Debian Bookworm (deprecated - now built into kernel).
+#
+# Keeping this file EMPTY to avoid installing unnecessary packages.
+# Essential packages are already installed in earlier stages.
