@@ -77,8 +77,9 @@ for script in "${SCRIPTS[@]}"; do
         exit 1
     fi
 
-    # Create symlink in /usr/local/bin for PATH convenience
-    ln -sf "/opt/hdmi-tester/${script}" "${ROOTFS_DIR}/usr/local/bin/${script}"
+    # Create relative symlink in /usr/local/bin for PATH convenience
+    # Use relative path so symlink works when filesystem is mounted elsewhere
+    ln -sf "../../opt/hdmi-tester/${script}" "${ROOTFS_DIR}/usr/local/bin/${script}"
 
     # Verify symlink was created
     if [ ! -L "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
