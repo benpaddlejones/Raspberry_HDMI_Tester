@@ -151,7 +151,6 @@ FILES_TO_CHECK=(
     "/opt/hdmi-tester/hdmi-test|HDMI Test Script"
     "/opt/hdmi-tester/pixel-test|Pixel Test Script"
     "/opt/hdmi-tester/image-test|Image Rotation Test Script"
-    "/opt/hdmi-tester/test-notvideo|Static Image + Audio Test Script"
     "/opt/hdmi-tester/full-test|Full Test Script"
     "/opt/hdmi-tester/hdmi-diagnostics|HDMI Diagnostics Script"
     "/opt/hdmi-tester/detect-hdmi-audio|Detect HDMI Audio Script"
@@ -160,7 +159,6 @@ FILES_TO_CHECK=(
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
     "/etc/systemd/system/image-test.service|Image Rotation Test Service"
-    "/etc/systemd/system/test-notvideo.service|Static Image + Audio Test Service"
     "/etc/systemd/system/audio-test.service|Audio Test Service"
     "/etc/systemd/system/full-test.service|Full Test Service"
 )
@@ -269,7 +267,6 @@ SERVICES_TO_CHECK=(
     "hdmi-test.service|HDMI Test Service|multi-user.target"
     "pixel-test.service|Pixel Test Service|multi-user.target"
     "image-test.service|Image Rotation Test Service|multi-user.target"
-    "test-notvideo.service|Static Image + Audio Test Service|multi-user.target"
     "audio-test.service|Audio Test Service|multi-user.target"
     "full-test.service|Full Test Service|multi-user.target"
 )

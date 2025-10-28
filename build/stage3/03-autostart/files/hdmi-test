@@ -194,10 +194,24 @@ echo ""
     ps aux | grep -E "vlc|ffmpeg" | grep -v grep || echo "None"
     echo ""
 
-    # Detect HDMI audio device dynamically
-    echo "=== Detecting HDMI Audio Device ==="
-    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
-    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
+    # Detect current display resolution
+    echo "=== Detecting Display Resolution ==="
+    RESOLUTION="Unknown"
+    if command -v tvservice &> /dev/null; then
+        # Try tvservice first (legacy method)
+        TV_STATUS=$(tvservice -s 2>/dev/null)
+        if echo "${TV_STATUS}" | grep -q "x"; then
+            RESOLUTION=$(echo "${TV_STATUS}" | grep -oP '\d+x\d+' | head -1)
+        fi
+    fi
+
+    # Fallback: Try framebuffer info
+    if [ "${RESOLUTION}" = "Unknown" ] && [ -f /sys/class/graphics/fb0/virtual_size ]; then
+        FB_SIZE=$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)
+        RESOLUTION=$(echo "${FB_SIZE}" | sed 's/,/x/')
+    fi
+
+    echo "Detected resolution: ${RESOLUTION}"
     echo ""
 
     # Use VLC auto-detect for video output
@@ -205,7 +219,8 @@ echo ""
     # This ensures compatibility across VLC 3.0.x (Bookworm) and future 4.0+ versions
     echo "=== Starting VLC (Verbose Mode) ==="
     echo "Video Output: auto-detect (VLC will choose best available)"
-    echo "Command: cvlc --loop --no-video-title-show --no-osd --aout=alsa --alsa-audio-device=${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Resolution Overlay: ${RESOLUTION} (top-right corner)"
+    echo "Command: cvlc --loop --no-video-title-show --no-osd --sub-source marq --marq-marquee=\"${RESOLUTION}\" --marq-position=6 --marq-size=24 -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
@@ -214,7 +229,11 @@ echo ""
     # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Let VLC auto-detect video output - no --vout flag needed
     # VLC will try: fb, drm (if available), x11, etc. in order of preference
+    # Plays video file with embedded audio via HDMI
+    # --sub-source marq: Enable marquee text overlay
+    # --marq-marquee: Text to display (resolution)
+    # --marq-position=6: Top-right corner (1=left, 2=right, 4=top, 8=bottom, 6=top-right)
+    # --marq-size=24: Font size in pixels
     exec cvlc --loop --no-video-title-show --no-osd \
-        --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
-        "${VIDEO_FILE}" 2>&1
+        --sub-source marq --marq-marquee="${RESOLUTION}" --marq-position=6 --marq-size=24 \
+        -vv "${VIDEO_FILE}" 2>&1

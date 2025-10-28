@@ -394,7 +394,7 @@ echo ""
     echo ""
 
     echo "=== HDMI Test Services Status ==="
-    for service in image-test hdmi-test pixel-test audio-test test-notvideo full-test; do
+    for service in image-test hdmi-test pixel-test audio-test full-test; do
         echo "--- ${service}.service ---"
         systemctl status "${service}.service" 2>&1 || echo "Service not found"
         echo ""
@@ -703,7 +703,7 @@ journalctl -b -1 > "${DIAG_DIR}/journals/previous-boot.log" 2>&1
 echo "✓ Previous boot journal"
 
 # Service-specific journals
-for service in image-test hdmi-test pixel-test audio-test test-notvideo full-test; do
+for service in image-test hdmi-test pixel-test audio-test full-test; do
     journalctl -u "${service}.service" --no-pager > "${DIAG_DIR}/journals/${service}-service.log" 2>&1
 done
 echo "✓ Service journals extracted"
@@ -756,7 +756,6 @@ test-logs/              - Logs from test script executions
   audio-test.log        - Audio-only test
   full-test.log         - Combined video test
   image-test.log        - Image rotation test
-  test-notvideo.log     - Static image + audio test
 
 system-logs/            - System log files
   syslog
