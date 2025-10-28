@@ -1,1 +1,20 @@
+# Build artifacts
+build/pi-gen-work/
+build/validation-*.log
+build/validation-*.txt
+build/qemu-testing/
+
+# Hardware-specific test directories
 rpi4/
+
+# Temporary files
+*.tmp
+*.log~
+*~
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/settings.json
+.idea/
