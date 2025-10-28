@@ -2,6 +2,29 @@
 # Format: One package per line
 # These packages are normally installed in stage2 but bloat the image unnecessarily
 
+# NETWORKING (SECURITY: Completely disabled for HDMI tester)
+# Ethernet drivers and tools
+ethtool
+ifupdown
+isc-dhcp-client
+dhcpcd5
+dhcpcd
+wpasupplicant
+wireless-tools
+iw
+crda
+wireless-regdb
+firmware-atheros
+firmware-brcm80211
+firmware-libertas
+firmware-misc-nonfree
+firmware-realtek
+
+# Network management
+network-manager
+network-manager-gnome
+wpagui
+
 # Bluetooth stack (not needed - no wireless connectivity required)
 bluez
 bluez-firmware

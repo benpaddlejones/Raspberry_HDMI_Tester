@@ -54,7 +54,8 @@ disable_service "triggerhappy.socket" "Triggerhappy socket"
 
 # Disable other potentially unnecessary services
 disable_service "ModemManager.service" "Modem Manager"
-disable_service "wpa_supplicant.service" "WPA Supplicant (WiFi not configured)"
+
+# Note: Network services (WiFi, Ethernet, DHCP) are disabled by 01-disable-networking.sh
 
 # CRITICAL FIX: Disable PulseAudio to prevent bcm2835 audio VCHI timeouts
 # PulseAudio races with ALSA initialization causing kernel driver crashes

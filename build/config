@@ -31,13 +31,13 @@ ENABLE_SSH=1
 # Stage list - which stages to build
 # stage0: Bootstrap minimal Debian
 # stage1: Core Raspberry Pi OS components
-# stage2: Networking and basic utilities (minimal OS)
+# stage2: Basic system utilities (networking disabled for security)
 # stage3: Our custom HDMI tester functionality (replaces standard desktop stage)
 #   - 00-install-packages: VLC, audio tools, codecs
 #   - 01-test-image: Deploy test pattern (1920x1080)
 #   - 02-audio-test: Deploy audio file
 #   - 03-autostart: systemd services for auto-boot
-#   - 04-boot-config: HDMI 1920x1080@60Hz configuration
+#   - 04-boot-config: HDMI 1920x1080@60Hz configuration, networking disabled
 # We skip stage4 (recommended apps), stage5 (extras)
 # NOTE: Our custom stage3 replaces pi-gen's standard desktop stage
 STAGE_LIST="stage0 stage1 stage2 stage3"
