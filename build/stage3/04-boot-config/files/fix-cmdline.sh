@@ -133,13 +133,19 @@ log "✅ Console: ${CONSOLE_SERIAL} ${CONSOLE_TTY}"
 
 # STEP 3: Build the CORRECT cmdline from scratch
 # Only include parameters we actually want, in correct order
+# This REPLACES ALL firmware-injected parameters to prevent conflicts
 REBUILT="${CONSOLE_SERIAL} ${CONSOLE_TTY} ${ROOT_PARAM} ${ROOTFSTYPE} fsck.repair=yes rootwait"
 
 # Add our audio parameters (EXACTLY ONCE, no conflicts)
+# These must be the ONLY audio parameters - no firmware additions
 REBUILT="${REBUILT} snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1"
 
 # Add boot optimization parameters
 REBUILT="${REBUILT} noswap quiet splash loglevel=1 fastboot"
+
+# DO NOT add firmware parameters (coherent_pool, vc_mem, 8250.nr_uarts, cgroup_disable)
+# These are added by firmware during boot and cause conflicts with DRM/vc4
+# By not including them here, we ensure they don't accumulate across reboots
 
 # Final cleanup: ensure single spaces, trim
 FINAL=$(echo "${REBUILT}" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
@@ -171,8 +177,19 @@ if ! echo "${FINAL}" | grep -q "console="; then
 fi
 log "   ✅ Contains console="
 
-# Check for conflicts (these should NOT exist)
+# Check for conflicts (these should NOT exist after our rebuild)
 CONFLICTS=0
+
+# Check for firmware-injected parameters that cause DRM/audio conflicts
+if echo "${FINAL}" | grep -q "coherent_pool="; then
+    log "   ❌ CONFLICT: Found coherent_pool= (firmware parameter)"
+    CONFLICTS=$((CONFLICTS + 1))
+fi
+
+if echo "${FINAL}" | grep -q "vc_mem\."; then
+    log "   ❌ CONFLICT: Found vc_mem.* (firmware parameter)"
+    CONFLICTS=$((CONFLICTS + 1))
+fi
 
 if echo "${FINAL}" | grep -q "snd_bcm2835.enable_hdmi=0"; then
     log "   ❌ CONFLICT: Found enable_hdmi=0"

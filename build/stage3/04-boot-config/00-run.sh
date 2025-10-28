@@ -133,23 +133,28 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         exit 1
     fi
 
-    # Remove ALL existing audio/boot parameters to avoid conflicts
-    # Single sed command with multiple expressions for efficiency
+    # Remove ALL existing conflicting parameters (including firmware-added ones)
+    # This prevents duplicates and conflicts when firmware/firstboot scripts modify cmdline.txt
     sed -i \
         -e 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' \
         -e 's/snd_bcm2835\.enable_headphones=[^ ]*//g' \
+        -e 's/coherent_pool=[^ ]*//g' \
+        -e 's/8250\.nr_uarts=[^ ]*//g' \
+        -e 's/cgroup_disable=[^ ]*//g' \
+        -e 's/vc_mem\.mem_base=[^ ]*//g' \
+        -e 's/vc_mem\.mem_size=[^ ]*//g' \
         -e 's/noswap//g' \
         -e 's/quiet//g' \
         -e 's/splash//g' \
         -e 's/loglevel=[^ ]*//g' \
         -e 's/fastboot//g' \
-        -e 's/cgroup_disable=[^ ]*//g' \
-        -e 's/  */ /g' \
         -e 's/  */ /g' \
         -e 's/^ *//;s/ *$//' \
         "${CMDLINE_FILE}"
 
-    # Append audio parameters and boot optimizations (on same line, space-separated)
+    # Append clean parameters ONCE
+    # NOTE: For DRM/vc4 systems (Pi 3B+, Pi 4, Pi 5), the vc4-hdmi driver handles audio,
+    # but we keep snd_bcm2835 enabled for backward compatibility with older models
     sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
 
     # Verify parameters were added

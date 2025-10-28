@@ -8,16 +8,38 @@
 # Function to find HDMI audio device
 find_hdmi_audio() {
     # STRATEGY: Try multiple detection methods in order of reliability
-    # This handles all Pi models: Pi 3 (bcm2835), Pi 4/5 (vc4-hdmi)
+    # PRIORITY: vc4-hdmi (DRM) over bcm2835 (legacy) for Pi 3B+/4/5 compatibility
 
-    # Method 1: Parse aplay -l for HDMI/vc4 cards (most reliable, works across all models)
+    # Method 1a: Check for vc4-hdmi first (DRM/modern driver - Pi 3B+, Pi 4, Pi 5)
+    local vc4_card
+    vc4_card=$(aplay -l 2>/dev/null | grep -i "vc4-hdmi" | head -1 | grep -oP "card \K[0-9]+")
+
+    if [ -n "${vc4_card}" ]; then
+        # vc4-hdmi found - this is the correct device for DRM systems
+        echo "hw:${vc4_card},0"
+        logger -t hdmi-audio-detect "Method 1a: Found vc4-hdmi (DRM): hw:${vc4_card},0"
+        return 0
+    fi
+
+    # Method 1b: Check for legacy bcm2835 HDMI (older Pi models without DRM)
+    local bcm_card
+    bcm_card=$(aplay -l 2>/dev/null | grep -i "bcm2835 HDMI" | head -1 | grep -oP "card \K[0-9]+")
+
+    if [ -n "${bcm_card}" ]; then
+        # Found legacy bcm2835 HDMI card
+        echo "hw:${bcm_card},0"
+        logger -t hdmi-audio-detect "Method 1b: Found bcm2835 HDMI (legacy): hw:${bcm_card},0"
+        return 0
+    fi
+
+    # Method 1c: Generic HDMI detection (fallback for any HDMI device)
     local hdmi_card
-    hdmi_card=$(aplay -l 2>/dev/null | grep -iE "(vc4-hdmi|hdmi)" | head -1 | grep -oP "card \K[0-9]+")
+    hdmi_card=$(aplay -l 2>/dev/null | grep -i "hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${hdmi_card}" ]; then
         # Found HDMI card via aplay listing
         echo "hw:${hdmi_card},0"
-        logger -t hdmi-audio-detect "Method 1: Found HDMI via aplay -l: hw:${hdmi_card},0"
+        logger -t hdmi-audio-detect "Method 1c: Found generic HDMI: hw:${hdmi_card},0"
         return 0
     fi
 
