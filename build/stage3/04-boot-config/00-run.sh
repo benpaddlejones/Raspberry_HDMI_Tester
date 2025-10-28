@@ -138,16 +138,30 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # This ensures we always work with a single-line file
     sed -i ':a;N;$!ba;s/\n/ /g' "${CMDLINE_FILE}"
 
-    # Remove ALL existing conflicting parameters (including firmware-added ones)
-    # This prevents duplicates and conflicts when firmware/firstboot scripts modify cmdline.txt
+    # ROOT CAUSE #2 FIX: Remove ALL firmware parameters to prevent conflicts
+    # Raspberry Pi firmware adds these during boot, but they conflict with DRM/vc4
+    # We remove them completely - kernel will use defaults which work better with modern drivers
+    # 
+    # Firmware parameters that cause problems:
+    # - coherent_pool=1M       : DMA pool (kernel default is fine)
+    # - 8250.nr_uarts=0        : Disables 8250 UART (breaks serial console on some models)
+    # - cgroup_disable=memory  : Disables memory cgroup (not needed, causes issues)
+    # - vc_mem.mem_base/size   : VideoCore memory (kernel auto-detects correctly)
+    # - snd_bcm2835.enable_*=0 : DISABLES AUDIO (the root cause of crashes!)
+    #
+    # By removing these, we ensure:
+    # 1. Our audio parameters are the ONLY audio parameters
+    # 2. No conflicting =0 values can override our =1 values
+    # 3. Kernel defaults work better with DRM than firmware-chosen values
     sed -i \
-        -e 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' \
-        -e 's/snd_bcm2835\.enable_headphones=[^ ]*//g' \
         -e 's/coherent_pool=[^ ]*//g' \
         -e 's/8250\.nr_uarts=[^ ]*//g' \
         -e 's/cgroup_disable=[^ ]*//g' \
         -e 's/vc_mem\.mem_base=[^ ]*//g' \
         -e 's/vc_mem\.mem_size=[^ ]*//g' \
+        -e 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' \
+        -e 's/snd_bcm2835\.enable_headphones=[^ ]*//g' \
+        -e 's/snd_bcm2835\.enable_compat_alsa=[^ ]*//g' \
         -e 's/noswap//g' \
         -e 's/quiet//g' \
         -e 's/splash//g' \
@@ -158,6 +172,11 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         "${CMDLINE_FILE}"
 
     # Append clean parameters ONCE to the single line (using line-specific anchor)
+    # These audio parameters MUST come last to override any firmware additions
+    # Firmware may inject parameters at the START of cmdline, so we append at the END
+    # Kernel processes parameters left-to-right, LAST value wins
+    # 
+    # CRITICAL: snd_bcm2835.enable_hdmi=1 MUST be the final audio parameter
     # NOTE: For DRM/vc4 systems (Pi 3B+, Pi 4, Pi 5), the vc4-hdmi driver handles audio,
     # but we keep snd_bcm2835 enabled for backward compatibility with older models
     sed -i '1 s/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
@@ -170,9 +189,34 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         exit 1
     fi
 
+    # Verify NO firmware parameters remain (they cause conflicts)
+    CMDLINE_CONTENT=$(cat "${CMDLINE_FILE}")
+    
+    if echo "${CMDLINE_CONTENT}" | grep -q "coherent_pool="; then
+        echo "❌ Error: coherent_pool parameter still present in ${CMDLINE_FILE}"
+        echo "   This firmware parameter causes DRM conflicts"
+        exit 1
+    fi
+    
+    if echo "${CMDLINE_CONTENT}" | grep -q "vc_mem\."; then
+        echo "❌ Error: vc_mem parameter still present in ${CMDLINE_FILE}"
+        echo "   This firmware parameter causes memory conflicts"
+        exit 1
+    fi
+
     # Verify parameters were added
     if ! grep -q "snd_bcm2835.enable_hdmi=1" "${CMDLINE_FILE}"; then
         echo "❌ Error: Failed to add audio parameters to ${CMDLINE_FILE}"
+        exit 1
+    fi
+
+    # CRITICAL: Verify enable_hdmi=1 comes AFTER any enable_hdmi=0
+    # Extract the LAST occurrence of enable_hdmi parameter
+    LAST_HDMI_VALUE=$(echo "${CMDLINE_CONTENT}" | grep -o "snd_bcm2835\.enable_hdmi=[01]" | tail -1)
+    if [ "${LAST_HDMI_VALUE}" != "snd_bcm2835.enable_hdmi=1" ]; then
+        echo "❌ Error: Last enable_hdmi value is not =1 in ${CMDLINE_FILE}"
+        echo "   Found: ${LAST_HDMI_VALUE}"
+        echo "   Audio will be disabled! Our =1 must come LAST."
         exit 1
     fi
 
@@ -195,6 +239,8 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         echo "❌ Error: Failed to add fastboot parameter to ${CMDLINE_FILE}"
         exit 1
     fi
+    
+    echo "  ✅ Validated: Single line, no firmware conflicts, enable_hdmi=1 is last"
 done
 
 echo "✅ Audio parameters and boot optimizations (quiet splash loglevel=1 noswap fastboot) added to all cmdline.txt files"
