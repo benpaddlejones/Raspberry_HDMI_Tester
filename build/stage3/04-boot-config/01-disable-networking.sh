@@ -39,10 +39,10 @@ echo "  📝 Disabling network services..."
 disable_network_service() {
     local service="$1"
     local description="$2"
-    
+
     local service_file="${ROOTFS_DIR}/lib/systemd/system/${service}"
     local alt_service_file="${ROOTFS_DIR}/usr/lib/systemd/system/${service}"
-    
+
     if [ -f "${service_file}" ] || [ -f "${alt_service_file}" ]; then
         # Create mask symlink
         mkdir -p "${ROOTFS_DIR}/etc/systemd/system"

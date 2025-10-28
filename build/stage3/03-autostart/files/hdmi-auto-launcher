@@ -1,0 +1,80 @@
+#!/bin/bash
+# HDMI Tester Auto-Launcher
+# Automatically launches the default service (if set) on console login
+# Also handles Ctrl+C to launch the configuration UI
+
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
+# Get default service from config
+DEFAULT_SERVICE=$(get_default_service)
+
+# If no default service, just show a welcome message and exit
+if [ -z "${DEFAULT_SERVICE}" ]; then
+    echo ""
+    echo "==========================================="
+    echo "  HDMI Tester - No Default Service Set"
+    echo "==========================================="
+    echo ""
+    echo "To configure a default service:"
+    echo "  $ hdmi-tester-config"
+    echo ""
+    echo "Available services:"
+    echo "  - hdmi-test       (HDMI video test pattern)"
+    echo "  - audio-test      (HDMI audio looping test)"
+    echo "  - image-test      (Static image rotation)"
+    echo "  - pixel-test      (Pixel-level color test)"
+    echo "  - full-test       (Combined A/V test)"
+    echo "  - hdmi-diagnostics (System diagnostics, requires sudo)"
+    echo ""
+    exit 0
+fi
+
+# Validate that the service command exists
+SERVICE_SCRIPT="/usr/local/bin/${DEFAULT_SERVICE}"
+
+if [ ! -x "${SERVICE_SCRIPT}" ]; then
+    echo ""
+    echo "❌ ERROR: Default service '${DEFAULT_SERVICE}' not found"
+    echo "   Expected: ${SERVICE_SCRIPT}"
+    echo ""
+    echo "Run 'hdmi-tester-config' to fix configuration"
+    echo ""
+    exit 1
+fi
+
+# Setup Ctrl+C trap to launch config UI
+trap 'echo ""; echo "Launching configuration..."; hdmi-tester-config; exit 0' INT
+
+# Show startup message
+echo ""
+echo "==========================================="
+echo "  HDMI Tester Auto-Start"
+echo "==========================================="
+echo "Default service: ${DEFAULT_SERVICE}"
+echo "Press Ctrl+C at any time to configure"
+echo ""
+echo "Starting in 3 seconds..."
+sleep 3
+
+# Launch the service
+# Keep Ctrl+C trap active so user can return to config menu
+while true; do
+    echo ""
+    echo "--- Starting ${DEFAULT_SERVICE} ---"
+    echo ""
+
+    # Run the service
+    # If user presses Ctrl+C, the trap will launch config menu
+    "${SERVICE_SCRIPT}" || {
+        EXIT_CODE=$?
+        echo ""
+        echo "⚠️  Service exited with code ${EXIT_CODE}"
+        echo ""
+        echo "Options:"
+        echo "  - Press Ctrl+C to configure"
+        echo "  - Service will restart in 5 seconds..."
+        echo ""
+        sleep 5
+    }
+done

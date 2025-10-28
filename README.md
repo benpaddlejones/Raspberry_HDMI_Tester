@@ -1,29 +1,123 @@
 # Raspberry Pi HDMI Tester
 
-> **A plug-and-play SD card image for instantly testing HDMI displays and audio.**
-> Perfect for end-users who need a quick, reliable HDMI testing tool.
+> **The ultimate plug-and-play HDMI testing solution for displays, audio systems, and A/V equipment.**
+>
+> Professional-grade testing tools on a simple SD card - no configuration needed.
 
-A ready-to-use Raspberry Pi image that automatically displays a test pattern and plays audio through HDMI. Perfect for quickly testing displays, troubleshooting HDMI connections, and verifying A/V equipment.
+A complete HDMI testing suite that runs on Raspberry Pi. Flash it to an SD card, boot up, and instantly access professional test patterns, audio verification, and diagnostic tools. Perfect for technicians, installers, trade shows, and anyone who needs reliable HDMI testing.
 
 ## What Is This?
 
-This is a ready-to-use Raspberry Pi image that:
-- ✅ **Boots automatically** - No keyboard, mouse, or interaction needed
-- ✅ **Displays a test pattern** - Full HD 1920x1080 test image
-- ✅ **Plays continuous audio** - Audio loops infinitely through HDMI
-- ✅ **Boots in ~30 seconds** - Fast startup for quick testing
-- ✅ **Works on any Pi** - Compatible with Pi 3, 4, 5, Zero 2 W
+The Raspberry Pi HDMI Tester is a **ready-to-use testing toolkit** that:
 
-Simply flash it to an SD card, insert it into a Raspberry Pi, connect HDMI, and power on!
+- 🎯 **Boots in seconds** - No keyboard, mouse, or setup required
+- 🖥️ **Tests video quality** - Professional test patterns for display validation
+- 🔊 **Verifies audio systems** - High-quality FLAC files test stereo and surround sound
+- 🔍 **Detects pixel issues** - Identify dead, stuck, or color-locked pixels
+- ⚙️ **Fully configurable** - Interactive menu system for all settings
+- 🚀 **Works on any Pi** - Compatible with Pi 3, 4, 5, Zero 2 W
+
+Simply flash to an SD card, insert into a Raspberry Pi, connect HDMI, and start testing!
+
+## Professional Testing Suite
+
+### 🎬 HDMI Test - Video & Audio Verification
+**What it does**: Loops a high-quality test video with embedded 2.1 channel audio
+- ✅ **Video Quality**: Full HD test pattern with resolution overlay
+- ✅ **Audio Testing**: 2.1 channel audio (stereo + subwoofer/LFE)
+- ✅ **Continuous Loop**: Runs indefinitely for long-term testing
+- ✅ **Perfect for**: Display connectivity, HDMI handshake verification, basic A/V sync
+
+**Use cases**:
+- Quick HDMI connection verification
+- Trade show booth display testing
+- Digital signage deployment validation
+- A/V receiver compatibility testing
+
+### 🔊 Audio Test - Comprehensive Audio Validation
+**What it does**: Tests your audio system with high-fidelity FLAC files
+- ✅ **Stereo (2.0)**: Crystal-clear stereo audio test
+- ✅ **Surround 5.1**: Full 5.1 channel surround sound verification
+- ✅ **Lossless Quality**: FLAC format ensures perfect audio reproduction
+- ✅ **Channel Verification**: Identify individual speaker channels
+
+**Use cases**:
+- Home theater system setup and calibration
+- Soundbar/speaker system verification
+- HDMI audio passthrough testing
+- AV receiver channel mapping validation
+
+### 🎨 Pixel Test - Dead Pixel Detection
+**What it does**: Cycles through solid colors to reveal display defects
+- ✅ **Dead Pixels**: Identifies pixels that won't illuminate
+- ✅ **Stuck Pixels**: Finds pixels locked in the "on" position
+- ✅ **Color Issues**: Detects pixels locked to a specific color
+- ✅ **Full Coverage**: Solid black, white, red, green, blue patterns
+
+**Use cases**:
+- New display quality control
+- Pre-purchase display inspection
+- Warranty claim documentation
+- Monitor/TV return verification
+
+### 🖼️ Image Test - Color Calibration & Resolution
+**What it does**: Rotates through professional test patterns
+- ✅ **Color Accuracy**: Verify true color reproduction
+- ✅ **Resolution Check**: Confirm native resolution support
+- ✅ **Aspect Ratio**: Validate proper scaling and geometry
+- ✅ **Custom Patterns**: Easy to add your own test images
+
+**Use cases**:
+- Display calibration reference
+- Multi-display uniformity testing
+- Projector alignment and focus
+- Video wall configuration
+
+### 🎯 Full Test - Complete A/V System Validation
+**What it does**: Runs comprehensive video and audio tests in sequence
+- ✅ **End-to-End Testing**: Video quality + audio verification
+- ✅ **Automated Sequence**: Runs multiple tests continuously
+- ✅ **Unattended Operation**: Perfect for burn-in testing
+- ✅ **Complete Coverage**: Tests all aspects of HDMI connectivity
+
+**Use cases**:
+- Complete system validation before deployment
+- Burn-in testing for new equipment
+- Long-term reliability testing
+- Production line quality assurance
+
+### 🔧 Diagnostics - Troubleshooting & Support
+**What it does**: Captures complete system state for issue resolution
+- ✅ **Auto-saves to USB**: Plug in a USB drive for instant log export
+- ✅ **Comprehensive Logs**: System info, HDMI config, audio devices, boot logs
+- ✅ **GitHub Integration**: Easy issue reporting with diagnostic bundle
+- ✅ **Debug Mode**: Enable verbose logging for detailed troubleshooting
+
+**Use cases**:
+- Troubleshooting HDMI issues
+- Technical support documentation
+- Issue reporting to manufacturers
+- Field service diagnostics
 
 ## Use Cases
 
-- 🖥️ **Testing HDMI displays and monitors**
-- 🔊 **Verifying HDMI audio output**
-- 🔌 **Quick connectivity checks for A/V equipment**
-- 🏢 **Trade show booth display testing**
-- 📺 **Digital signage troubleshooting**
-- 🛠️ **Field service HDMI diagnostics**
+### For Technicians & Installers
+- 🏢 **Commercial Installations**: Validate displays before client sign-off
+- 📺 **Home Theater Setup**: Verify audio channels and video quality
+- 🎪 **Event Production**: Quick HDMI troubleshooting on-site
+- 🏭 **Manufacturing QA**: Production line display testing
+
+### For IT & Support Teams
+- 💼 **Conference Room Setup**: Test presentation systems
+- 🖥️ **Workstation Deployment**: Verify monitor quality
+- 🎯 **Help Desk**: Quick display/audio diagnostics
+- 📊 **Inventory Testing**: Check used/refurbished equipment
+
+### For Enthusiasts & Consumers
+- 🛒 **Pre-Purchase Testing**: Verify display quality before buying
+- 🎮 **Gaming Setup**: Test monitor pixel response and audio
+- 🎬 **Home Cinema**: Calibrate projectors and audio systems
+- 📦 **Return/Warranty**: Document defects for claims
 
 ## Quick Start
 
@@ -43,8 +137,8 @@ Simply flash it to an SD card, insert it into a Raspberry Pi, connect HDMI, and 
 ### Step 1: Download the Image
 
 1. Go to [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
-2. Download `RaspberryPi_HDMI_Tester.img.zip`
-3. Extract the `.img` file from the ZIP
+2. Download `RaspberryPi_HDMI_Tester-v0.9.8-RC.img.gz`
+3. Extract if needed (some tools extract automatically)
 
 ### Step 2: Flash to SD Card
 
@@ -68,33 +162,160 @@ Choose your operating system for detailed instructions:
 4. **Wait ~30 seconds** for boot
 
 **You should see**:
-- ✅ Green LED blinks on the Pi
-- ✅ Test pattern appears on screen (1920x1080)
-- ✅ Audio plays continuously through HDMI
+- ✅ Green LED blinks on the Pi (boot activity)
+- ✅ Welcome message on screen
+- ✅ Configuration menu with test options
 
-**That's it!** Your HDMI tester is working.
+**First Time Setup**:
+1. The system boots to a terminal with a welcome message
+2. Run `hdmi-tester-config` to access the interactive menu
+3. Choose a test mode to run, or set a default to auto-start on boot
+
+**That's it!** You're ready to start testing.
+
+## How to Use
+
+### Interactive Configuration Menu
+
+After boot, run `hdmi-tester-config` to access the easy-to-use menu:
+
+```
+╔════════════════════════════════════════════════════════════╗
+║         HDMI Tester Configuration Manager                 ║
+╚════════════════════════════════════════════════════════════╝
+
+Current Configuration:
+  Debug Mode:      true
+  Default Service: (none - boot to terminal)
+
+Options:
+  1) Toggle Debug Mode
+  2) Set Default Service (auto-start on boot)
+  3) Run a Service Now (one-time)
+  4) View/Edit Config File
+  5) Exit to Terminal
+```
+
+### Running Tests
+
+**Option 1: Run Once (No Auto-Start)**
+1. Boot the Pi
+2. At the terminal, run: `hdmi-tester-config`
+3. Select option 3: "Run a Service Now"
+4. Choose your test (hdmi-test, audio-test, pixel-test, etc.)
+5. Press Ctrl+C to return to menu
+
+**Option 2: Set Default Auto-Start**
+1. Boot the Pi
+2. Run: `hdmi-tester-config`
+3. Select option 2: "Set Default Service"
+4. Choose which test to run automatically on boot
+5. Reboot - your chosen test starts automatically
+6. Press Ctrl+C anytime to return to configuration menu
+
+**Option 3: Run Directly from Terminal**
+```bash
+hdmi-test       # Video + 2.1 audio test
+audio-test      # Stereo + 5.1 surround audio
+pixel-test      # Solid colors for dead pixel detection
+image-test      # Rotate through test patterns
+full-test       # Complete A/V test sequence
+```
+
+### Debug Mode
+
+Enable debug mode for troubleshooting:
+- **ON**: Verbose VLC logging (see detailed codec info, buffering, errors)
+- **OFF**: Clean minimal output
+
+Toggle via configuration menu or edit `/boot/firmware/hdmi-tester.conf`
+
+### Configuration File
+
+The configuration is stored in `/boot/firmware/hdmi-tester.conf` and can be edited from any computer:
+
+```bash
+# DEBUG_MODE: Enable verbose debugging output system-wide
+DEBUG_MODE=true
+
+# DEFAULT_SERVICE: Service to auto-launch on boot
+# Options: hdmi-test, audio-test, image-test, pixel-test, full-test
+DEFAULT_SERVICE=
+```
+
+Windows/Mac users can edit this file directly when the SD card is mounted!
 
 ## What You'll See
 
-### Test Pattern
-The default test pattern displays:
-- Full HD resolution (1920x1080)
-- Color information
-- Resolution details
-- Visual reference for display testing
+## What You'll See
 
-### Audio Output
-- Continuous audio playback through HDMI
-- Loops infinitely (no user interaction needed)
-- Tests both HDMI video and audio simultaneously
+### HDMI Test (Video + Audio)
+- **Video**: Full HD test pattern with resolution overlay in top-right corner
+- **Audio**: 2.1 channel audio (stereo + LFE/subwoofer channel)
+- **Duration**: Loops infinitely
+- **Resolution Detection**: Automatically detects and displays your screen resolution
+
+### Audio Test
+- **Track 1**: High-quality stereo (2.0) FLAC audio
+- **Track 2**: 5.1 surround sound FLAC audio
+- **Format**: Lossless FLAC for perfect reproduction
+- **Playback**: Continuous loop through both tracks
+
+### Pixel Test
+Cycles through solid colors in fullscreen:
+- **Black Screen**: Detect bright pixels, stuck-on pixels
+- **White Screen**: Detect dead pixels, dark spots
+- **Red Screen**: Identify red channel issues
+- **Green Screen**: Identify green channel issues
+- **Blue Screen**: Identify blue channel issues
+- **Custom Images**: Test pattern with color bars and gradients
+
+Each color displays for 10 seconds before automatically transitioning.
+
+### Image Test
+Rotates through professional test patterns:
+- Color calibration charts
+- Resolution and sharpness patterns
+- Aspect ratio verification
+- Custom test images
+
+### Full Test
+Runs the complete test sequence:
+1. HDMI video test with 2.1 audio
+2. Pixel test (fullscreen colors)
+3. Loops continuously for extended testing
+
+## Key Features
+
+### Professional Grade Testing
+- **High Quality Media**: WebM VP9 video (Pi 4+) or H.264 (Pi 3), lossless FLAC audio
+- **Auto-Detection**: Automatically selects optimal codec based on Pi model
+- **Resolution Support**: Auto-detects display capabilities (720p/1080p/4K)
+- **Configurable**: Easy-to-use menu system for all settings
+
+### Zero Configuration Required
+- **No Setup**: Works out of the box - just flash and boot
+- **Auto-Login**: Boots directly to terminal (user: pi)
+- **Instant Access**: All tests available immediately
+- **No Network Needed**: Completely offline operation
+
+### Advanced Features
+- **Debug Mode**: Toggle verbose logging for troubleshooting
+- **USB Diagnostics**: Auto-save system diagnostics to USB drive
+- **GitHub Integration**: Built-in guidance for issue reporting
+- **SSH Access**: Remote access for advanced configuration (default password: `raspberry`)
+  - ⚠️ **Change password if exposing to network!**
 
 ## Customization
 
-Want to use your own test pattern or audio? See the [Customization Guide](docs/CUSTOMIZATION.md) for:
-- Replacing the test pattern image
+Want to customize the tests? See the [Customization Guide](docs/CUSTOMIZATION.md) for:
+- Adding your own test patterns
 - Using custom audio files
 - Changing HDMI resolution settings
-- Modifying boot behavior
+- Modifying test sequences
+- Creating custom test modes
+
+**Quick customization**: Edit files in `/opt/hdmi-tester/` on the SD card or via SSH.
 
 ## Troubleshooting
 
@@ -102,17 +323,45 @@ Want to use your own test pattern or audio? See the [Customization Guide](docs/C
 
 **Check these first**:
 - ✅ HDMI cable is firmly connected
-- ✅ Display is powered on and set to correct input
-- ✅ Display supports 1920x1080 resolution
-- ✅ Try a different HDMI cable
+- ✅ Display is powered on and set to correct HDMI input
+- ✅ Try a different HDMI cable or port
+- ✅ Wait full 30 seconds for boot to complete
+- ✅ Check if green LED is blinking (indicates boot activity)
+
+**Advanced troubleshooting**:
+- Some displays need time to detect signal - wait up to 60 seconds
+- Try forcing a specific resolution in `/boot/firmware/config.txt`
+- Enable debug mode to see detailed boot logs
 
 ### No Audio?
 
 **Common fixes**:
-- ✅ Enable HDMI audio in your TV/monitor settings
-- ✅ Increase volume on the display
-- ✅ Some displays default to internal speakers - switch to HDMI audio
-- ✅ Try a different HDMI port
+- ✅ Enable HDMI audio in your TV/monitor/receiver settings
+- ✅ Increase volume on the display/receiver
+- ✅ Some displays default to internal speakers - switch to HDMI audio input
+- ✅ Try a different HDMI port (some ports are video-only)
+- ✅ Verify your display supports audio over HDMI
+
+**For audio-test specifically**:
+- Stereo (2.0) should work on all HDMI devices
+- Surround 5.1 requires an AV receiver or soundbar with HDMI input
+- Check receiver is set to correct HDMI input channel
+
+### Pixel Test Shows No Issues But I See Dead Pixels?
+
+**Try this**:
+- ✅ Let each color display for the full 10 seconds
+- ✅ View the screen from directly in front (not at an angle)
+- ✅ Ensure room is dark or reduce ambient light
+- ✅ Dead pixels may only be visible on certain colors
+- ✅ Run pixel-test multiple times
+
+### Tests Run But Performance Issues?
+
+**Check debug mode**:
+- Debug mode (verbose logging) can impact performance slightly
+- Disable debug mode via `hdmi-tester-config` for best performance
+- Debug mode should only be enabled for troubleshooting
 
 ### Pi Won't Boot?
 
@@ -152,15 +401,18 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 ## Technical Details
 
 - **Base OS**: Raspberry Pi OS Lite (Debian 12 Bookworm)
-- **Display**: VLC (no desktop environment)
-- **Resolution**: 1920x1080 @ 60Hz (configurable)
+- **Display**: VLC media player (fullscreen, no desktop environment)
+- **Resolution**: Auto-detect (720p/1080p/4K), default 1920x1080 @ 60Hz
 - **Audio**: ALSA direct output via VLC with infinite loop
-- **Boot Time**: ~20-30 seconds
+- **Boot Time**: ~20-30 seconds to test display
 - **Image Size**: ~1.5-2GB (compressed)
-- **GPU Memory**: 64MB (minimal, console mode)
-- **SSH**: Enabled by default for troubleshooting (default password: `raspberry`)
+- **GPU Memory**: 64MB (minimal allocation for console mode)
+- **Configuration**: `/boot/firmware/hdmi-tester.conf` (accessible from Windows/Mac)
+- **SSH**: Enabled by default for remote configuration (username: `pi`, password: `raspberry`)
   - ⚠️ **Change password if exposing to network!**
-- **Network**: WiFi not configured by default (optional)
+- **Network**: WiFi not configured by default (offline operation)
+- **Debug Mode**: Toggle verbose logging via configuration menu
+- **Auto-Start**: Optional auto-boot to any test mode
 
 ### Video & Audio Codecs
 
@@ -201,28 +453,26 @@ For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md
 
 ## Development Status
 
-**Current Version**: v1.0.0 (Released October 2025)
+**Current Version**: v0.9.8 Release Candidate (RC)
 
-### ✅ Completed
-- Project setup and documentation
-- GitHub Codespaces development environment
-- Test pattern assets (1920x1080 PNG)
-- Test audio asset (MP3, infinite loop)
-- pi-gen build system (5 custom stages)
-- Auto-start services (systemd)
-- Audio playback integration (VLC with --loop)
-- HDMI configuration (1920x1080@60Hz forced)
-- Build and testing scripts
-- QEMU testing validation
-- Comprehensive logging system
-- User documentation (end-user focused)
+### What's New in v0.9.8
+- ✅ **Interactive Configuration System**: Easy-to-use menu (`hdmi-tester-config`)
+- ✅ **Debug Mode Toggle**: Enable/disable verbose logging without editing files
+- ✅ **Auto-Start Support**: Set any test to launch automatically on boot
+- ✅ **Enhanced Diagnostics**: Auto-save system logs to USB with GitHub issue guidance
+- ✅ **Improved User Experience**: Ctrl+C returns to menu, streamlined workflows
+- ✅ **Multi-Channel Audio**: 2.1 audio (HDMI test) + stereo/5.1 FLAC (audio test)
+- ✅ **Pixel Detection**: Dead, stuck, and color-locked pixel identification
+- ✅ **Configuration File**: `/boot/firmware/hdmi-tester.conf` accessible from any OS
 
-### 🚧 Future Enhancements
-- Boot optimization (reduce to <20 seconds)
-- Hardware testing on additional Raspberry Pi models
-- CI/CD pipeline for automated builds
-- Multi-resolution support (720p, 4K options)
-- Web interface for configuration (optional)
+### Roadmap
+- ⏳ Hardware testing on additional Pi models (ongoing)
+- ⏳ Boot time optimization (target: <20 seconds)
+- ⏳ Multi-resolution support refinement
+- 📋 CI/CD pipeline for automated builds
+- 📋 Community-submitted test patterns
+
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ## Documentation Guide
 

@@ -2,6 +2,9 @@
 # Image Rotation Test: Cycle through color test images using VLC
 # Displays each image for 10 seconds in fullscreen
 
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
 LOG_DIR="/logs"
 LOG_FILE="${LOG_DIR}/image-test.log"
 
@@ -152,6 +155,9 @@ echo "User: $(whoami)"
     echo "Starting infinite loop at $(date '+%Y-%m-%d %H:%M:%S')"
     echo ""
 
+    # Get debug flags from config
+    VLC_FLAGS=$(get_vlc_flags)
+
     # Infinite loop through images
     while true; do
         for img in "${IMAGES[@]}"; do
@@ -164,7 +170,7 @@ echo "User: $(whoami)"
             # VLC auto-detects video output (no --vout needed)
             if timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
                 --no-osd --play-and-exit --no-audio \
-                --image-duration=${DISPLAY_TIME} "${img}" 2>&1; then
+                --image-duration=${DISPLAY_TIME} ${VLC_FLAGS} "${img}" 2>&1; then
                 echo "✓ Finished displaying ${IMAGE_NAME}"
             else
                 VLC_EXIT=$?

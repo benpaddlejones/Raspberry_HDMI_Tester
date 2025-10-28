@@ -4,6 +4,9 @@
 #!/bin/bash
 # Full Test: Combined image-test + color-test videos
 
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
 LOG_DIR="/logs"
 LOG_FILE="${LOG_DIR}/full-test.log"
 
@@ -121,6 +124,9 @@ echo ""
     # No need for model-specific flags
     VIDEO_FLAGS=""
 
+    # Get debug flags from config
+    VLC_FLAGS=$(get_vlc_flags)
+
     # Loop forever with Raspberry Pi optimized flags using VLC
     while true; do
         LOOP_COUNT=$((LOOP_COUNT + 1))
@@ -137,10 +143,10 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: image-test.${VIDEO_FORMAT} (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${IMAGE_VIDEO}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${IMAGE_VIDEO}"
         cvlc --play-and-exit --no-video-title-show --no-osd \
             ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-            --no-audio-time-stretch --audio-replay-gain-mode=none -vvv \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${IMAGE_VIDEO}" 2>&1
         VLC_EXIT=$?
         echo "Exit code: ${VLC_EXIT}"
@@ -149,11 +155,11 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: color-test.${VIDEO_FORMAT} (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${COLOR_VIDEO}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${COLOR_VIDEO}"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
             ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-            --no-audio-time-stretch --audio-replay-gain-mode=none -vvv \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${COLOR_VIDEO}" 2>&1
         VLC_EXIT=$?
         echo "Exit code: ${VLC_EXIT}"

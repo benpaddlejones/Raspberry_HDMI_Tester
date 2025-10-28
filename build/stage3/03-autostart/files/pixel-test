@@ -4,6 +4,9 @@
 #!/bin/bash
 # Test Script 2 (VLC): Loop color test pattern video (fullscreen stretched)
 
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
 LOG_DIR="/logs"
 LOG_FILE="${LOG_DIR}/pixel-test.log"
 
@@ -217,7 +220,11 @@ echo ""
     # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Use --alsa-audio-device to explicitly set HDMI device (AUDIODEV env var doesn't work)
     # Let VLC auto-detect video output
+
+    # Get debug flags from config
+    VLC_FLAGS=$(get_vlc_flags)
+
     exec cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
         --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
+        --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
         "${VIDEO_FILE}" 2>&1

@@ -1,0 +1,289 @@
+#!/bin/bash
+# HDMI Tester Configuration Tool
+# Interactive menu for managing HDMI tester settings
+#
+# Usage: hdmi-tester-config
+
+set -e
+
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
+# Colors for UI
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly CYAN='\033[0;36m'
+readonly BOLD='\033[1m'
+readonly NC='\033[0m' # No Color
+
+# Clear screen and show header
+show_header() {
+    clear
+    echo -e "${BOLD}${CYAN}"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║         HDMI Tester Configuration Manager                 ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+# Show current configuration
+show_current_config() {
+    local debug_mode default_service
+    debug_mode=$(get_config_value "DEBUG_MODE")
+    default_service=$(get_config_value "DEFAULT_SERVICE")
+
+    echo -e "${BOLD}Current Configuration:${NC}"
+    echo -e "  Debug Mode:      ${CYAN}${debug_mode}${NC}"
+    if [ -z "${default_service}" ]; then
+        echo -e "  Default Service: ${YELLOW}(none - boot to terminal)${NC}"
+    else
+        echo -e "  Default Service: ${GREEN}${default_service}${NC}"
+    fi
+    echo ""
+}
+
+# Main menu
+show_menu() {
+    echo -e "${BOLD}Options:${NC}"
+    echo "  1) Toggle Debug Mode"
+    echo "  2) Set Default Service (auto-start on boot)"
+    echo "  3) Run a Service Now (one-time)"
+    echo "  4) View/Edit Config File"
+    echo "  5) Exit to Terminal"
+    echo ""
+}
+
+# Toggle debug mode
+toggle_debug() {
+    local current_debug new_debug
+    current_debug=$(get_config_value "DEBUG_MODE")
+
+    if [ "${current_debug}" = "true" ]; then
+        new_debug="false"
+    else
+        new_debug="true"
+    fi
+
+    if set_config_value "DEBUG_MODE" "${new_debug}"; then
+        echo -e "${GREEN}✓ Debug mode set to: ${new_debug}${NC}"
+        echo "  This will take effect on next service start or reboot."
+    else
+        echo -e "${RED}✗ Failed to update debug mode${NC}"
+    fi
+
+    read -p "Press Enter to continue..."
+}
+
+# Set default service
+set_default_service() {
+    show_header
+    echo -e "${BOLD}Select Default Service (auto-start on boot):${NC}"
+    echo ""
+    echo "  0) None (boot to terminal)"
+    echo "  1) hdmi-test      - HDMI video test pattern"
+    echo "  2) audio-test     - HDMI audio test (looping)"
+    echo "  3) image-test     - Static image test"
+    echo "  4) pixel-test     - Pixel-level test pattern"
+    echo "  5) full-test      - Full A/V test"
+    echo "  6) hdmi-diagnostics - System diagnostics (requires sudo)"
+    echo ""
+
+    local choice service
+    read -p "Enter choice [0-6]: " choice
+
+    case "${choice}" in
+        0) service="" ;;
+        1) service="hdmi-test" ;;
+        2) service="audio-test" ;;
+        3) service="image-test" ;;
+        4) service="pixel-test" ;;
+        5) service="full-test" ;;
+        6) service="hdmi-diagnostics" ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            read -p "Press Enter to continue..."
+            return
+            ;;
+    esac
+
+    if set_config_value "DEFAULT_SERVICE" "${service}"; then
+        if [ -z "${service}" ]; then
+            echo -e "${GREEN}✓ Default service cleared - will boot to terminal${NC}"
+        else
+            echo -e "${GREEN}✓ Default service set to: ${service}${NC}"
+            echo "  This will auto-start on next boot."
+            echo "  Press Ctrl+C during service to return to this menu."
+        fi
+    else
+        echo -e "${RED}✗ Failed to update default service${NC}"
+    fi
+
+    read -p "Press Enter to continue..."
+}
+
+# Run service now
+run_service_now() {
+    show_header
+    echo -e "${BOLD}Run a Service Now (one-time):${NC}"
+    echo ""
+    echo "  1) hdmi-test      - HDMI video test pattern"
+    echo "  2) audio-test     - HDMI audio test (looping)"
+    echo "  3) image-test     - Static image test"
+    echo "  4) pixel-test     - Pixel-level test pattern"
+    echo "  5) full-test      - Full A/V test"
+    echo "  6) hdmi-diagnostics - System diagnostics (requires sudo)"
+    echo "  0) Cancel"
+    echo ""
+
+    local choice service_script
+    read -p "Enter choice [0-6]: " choice
+
+    case "${choice}" in
+        1) service_script="/usr/local/bin/hdmi-test" ;;
+        2) service_script="/usr/local/bin/audio-test" ;;
+        3) service_script="/usr/local/bin/image-test" ;;
+        4) service_script="/usr/local/bin/pixel-test" ;;
+        5) service_script="/usr/local/bin/full-test" ;;
+        6)
+            # Show pre-diagnostics information
+            show_header
+            echo -e "${BOLD}${YELLOW}⚠️  HDMI Diagnostics - Important Information${NC}"
+            echo ""
+            echo -e "${BOLD}Before running diagnostics:${NC}"
+            echo ""
+            echo -e "${CYAN}1. Enable Debug Mode First${NC}"
+            echo "   If you're experiencing issues with any test, enable debug mode"
+            echo "   BEFORE running diagnostics to capture detailed logs:"
+            echo ""
+            echo "   • Run the failing test with debug mode enabled"
+            echo "   • Let it run for at least 30 seconds to capture behavior"
+            echo "   • Then run diagnostics to collect all logs"
+            echo ""
+            echo -e "${CYAN}2. Insert a USB Drive${NC}"
+            echo "   Diagnostics will automatically save to USB if detected."
+            echo "   This makes it easy to share logs from another computer."
+            echo ""
+            echo -e "${BOLD}Current Configuration:${NC}"
+            local current_debug
+            current_debug=$(get_config_value "DEBUG_MODE")
+            if [ "${current_debug}" = "true" ]; then
+                echo -e "   Debug Mode: ${GREEN}Enabled ✓${NC} (verbose logging active)"
+            else
+                echo -e "   Debug Mode: ${RED}Disabled ✗${NC}"
+                echo ""
+                echo -e "${YELLOW}   ⚠️  Consider enabling debug mode first if troubleshooting!${NC}"
+                echo "      Return to main menu and toggle debug mode on."
+            fi
+            echo ""
+            echo -e "${YELLOW}Note: hdmi-diagnostics requires sudo privileges${NC}"
+            echo ""
+            read -p "Press Enter to continue with diagnostics, or Ctrl+C to cancel..."
+
+            # Run diagnostics
+            echo ""
+            sudo /usr/local/bin/hdmi-diagnostics
+
+            # Show post-diagnostics information
+            echo ""
+            echo ""
+            echo -e "${BOLD}${GREEN}✅ Diagnostics Complete!${NC}"
+            echo ""
+            echo -e "${BOLD}Next Steps:${NC}"
+            echo ""
+            echo -e "${CYAN}1. Submit a GitHub Issue${NC}"
+            echo "   Go to: ${BOLD}https://github.com/benpaddlejones/Raspberry_HDMI_Tester/issues${NC}"
+            echo ""
+            echo -e "${CYAN}2. Attach the Diagnostic Files${NC}"
+            echo "   If USB was detected, the files are already on your USB drive:"
+            echo "   • hdmi-diagnostics-*.tar.gz (complete archive)"
+            echo "   • diagnostic-report.txt (quick overview)"
+            echo ""
+            echo "   If no USB was found, copy from Raspberry Pi:"
+            echo "   • Files are in: /tmp/hdmi-diagnostics-*/"
+            echo ""
+            echo -e "${CYAN}3. Describe Your Issue${NC}"
+            echo "   Include in your GitHub issue:"
+            echo "   • What you were trying to do"
+            echo "   • What went wrong"
+            echo "   • Attach the diagnostic files"
+            echo ""
+            echo -e "${BOLD}Thank you for helping improve the HDMI Tester! 🙏${NC}"
+            echo ""
+            read -p "Press Enter to continue..."
+            return
+            ;;
+        0) return ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            read -p "Press Enter to continue..."
+            return
+            ;;
+    esac
+
+    if [ -x "${service_script}" ]; then
+        echo ""
+        echo -e "${CYAN}Starting service... (Press Ctrl+C to return to this menu)${NC}"
+        echo ""
+        sleep 2
+
+        # Run the service, trap Ctrl+C to return gracefully
+        "${service_script}" || true
+
+        echo ""
+        echo -e "${YELLOW}Service stopped${NC}"
+        read -p "Press Enter to continue..."
+    else
+        echo -e "${RED}Service script not found: ${service_script}${NC}"
+        read -p "Press Enter to continue..."
+    fi
+}
+
+# View/edit config file
+view_config() {
+    show_header
+    echo -e "${BOLD}Configuration File: ${CONFIG_FILE}${NC}"
+    echo ""
+    cat "${CONFIG_FILE}"
+    echo ""
+    echo -e "${YELLOW}To manually edit, use: sudo nano ${CONFIG_FILE}${NC}"
+    echo ""
+    read -p "Press Enter to continue..."
+}
+
+# Main loop
+main() {
+    # Check if config file exists
+    if [ ! -f "${CONFIG_FILE}" ]; then
+        echo -e "${RED}Error: Configuration file not found: ${CONFIG_FILE}${NC}"
+        echo "This tool requires a properly configured HDMI Tester image."
+        exit 1
+    fi
+
+    while true; do
+        show_header
+        show_current_config
+        show_menu
+
+        read -p "Enter choice [1-5]: " choice
+
+        case "${choice}" in
+            1) toggle_debug ;;
+            2) set_default_service ;;
+            3) run_service_now ;;
+            4) view_config ;;
+            5)
+                echo "Exiting to terminal..."
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                read -p "Press Enter to continue..."
+                ;;
+        esac
+    done
+}
+
+# Run main
+main

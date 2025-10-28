@@ -1,6 +1,9 @@
 #!/bin/bash
 # Audio Test Script: Loop stereo.flac and surround51.flac for HDMI audio testing
 
+# Source configuration library
+source /usr/local/lib/hdmi-tester/config-lib.sh
+
 STEREO_FILE="/opt/hdmi-tester/stereo.flac"
 SURROUND_FILE="/opt/hdmi-tester/surround51.flac"
 LOG_DIR="/logs"
@@ -171,6 +174,10 @@ echo ""
 
     # Run VLC with verbose output (use -vv for detailed debugging until stable)
     # Use --alsa-audio-device to explicitly set HDMI device (AUDIODEV env var doesn't work)
+
+    # Get debug flags from config
+    VLC_FLAGS=$(get_vlc_flags)
+
     exec cvlc --loop --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-        --no-audio-time-stretch --audio-replay-gain-mode=none -vv \
+        --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
         "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1

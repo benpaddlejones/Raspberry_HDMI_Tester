@@ -12,7 +12,7 @@ validate_rootfs_dir || exit 1
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test" "hdmi-tester-config" "hdmi-auto-launcher")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -26,6 +26,18 @@ for script in "${SCRIPTS[@]}"; do
 done
 
 echo "  ✓ All ${#SCRIPTS[@]} scripts validated"
+
+# Install configuration library
+echo "Installing configuration library..."
+mkdir -p "${ROOTFS_DIR}/usr/local/lib/hdmi-tester"
+install -m 644 "files/config-lib.sh" "${ROOTFS_DIR}/usr/local/lib/hdmi-tester/"
+echo "  ✓ Configuration library installed"
+
+# Install default configuration file to /boot/firmware
+echo "Installing default configuration..."
+mkdir -p "${ROOTFS_DIR}/boot/firmware"
+install -m 644 "files/hdmi-tester.conf" "${ROOTFS_DIR}/boot/firmware/"
+echo "  ✓ Default configuration installed to /boot/firmware/hdmi-tester.conf"
 
 # Create log directory for runtime test logs
 echo "Creating /logs directory for runtime test logs..."
@@ -162,6 +174,11 @@ echo "========================================="
 echo "   Raspberry Pi HDMI Tester"
 echo "========================================="
 echo ""
+echo "Configuration:"
+echo ""
+echo "  hdmi-tester-config         - Interactive configuration menu"
+echo "                               (Set debug mode, default service)"
+echo ""
 echo "Available test commands:"
 echo ""
 echo "  hdmi-test                  - Loop image-test.webm"
@@ -175,35 +192,19 @@ echo ""
 echo "  hdmi-diagnostics           - Capture complete system diagnostics"
 echo "                               (Creates timestamped .tar.gz bundle)"
 echo ""
-echo "Available systemd services (not enabled by default):"
+echo "Configuration file: /boot/firmware/hdmi-tester.conf"
+echo "  (Accessible from Windows/Mac when SD card is mounted)"
 echo ""
-echo "  hdmi-test.service              - Auto-run hdmi-test on boot"
-echo "  pixel-test.service             - Auto-run pixel-test on boot"
-echo "  image-test.service             - Auto-run image-test on boot"
-echo "  full-test.service              - Auto-run full-test on boot"
-echo "  audio-test.service             - Auto-run audio-test on boot (MP3 only)"
-echo ""
-echo "To enable auto-start:"
-echo "  sudo systemctl enable hdmi-test.service"
-echo "  sudo systemctl start hdmi-test.service"
-echo ""
-echo "Examples:"
-echo "  hdmi-test          # Loop image test video"
-echo "  pixel-test         # Fullscreen color test"
-echo "  image-test         # Rotate through color images"
-echo "  full-test          # Play both videos in sequence"
-echo "  audio-test         # Loop audio tests"
-echo ""
-echo "Troubleshooting:"
-echo "  hdmi-diagnostics             # Collect all logs and system info"
-echo "                               # Creates /tmp/hdmi-diagnostics-*.tar.gz"
-echo ""
-echo "Press Ctrl+C to stop any test"
+echo "Press Ctrl+C to stop any test and return to config menu"
 echo "========================================="
 echo ""
 WELCOME_EOF
 
+# Add auto-launcher snippet to bashrc
+echo "Configuring auto-launcher..."
+cat "files/bashrc-hdmi-launcher.sh" >> "${ROOTFS_DIR}/home/pi/.bashrc"
+
 # Set correct ownership
 chown -R 1000:1000 "${ROOTFS_DIR}/home/pi"
 
-echo "✅ HDMI tester scripts installed (manual testing mode)"
+echo "✅ HDMI tester scripts installed with configuration system"

@@ -141,7 +141,6 @@ FILES_TO_CHECK=(
     "/opt/hdmi-tester/color-test.webm|Color Test Video"
     "/opt/hdmi-tester/stereo.flac|Stereo FLAC Audio"
     "/opt/hdmi-tester/surround51.flac|5.1 Surround FLAC Audio"
-    "/opt/hdmi-tester/audio.mp3|MP3 Audio File"
     "/opt/hdmi-tester/image.png|Default Test Image"
     "/opt/hdmi-tester/black.png|Black Test Image"
     "/opt/hdmi-tester/blue.png|Blue Test Image"
@@ -152,10 +151,13 @@ FILES_TO_CHECK=(
     "/opt/hdmi-tester/pixel-test|Pixel Test Script"
     "/opt/hdmi-tester/image-test|Image Rotation Test Script"
     "/opt/hdmi-tester/full-test|Full Test Script"
+    "/opt/hdmi-tester/audio-test|Audio Test Script"
     "/opt/hdmi-tester/hdmi-diagnostics|HDMI Diagnostics Script"
     "/opt/hdmi-tester/detect-hdmi-audio|Detect HDMI Audio Script"
-    "/etc/asound.conf|ALSA System Configuration"
-    "/var/lib/alsa/asound.state|ALSA State File"
+    "/usr/local/bin/hdmi-tester-config|Configuration TUI Tool"
+    "/usr/local/bin/hdmi-auto-launcher|Auto-Launcher Script"
+    "/usr/local/lib/hdmi-tester/config-lib.sh|Configuration Library"
+    "/boot/firmware/hdmi-tester.conf|Configuration File"
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
     "/etc/systemd/system/image-test.service|Image Rotation Test Service"
@@ -299,13 +301,16 @@ echo "🔍 Checking test script contents (VLC fixes)..."
 echo ""
 
 SCRIPT_CONTENT_CHECKS=(
-    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|auto-detect|VLC auto-detect video output"
-    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--alsa-audio-device|ALSA audio device flag"
-    "/opt/hdmi-tester/pixel-test|Pixel Test Script|auto-detect|VLC auto-detect video output"
-    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--alsa-audio-device|ALSA audio device flag"
-    "/opt/hdmi-tester/image-test|Image Test Script|auto-detect|VLC auto-detect video output"
-    "/opt/hdmi-tester/full-test|Full Test Script|auto-detect|VLC auto-detect video output"
-    "/opt/hdmi-tester/audio-test|Audio Test Script|--alsa-audio-device|ALSA audio device flag"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|source.*config-lib.sh|Config library sourcing"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|get_vlc_flags|VLC flags from config"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|source.*config-lib.sh|Config library sourcing"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|get_vlc_flags|VLC flags from config"
+    "/opt/hdmi-tester/image-test|Image Test Script|source.*config-lib.sh|Config library sourcing"
+    "/opt/hdmi-tester/image-test|Image Test Script|get_vlc_flags|VLC flags from config"
+    "/opt/hdmi-tester/full-test|Full Test Script|source.*config-lib.sh|Config library sourcing"
+    "/opt/hdmi-tester/full-test|Full Test Script|get_vlc_flags|VLC flags from config"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|source.*config-lib.sh|Config library sourcing"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|get_vlc_flags|VLC flags from config"
 )
 
 for check_entry in "${SCRIPT_CONTENT_CHECKS[@]}"; do
@@ -317,10 +322,10 @@ for check_entry in "${SCRIPT_CONTENT_CHECKS[@]}"; do
         continue
     fi
 
-    if grep -qF -- "${pattern}" "${full_path}" 2>/dev/null; then
+    if grep -qE -- "${pattern}" "${full_path}" 2>/dev/null; then
         echo "  ✅ ${script_name}: ${description} configured correctly"
     else
-        echo "  ❌ ${script_name}: Missing ${description} (expected '${pattern}')"
+        echo "  ❌ ${script_name}: Missing ${description} (expected pattern '${pattern}')"
         VALIDATION_ERRORS+=("${script_name}: Missing ${description}")
         ALL_OK=false
     fi
@@ -332,13 +337,11 @@ echo "🔍 Checking for deprecated/broken flags..."
 echo ""
 
 BAD_FLAG_CHECKS=(
-    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|--vout=fbdev|fbdev (deprecated)"
-    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
-    "/opt/hdmi-tester/pixel-test|Pixel Test Script|--vout=fbdev|fbdev (deprecated)"
-    "/opt/hdmi-tester/pixel-test|Pixel Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
-    "/opt/hdmi-tester/image-test|Image Test Script|--vout=fbdev|fbdev (deprecated)"
-    "/opt/hdmi-tester/full-test|Full Test Script|--vout=fbdev|fbdev (deprecated)"
-    "/opt/hdmi-tester/audio-test|Audio Test Script|export AUDIODEV=|AUDIODEV env var (doesn't work)"
+    "/opt/hdmi-tester/hdmi-test|HDMI Test Script|-vvv|hardcoded -vvv (should use config)"
+    "/opt/hdmi-tester/pixel-test|Pixel Test Script|-vvv|hardcoded -vvv (should use config)"
+    "/opt/hdmi-tester/image-test|Image Test Script|-vvv|hardcoded -vvv (should use config)"
+    "/opt/hdmi-tester/full-test|Full Test Script|-vvv|hardcoded -vvv (should use config)"
+    "/opt/hdmi-tester/audio-test|Audio Test Script|-vvv|hardcoded -vvv (should use config)"
 )
 
 for check_entry in "${BAD_FLAG_CHECKS[@]}"; do
@@ -357,6 +360,98 @@ for check_entry in "${BAD_FLAG_CHECKS[@]}"; do
         echo "  ✅ ${script_name}: No deprecated ${description}"
     fi
 done
+
+echo ""
+
+# Check configuration system
+echo "🔍 Checking configuration system..."
+echo ""
+
+# Check config file exists and has correct defaults
+CONFIG_FILE="${MOUNT_POINT}/boot/firmware/hdmi-tester.conf"
+if [ -f "${CONFIG_FILE}" ]; then
+    echo "  ✅ Configuration file exists: /boot/firmware/hdmi-tester.conf"
+
+    # Check for required config keys
+    if grep -q "^DEBUG_MODE=" "${CONFIG_FILE}" 2>/dev/null; then
+        DEBUG_VALUE=$(grep "^DEBUG_MODE=" "${CONFIG_FILE}" | cut -d'=' -f2)
+        if [ "${DEBUG_VALUE}" = "true" ]; then
+            echo "      ✅ DEBUG_MODE=true (verbose logging enabled by default)"
+        else
+            echo "      ⚠️  DEBUG_MODE=${DEBUG_VALUE} (expected 'true' by default)"
+        fi
+    else
+        echo "      ❌ DEBUG_MODE not found in config"
+        VALIDATION_ERRORS+=("DEBUG_MODE missing from config file")
+        ALL_OK=false
+    fi
+
+    if grep -q "^DEFAULT_SERVICE=" "${CONFIG_FILE}" 2>/dev/null; then
+        DEFAULT_VALUE=$(grep "^DEFAULT_SERVICE=" "${CONFIG_FILE}" | cut -d'=' -f2)
+        if [ -z "${DEFAULT_VALUE}" ]; then
+            echo "      ✅ DEFAULT_SERVICE is empty (boot to terminal by default)"
+        else
+            echo "      ⚠️  DEFAULT_SERVICE=${DEFAULT_VALUE} (expected empty by default)"
+        fi
+    else
+        echo "      ❌ DEFAULT_SERVICE not found in config"
+        VALIDATION_ERRORS+=("DEFAULT_SERVICE missing from config file")
+        ALL_OK=false
+    fi
+else
+    echo "  ❌ Configuration file not found: /boot/firmware/hdmi-tester.conf"
+    VALIDATION_ERRORS+=("Configuration file missing")
+    ALL_OK=false
+fi
+
+# Check config library
+if [ -f "${MOUNT_POINT}/usr/local/lib/hdmi-tester/config-lib.sh" ]; then
+    echo "  ✅ Configuration library exists"
+
+    # Check for key functions
+    if grep -q "get_vlc_flags()" "${MOUNT_POINT}/usr/local/lib/hdmi-tester/config-lib.sh" 2>/dev/null; then
+        echo "      ✅ get_vlc_flags() function defined"
+    else
+        echo "      ❌ get_vlc_flags() function missing"
+        VALIDATION_ERRORS+=("get_vlc_flags() missing from config library")
+        ALL_OK=false
+    fi
+else
+    echo "  ❌ Configuration library not found"
+    VALIDATION_ERRORS+=("Configuration library missing")
+    ALL_OK=false
+fi
+
+# Check TUI tool
+if [ -f "${MOUNT_POINT}/usr/local/bin/hdmi-tester-config" ] && [ -x "${MOUNT_POINT}/usr/local/bin/hdmi-tester-config" ]; then
+    echo "  ✅ Configuration TUI tool exists and is executable"
+else
+    echo "  ❌ Configuration TUI tool missing or not executable"
+    VALIDATION_ERRORS+=("Configuration TUI missing or not executable")
+    ALL_OK=false
+fi
+
+# Check auto-launcher
+if [ -f "${MOUNT_POINT}/usr/local/bin/hdmi-auto-launcher" ] && [ -x "${MOUNT_POINT}/usr/local/bin/hdmi-auto-launcher" ]; then
+    echo "  ✅ Auto-launcher exists and is executable"
+else
+    echo "  ❌ Auto-launcher missing or not executable"
+    VALIDATION_ERRORS+=("Auto-launcher missing or not executable")
+    ALL_OK=false
+fi
+
+# Check bashrc integration
+if [ -f "${MOUNT_POINT}/home/pi/.bashrc" ]; then
+    if grep -q "hdmi-auto-launcher" "${MOUNT_POINT}/home/pi/.bashrc" 2>/dev/null; then
+        echo "  ✅ Auto-launcher integrated into .bashrc"
+    else
+        echo "  ❌ Auto-launcher not integrated into .bashrc"
+        VALIDATION_ERRORS+=("Auto-launcher not in .bashrc")
+        ALL_OK=false
+    fi
+else
+    echo "  ⚠️  /home/pi/.bashrc not found"
+fi
 
 echo ""
 

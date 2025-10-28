@@ -41,12 +41,12 @@ echo "  ✓ Source files validated"
 # Create target directory
 mkdir -p "${ROOTFS_DIR}/opt/hdmi-tester"
 
-# Copy FLAC files
+# Copy FLAC files (owned by pi user: UID 1000, GID 1000)
 echo "  Copying stereo.flac..."
-install -m 644 -o root -g root "${FILES_DIR}/stereo.flac" "${ROOTFS_DIR}/opt/hdmi-tester/"
+install -m 644 -o 1000 -g 1000 "${FILES_DIR}/stereo.flac" "${ROOTFS_DIR}/opt/hdmi-tester/"
 
 echo "  Copying surround51.flac..."
-install -m 644 -o root -g root "${FILES_DIR}/surround51.flac" "${ROOTFS_DIR}/opt/hdmi-tester/"
+install -m 644 -o 1000 -g 1000 "${FILES_DIR}/surround51.flac" "${ROOTFS_DIR}/opt/hdmi-tester/"
 
 # Verify files were copied
 if [ ! -f "${ROOTFS_DIR}/opt/hdmi-tester/stereo.flac" ]; then
