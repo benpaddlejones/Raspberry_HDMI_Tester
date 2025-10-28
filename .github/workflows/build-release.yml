@@ -1204,6 +1204,8 @@ jobs:
           **Build Date:** ${BUILD_DATE}
           **Commit:** ${{ github.sha }}
 
+          📋 **[View Full Changelog](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/blob/main/CHANGELOG.md)**
+
           ---
 
           ## ✨ Features
@@ -1225,8 +1227,8 @@ jobs:
 
           ### Quick Start (Windows 11)
 
-          1. **Download** \`RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz\`
-          2. **Extract** the \`.img\` file from the gzip archive
+          1. **Download** [RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/v${{ steps.config.outputs.version }}/RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz)
+          2. **Extract** the [.img file](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases/download/v${{ steps.config.outputs.version }}/RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz) from the gzip archive
              - Windows: Use [7-Zip](https://www.7-zip.org/) or extract via Raspberry Pi Imager directly
              - macOS/Linux: \`gunzip RaspberryPi_HDMI_Tester_v${{ steps.config.outputs.version }}.img.gz\`
           3. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
