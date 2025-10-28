@@ -44,6 +44,14 @@ CONFIG_FILE="${PROJECT_ROOT}/build/config"
 
 # Clean any previous build BEFORE setting up logging
 # (logging file lives in WORK_DIR, so we must clean before creating it)
+# CRITICAL: Preserve any early error log created by GitHub Actions workflow
+EARLY_LOG_BACKUP=""
+if [ -d "${WORK_DIR}" ] && [ -f "${WORK_DIR}/build-detailed.log" ]; then
+    echo "💾 Preserving early error log..."
+    EARLY_LOG_BACKUP=$(mktemp)
+    cp "${WORK_DIR}/build-detailed.log" "${EARLY_LOG_BACKUP}"
+fi
+
 if [ -d "${WORK_DIR}" ]; then
     echo "🧹 Cleaning previous build directory..."
     sudo rm -rf "${WORK_DIR}"
@@ -62,6 +70,16 @@ source "${SCRIPT_DIR}/logging-utils.sh"
 mkdir -p "${BUILD_LOG_DIR}"
 mkdir -p "${WORK_DIR}"
 init_logging "${BUILD_LOG_FILE}"
+
+# Restore early log content if it existed (from GitHub Actions workflow)
+if [ -n "${EARLY_LOG_BACKUP}" ] && [ -f "${EARLY_LOG_BACKUP}" ]; then
+    echo "📝 Restoring early error log content..."
+    # Prepend early log to new log file
+    cat "${EARLY_LOG_BACKUP}" "${BUILD_LOG_FILE}" > "${BUILD_LOG_FILE}.tmp"
+    mv "${BUILD_LOG_FILE}.tmp" "${BUILD_LOG_FILE}"
+    rm -f "${EARLY_LOG_BACKUP}"
+    echo "✅ Early log content preserved"
+fi
 
 # Terminal banner (simplified for clean output)
 echo "=================================================="
