@@ -141,7 +141,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # ROOT CAUSE #2 FIX: Remove ALL firmware parameters to prevent conflicts
     # Raspberry Pi firmware adds these during boot, but they conflict with DRM/vc4
     # We remove them completely - kernel will use defaults which work better with modern drivers
-    # 
+    #
     # Firmware parameters that cause problems:
     # - coherent_pool=1M       : DMA pool (kernel default is fine)
     # - 8250.nr_uarts=0        : Disables 8250 UART (breaks serial console on some models)
@@ -175,7 +175,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # These audio parameters MUST come last to override any firmware additions
     # Firmware may inject parameters at the START of cmdline, so we append at the END
     # Kernel processes parameters left-to-right, LAST value wins
-    # 
+    #
     # CRITICAL: snd_bcm2835.enable_hdmi=1 MUST be the final audio parameter
     # NOTE: For DRM/vc4 systems (Pi 3B+, Pi 4, Pi 5), the vc4-hdmi driver handles audio,
     # but we keep snd_bcm2835 enabled for backward compatibility with older models
@@ -191,13 +191,13 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
 
     # Verify NO firmware parameters remain (they cause conflicts)
     CMDLINE_CONTENT=$(cat "${CMDLINE_FILE}")
-    
+
     if echo "${CMDLINE_CONTENT}" | grep -q "coherent_pool="; then
         echo "❌ Error: coherent_pool parameter still present in ${CMDLINE_FILE}"
         echo "   This firmware parameter causes DRM conflicts"
         exit 1
     fi
-    
+
     if echo "${CMDLINE_CONTENT}" | grep -q "vc_mem\."; then
         echo "❌ Error: vc_mem parameter still present in ${CMDLINE_FILE}"
         echo "   This firmware parameter causes memory conflicts"
@@ -239,7 +239,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         echo "❌ Error: Failed to add fastboot parameter to ${CMDLINE_FILE}"
         exit 1
     fi
-    
+
     echo "  ✅ Validated: Single line, no firmware conflicts, enable_hdmi=1 is last"
 done
 
