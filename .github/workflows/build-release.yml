@@ -502,7 +502,7 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
 
-      - name: Commit build logs to repository
+      - name: Prepare build logs (commit only if build script failed)
         if: always()
         run: |
           BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
@@ -513,15 +513,17 @@ jobs:
           mkdir -p logs/successful-builds
           mkdir -p logs/failed-builds
 
-          # Determine log destination and filename
+          # CRITICAL CHANGE: Only commit logs for FAILED builds at this stage
+          # Successful builds will be committed AFTER validation/QEMU/release succeed
+          # This ensures logs are only in successful-builds if the ENTIRE workflow succeeds
           if [ "${BUILD_EXIT_CODE}" = "0" ]; then
-            LOG_DIR="logs/successful-builds"
-            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}.log"
-            echo "📝 Committing successful build log..."
+            echo "📝 Build script succeeded - log will be committed AFTER validation and release creation"
+            echo "⏳ Deferring log commit until workflow completion..."
+            exit 0
           else
             LOG_DIR="logs/failed-builds"
             LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_FAILED.log"
-            echo "📝 Committing failed build log..."
+            echo "📝 Committing failed build log (build script failed)..."
           fi
 
           # Copy log to repository or create error report
@@ -587,28 +589,10 @@ jobs:
             git add "${LOG_FILE}"
             git add logs/README.md logs/.gitkeep 2>/dev/null || true
 
-            if [ "${BUILD_EXIT_CODE}" = "0" ]; then
-              git commit -m "logs: Add successful build log for v${VERSION} [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
-            else
-              git commit -m "logs: Add failed build log [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
-            fi
+            git commit -m "logs: Add failed build log [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
 
-            # Push (only if build succeeded - for failed builds we'll push at the end)
-            if [ "${BUILD_EXIT_CODE}" = "0" ]; then
-              # Pull latest changes to avoid conflicts
-              git pull --rebase origin ${GITHUB_REF_NAME} || {
-                echo "⚠️ Rebase failed, trying merge..."
-                git pull origin ${GITHUB_REF_NAME}
-              }
-
-              git push || {
-                echo "❌ Failed to push logs"
-                exit 1
-              }
-              echo "✅ Build log committed and pushed"
-            else
-              echo "✅ Build log committed (will push at workflow end)"
-            fi
+            # Don't push yet - will be pushed at workflow end with other failed build artifacts
+            echo "✅ Failed build log committed (will push at workflow end)"
           fi
 
       - name: Validate built image
@@ -1306,6 +1290,64 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit successful build log
+        if: success()
+        run: |
+          BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
+          VERSION="${{ steps.config.outputs.version }}"
+
+          echo "📝 Committing successful build log (after complete validation & release)..."
+
+          # Create logs directory
+          mkdir -p logs/successful-builds
+
+          LOG_DIR="logs/successful-builds"
+          LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}.log"
+
+          # Copy log to repository
+          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
+            cp build/pi-gen-work/build-detailed.log "${LOG_FILE}"
+            echo "✅ Log file copied"
+          else
+            echo "❌ Error: Build log file not found at build/pi-gen-work/build-detailed.log"
+            echo "This should not happen - build succeeded but log is missing"
+            exit 1
+          fi
+
+          # Compress if larger than 50MB to stay within GitHub limits
+          if [ -f "${LOG_FILE}" ]; then
+            LOG_SIZE=$(stat -c%s "${LOG_FILE}" 2>/dev/null || echo 0)
+            if [ ${LOG_SIZE} -gt 52428800 ]; then
+              echo "⚠️  Log file is large ($(( LOG_SIZE / 1048576 ))MB), compressing..."
+              gzip "${LOG_FILE}"
+              LOG_FILE="${LOG_FILE}.gz"
+            fi
+
+            # Configure git
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+
+            # Add and commit log
+            git add "${LOG_FILE}"
+            git add logs/README.md logs/.gitkeep 2>/dev/null || true
+
+            git commit -m "logs: Add successful build log for v${VERSION} [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
+
+            # Pull latest changes to avoid conflicts
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
+              echo "⚠️ Rebase failed, trying merge..."
+              git pull origin ${GITHUB_REF_NAME}
+            }
+
+            # Push successful build log
+            git push || {
+              echo "❌ Failed to push logs"
+              exit 1
+            }
+
+            echo "✅ Successful build log committed and pushed to logs/successful-builds/"
+          fi
 
       - name: Update README with release link
         run: |
