@@ -509,6 +509,18 @@ jobs:
           BUILD_EXIT_CODE="${{ env.BUILD_EXIT_CODE }}"
           VERSION="${{ steps.config.outputs.version }}"
 
+          # Fallback for timestamp if build failed before it was set
+          if [ -z "$BUILD_TIMESTAMP" ]; then
+            BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d_%H-%M-%S')
+            echo "⚠️  BUILD_TIMESTAMP was not set, using fallback: ${BUILD_TIMESTAMP}"
+          fi
+
+          # Fallback for version if config step failed
+          if [ -z "$VERSION" ]; then
+            VERSION="unknown"
+            echo "⚠️  VERSION was not set, using fallback: ${VERSION}"
+          fi
+
           # Create logs directories
           mkdir -p logs/successful-builds
           mkdir -p logs/failed-builds
@@ -522,7 +534,7 @@ jobs:
             exit 0
           else
             LOG_DIR="logs/failed-builds"
-            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_FAILED.log"
+            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}-v${VERSION}_FAILED.log"
             echo "📝 Committing failed build log (build script failed)..."
           fi
 
