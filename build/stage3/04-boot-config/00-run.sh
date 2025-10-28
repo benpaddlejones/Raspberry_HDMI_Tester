@@ -133,6 +133,11 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         exit 1
     fi
 
+    # CRITICAL FIX: Flatten multi-line cmdline.txt to single line FIRST
+    # Raspberry Pi firmware/firstboot scripts may create multi-line files
+    # This ensures we always work with a single-line file
+    sed -i ':a;N;$!ba;s/\n/ /g' "${CMDLINE_FILE}"
+
     # Remove ALL existing conflicting parameters (including firmware-added ones)
     # This prevents duplicates and conflicts when firmware/firstboot scripts modify cmdline.txt
     sed -i \
@@ -152,10 +157,18 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         -e 's/^ *//;s/ *$//' \
         "${CMDLINE_FILE}"
 
-    # Append clean parameters ONCE
+    # Append clean parameters ONCE to the single line (using line-specific anchor)
     # NOTE: For DRM/vc4 systems (Pi 3B+, Pi 4, Pi 5), the vc4-hdmi driver handles audio,
     # but we keep snd_bcm2835 enabled for backward compatibility with older models
-    sed -i 's/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
+    sed -i '1 s/$/ snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
+
+    # Verify file is single line (critical for boot)
+    LINE_COUNT=$(wc -l < "${CMDLINE_FILE}")
+    if [ "${LINE_COUNT}" -gt 1 ]; then
+        echo "❌ Error: ${CMDLINE_FILE} has ${LINE_COUNT} lines (must be exactly 1)"
+        echo "   Content: $(head -c 200 "${CMDLINE_FILE}")"
+        exit 1
+    fi
 
     # Verify parameters were added
     if ! grep -q "snd_bcm2835.enable_hdmi=1" "${CMDLINE_FILE}"; then
