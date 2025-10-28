@@ -281,11 +281,11 @@ pcm.hdmi_dmix {
         period_time 0
         period_size 1024
         buffer_size 4096
-        
+
         # Don't force specific rate/format - let plug handle conversion
         # This allows hardware to negotiate its preferred format
     }
-    
+
     hint {
         show on
         description "HDMI Audio Mixer (allows app sharing)"
