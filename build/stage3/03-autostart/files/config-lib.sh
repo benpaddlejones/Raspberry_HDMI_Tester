@@ -119,10 +119,10 @@ is_valid_service() {
 
 # Get VLC debug flags based on config
 # Usage: get_vlc_flags
-# Returns: "--vvv" if debug enabled, "" otherwise
+# Returns: "-vvv" if debug enabled, "" otherwise
 get_vlc_flags() {
     if is_debug_enabled; then
-        echo "--vvv"
+        echo "-vvv"
     else
         echo ""
     fi
