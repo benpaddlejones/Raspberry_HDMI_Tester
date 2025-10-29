@@ -519,7 +519,7 @@ if [ -f "${MOUNT_POINT}/usr/bin/dpkg-query" ]; then
 
         # Mount and track pseudo-filesystems atomically
         # CRITICAL: Track BEFORE mounting so cleanup works even if mount fails partway
-        
+
         # Mount /proc
         if ! mountpoint -q "${MOUNT_POINT}/proc" 2>/dev/null; then
             track_mount "${MOUNT_POINT}/proc"
@@ -590,7 +590,7 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     IFS='|' read -r package description <<< "${pkg_entry}"
 
     PKG_INSTALLED=false
-    
+
     # Try chroot method if available
     if [ "${CAN_CHROOT}" = true ]; then
         # Chroot already tested and working, so no timeout needed here
