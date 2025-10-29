@@ -65,7 +65,8 @@ fi
 
 echo ""
 
-# Setup cleanup traps
+# CRITICAL: Setup cleanup traps BEFORE creating any resources
+# This ensures proper cleanup even if script exits unexpectedly
 setup_traps
 
 # Setup loop device
@@ -73,21 +74,52 @@ echo "📁 Setting up loop device..."
 LOOP_DEVICE=$(setup_loop_device "${IMAGE_FILE}")
 LOOP_EXIT=$?
 if [ ${LOOP_EXIT} -ne 0 ] || [ -z "${LOOP_DEVICE}" ]; then
-    echo "❌ Failed to setup loop device"
+    echo "❌ Failed to setup loop device (exit code: ${LOOP_EXIT})"
     exit 1
 fi
 
 echo "✅ Loop device ready: ${LOOP_DEVICE}"
 
-# CRITICAL FIX: Give kernel time to create partition devices
+# Wait for partition devices to be created by the kernel
+# Replace brittle sleep/partprobe with proper wait loop
 echo "⏳ Waiting for partition devices to be created..."
-sleep 2
+PARTITION_WAIT_MAX=10  # Maximum seconds to wait
+PARTITION_WAIT_COUNT=0
+
+# Try to probe partitions
 sudo partprobe "${LOOP_DEVICE}" 2>/dev/null || true
 
-# Additional wait for udev to settle
+# Wait for udev to settle if available
 if command -v udevadm &>/dev/null; then
     sudo udevadm settle 2>/dev/null || true
 fi
+
+# Determine partition naming convention (loop0p1 vs loop0_1)
+BOOT_PARTITION_EXPECTED="${LOOP_DEVICE}p1"
+if [ ! -e "${BOOT_PARTITION_EXPECTED}" ]; then
+    # Some systems use loop0_1 instead of loop0p1
+    BOOT_PARTITION_EXPECTED="${LOOP_DEVICE}_1"
+fi
+
+# Wait loop: check every 0.5 seconds for partition device to appear
+while [ ${PARTITION_WAIT_COUNT} -lt $((PARTITION_WAIT_MAX * 2)) ]; do
+    if [ -e "${BOOT_PARTITION_EXPECTED}" ]; then
+        break
+    fi
+    sleep 0.5
+    PARTITION_WAIT_COUNT=$((PARTITION_WAIT_COUNT + 1))
+done
+
+# Verify we actually found the partition
+if [ ! -e "${BOOT_PARTITION_EXPECTED}" ]; then
+    echo "❌ Partition devices not created after ${PARTITION_WAIT_MAX}s wait"
+    echo "   Expected: ${BOOT_PARTITION_EXPECTED}"
+    echo "   Available loop devices:"
+    ls -la /dev/loop* 2>/dev/null || echo "   (none found)"
+    exit 1
+fi
+
+echo "✅ Partition devices ready (waited $((PARTITION_WAIT_COUNT / 2)).$((PARTITION_WAIT_COUNT % 2 * 5))s)"
 echo ""
 
 # Verify boot partition exists
@@ -114,7 +146,20 @@ echo ""
 MOUNT_POINT=$(create_temp_dir "/tmp" "hdmi-tester-mount")
 MOUNT_EXIT=$?
 if [ ${MOUNT_EXIT} -ne 0 ] || [ -z "${MOUNT_POINT}" ]; then
-    echo "❌ Failed to create mount point"
+    echo "❌ Failed to create mount point (exit code: ${MOUNT_EXIT})"
+    exit 1
+fi
+
+# Validate MOUNT_POINT is a safe absolute path before using it
+if [[ ! "${MOUNT_POINT}" =~ ^/tmp/.+ ]]; then
+    echo "❌ Invalid mount point path: ${MOUNT_POINT}"
+    echo "   Expected path under /tmp/"
+    exit 1
+fi
+
+# Verify directory exists and is writable
+if [ ! -d "${MOUNT_POINT}" ] || [ ! -w "${MOUNT_POINT}" ]; then
+    echo "❌ Mount point not accessible: ${MOUNT_POINT}"
     exit 1
 fi
 
@@ -187,15 +232,12 @@ echo "🔍 Checking auto-start configuration (Console Mode)..."
 echo ""
 
 # Check for auto-login on tty1
-AUTOLOGIN_FOUND=false
-
 if [ -f "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]; then
     echo "  ✅ Auto-login config: /etc/systemd/system/getty@tty1.service.d/autologin.conf found"
 
     # Validate it contains autologin for pi user
     if grep -q "autologin pi" "${MOUNT_POINT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null; then
         echo "      ✅ Auto-login configured for user 'pi'"
-        AUTOLOGIN_FOUND=true
     else
         echo "      ⚠️  Auto-login config exists but may not be configured correctly"
         VALIDATION_ERRORS+=("Auto-login not configured for pi user")
@@ -470,54 +512,71 @@ fi
 
 # Check if we can use chroot (need qemu-user-static for ARM binaries on x86_64)
 CAN_CHROOT=false
-QEMU_COPIED=false
 if [ -f "${MOUNT_POINT}/usr/bin/dpkg-query" ]; then
     # Check if qemu-arm-static is available and binfmt is configured
     if [ -f "/usr/bin/qemu-arm-static" ] && [ -f "/proc/sys/fs/binfmt_misc/qemu-arm" ]; then
-        # CRITICAL FIX #1: Mount required pseudo-filesystems for chroot
-        echo "  ℹ️  Mounting pseudo-filesystems for chroot environment..."
+        echo "  ℹ️  Preparing chroot environment with pseudo-filesystems..."
 
-        # Mount /proc if not already mounted
+        # Mount and track pseudo-filesystems atomically
+        # CRITICAL: Track BEFORE mounting so cleanup works even if mount fails partway
+        
+        # Mount /proc
         if ! mountpoint -q "${MOUNT_POINT}/proc" 2>/dev/null; then
-            sudo mount -t proc proc "${MOUNT_POINT}/proc" || {
-                echo "  ⚠️  Failed to mount /proc, chroot may not work properly"
-            }
+            track_mount "${MOUNT_POINT}/proc"
+            if sudo mount -t proc proc "${MOUNT_POINT}/proc" 2>/dev/null; then
+                echo "     ✅ Mounted /proc"
+            else
+                echo "     ⚠️  Failed to mount /proc - chroot may not work"
+                # Remove from tracking since mount failed
+                CLEANUP_MOUNTS=("${CLEANUP_MOUNTS[@]/${MOUNT_POINT}\/proc}")
+            fi
         fi
 
-        # Mount /dev if not already mounted
+        # Mount /dev
         if ! mountpoint -q "${MOUNT_POINT}/dev" 2>/dev/null; then
-            sudo mount --bind /dev "${MOUNT_POINT}/dev" || {
-                echo "  ⚠️  Failed to mount /dev, chroot may not work properly"
-            }
+            track_mount "${MOUNT_POINT}/dev"
+            if sudo mount --bind /dev "${MOUNT_POINT}/dev" 2>/dev/null; then
+                echo "     ✅ Mounted /dev"
+            else
+                echo "     ⚠️  Failed to mount /dev - chroot may not work"
+                CLEANUP_MOUNTS=("${CLEANUP_MOUNTS[@]/${MOUNT_POINT}\/dev}")
+            fi
         fi
 
-        # Mount /sys if not already mounted
+        # Mount /sys
         if ! mountpoint -q "${MOUNT_POINT}/sys" 2>/dev/null; then
-            sudo mount --bind /sys "${MOUNT_POINT}/sys" || {
-                echo "  ⚠️  Failed to mount /sys, chroot may not work properly"
-            }
+            track_mount "${MOUNT_POINT}/sys"
+            if sudo mount --bind /sys "${MOUNT_POINT}/sys" 2>/dev/null; then
+                echo "     ✅ Mounted /sys"
+            else
+                echo "     ⚠️  Failed to mount /sys - chroot may not work"
+                CLEANUP_MOUNTS=("${CLEANUP_MOUNTS[@]/${MOUNT_POINT}\/sys}")
+            fi
         fi
 
-        # Track these mounts for cleanup
-        track_mount "${MOUNT_POINT}/proc"
-        track_mount "${MOUNT_POINT}/dev"
-        track_mount "${MOUNT_POINT}/sys"
-
-        # CRITICAL FIX #2: Track qemu-arm-static for cleanup
         # Ensure qemu-arm-static is available in chroot
         if [ ! -f "${MOUNT_POINT}/usr/bin/qemu-arm-static" ]; then
             echo "  ℹ️  Copying qemu-arm-static to chroot..."
-            sudo cp /usr/bin/qemu-arm-static "${MOUNT_POINT}/usr/bin/"
-            QEMU_COPIED=true
-            track_temp_file "${MOUNT_POINT}/usr/bin/qemu-arm-static"
+            if sudo cp /usr/bin/qemu-arm-static "${MOUNT_POINT}/usr/bin/" 2>/dev/null; then
+                track_temp_file "${MOUNT_POINT}/usr/bin/qemu-arm-static"
+                echo "     ✅ qemu-arm-static copied"
+            else
+                echo "     ⚠️  Failed to copy qemu-arm-static"
+            fi
         fi
 
-        CAN_CHROOT=true
-        echo "  ✅ ARM binary execution available (qemu-user-static)"
-        echo "  ✅ Chroot environment prepared with pseudo-filesystems"
+        # Test if chroot actually works with a simple command
+        echo "  ℹ️  Testing chroot functionality..."
+        if timeout 5 sudo chroot "${MOUNT_POINT}" /bin/true 2>/dev/null; then
+            CAN_CHROOT=true
+            echo "  ✅ Chroot environment ready and functional"
+        else
+            echo "  ⚠️  Chroot test failed - will use fallback binary checks"
+            echo "     (This is normal on some systems and doesn't affect validation)"
+        fi
     else
-        echo "  ⚠️  Cannot execute ARM binaries (qemu-user-static not configured)"
-        echo "      Will use fallback binary checks instead"
+        echo "  ℹ️  ARM emulation not available (qemu-user-static not configured)"
+        echo "     Will use fallback binary checks instead"
     fi
 else
     echo "  ⚠️  dpkg-query not found in image"
@@ -530,23 +589,17 @@ REQUIRED_PACKAGES=(
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     IFS='|' read -r package description <<< "${pkg_entry}"
 
-    # Try chroot method first if available
     PKG_INSTALLED=false
+    
+    # Try chroot method if available
     if [ "${CAN_CHROOT}" = true ]; then
-        # CRITICAL FIX #3: Add timeout for entire chroot operation, not just dpkg-query
-        # Use timeout to prevent hangs from QEMU/binfmt issues
-        if timeout 15 bash -c "sudo chroot '${MOUNT_POINT}' dpkg-query -W -f='\${Status}' '${package}' 2>/dev/null | grep -q 'install ok installed'"; then
+        # Chroot already tested and working, so no timeout needed here
+        if sudo chroot "${MOUNT_POINT}" dpkg-query -W -f='${Status}' "${package}" 2>/dev/null | grep -q 'install ok installed'; then
             PKG_INSTALLED=true
-        else
-            CHROOT_EXIT=$?
-            if [ ${CHROOT_EXIT} -eq 124 ]; then
-                echo "  ⚠️  Chroot timeout for ${package} (QEMU/binfmt may be failing)"
-                CAN_CHROOT=false  # Disable chroot for remaining checks
-            fi
         fi
     fi
 
-    # Fallback: Check for key binaries directly
+    # Fallback: Check for key binaries directly in filesystem
     if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
             alsa-utils)
