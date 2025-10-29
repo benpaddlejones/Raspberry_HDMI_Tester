@@ -1,0 +1,191 @@
+==================================================================
+  FILESYSTEM STRUCTURE - VALIDATION FAILURE DEBUG
+==================================================================
+Date: 2025-10-29 05:46:57 UTC
+Version: 0.9.7.28
+Image: build/pi-gen-work/deploy/2025-10-29-RaspberryPi_HDMI_Tester-hdmi-tester.img
+
+==================================================================
+MOUNTING IMAGE FOR STRUCTURE CAPTURE
+==================================================================
+
+✅ Root partition mounted successfully
+
+==================================================================
+CRITICAL DIRECTORIES - DETAILED STRUCTURE
+==================================================================
+
+--- /opt/hdmi-tester ---
+total 4.0M
+drwxr-xr-x 2 root   root   4.0K Oct 29 05:36 .
+drwxr-xr-x 3 root   root   4.0K Oct 29 05:36 ..
+-rwxr-xr-x 1 root   root   6.3K Oct 29 05:36 audio-test
+-rw-r--r-- 1 packer packer 203K Oct 29 05:36 audio.mp3
+-rw-r--r-- 1 packer packer 6.1K Oct 29 05:36 black.png
+-rw-r--r-- 1 packer packer  426 Oct 29 05:36 blue.png
+-rwxr-xr-x 1 root   root   1.8K Oct 29 05:36 check-audio-health
+-rw-r--r-- 1 packer packer 921K Oct 29 05:36 color-test.mp4
+-rw-r--r-- 1 packer packer 608K Oct 29 05:36 color-test.webm
+-rwxr-xr-x 1 root   root   3.1K Oct 29 05:36 detect-hdmi-audio
+-rwxr-xr-x 1 root   root   6.2K Oct 29 05:36 full-test
+-rw-r--r-- 1 packer packer  426 Oct 29 05:36 green.png
+-rwxr-xr-x 1 root   root   2.4K Oct 29 05:36 hdmi-auto-launcher
+-rwxr-xr-x 1 root   root    37K Oct 29 05:36 hdmi-diagnostics
+-rwxr-xr-x 1 root   root   8.7K Oct 29 05:36 hdmi-test
+-rwxr-xr-x 1 root   root   9.7K Oct 29 05:36 hdmi-tester-config
+-rwxr-xr-x 1 root   root   5.9K Oct 29 05:36 image-test
+-rw-r--r-- 1 packer packer 605K Oct 29 05:36 image-test.mp4
+-rw-r--r-- 1 packer packer 817K Oct 29 05:36 image-test.webm
+-rw-r--r-- 1 packer packer 347K Oct 29 05:36 image.png
+-rwxr-xr-x 1 root   root   7.4K Oct 29 05:36 pixel-test
+-rw-r--r-- 1 packer packer  426 Oct 29 05:36 red.png
+-rw-r--r-- 1 packer packer  95K Oct 29 05:36 stereo.flac
+-rw-r--r-- 1 packer packer 311K Oct 29 05:36 surround51.flac
+-rw-r--r-- 1 packer packer 8.5K Oct 29 05:36 white.png
+
+--- /boot (config files) ---
+/boot/cmdline.txt
+/boot/config.txt
+/boot/issue.txt
+
+Full /boot structure:
+total 54M
+drwxr-xr-x  3 root root 4.0K Oct 29 05:45 .
+drwxr-xr-x 19 root root 4.0K Oct 29 05:36 ..
+-rw-r--r--  1 root root   83 Sep 16 12:31 System.map-6.12.47+rpt-rpi-v6
+-rw-r--r--  1 root root   83 Sep 16 12:31 System.map-6.12.47+rpt-rpi-v7
+-rw-r--r--  1 root root   83 Sep 16 12:31 System.map-6.12.47+rpt-rpi-v8
+-rw-r--r--  1 root root  189 Oct 29 05:36 cmdline.txt
+-rw-r--r--  1 root root 207K Sep 16 12:31 config-6.12.47+rpt-rpi-v6
+-rw-r--r--  1 root root 213K Sep 16 12:31 config-6.12.47+rpt-rpi-v7
+-rw-r--r--  1 root root 244K Sep 16 12:31 config-6.12.47+rpt-rpi-v8
+-rw-r--r--  1 root root 1.3K Oct 29 05:36 config.txt
+drwxr-xr-x  2 root root 4.0K Oct 29 05:36 firmware
+-rw-r--r--  1 root root 9.4M Oct 29 05:39 initrd.img-6.12.47+rpt-rpi-v6
+-rw-r--r--  1 root root 9.5M Oct 29 05:42 initrd.img-6.12.47+rpt-rpi-v7
+-rw-r--r--  1 root root  10M Oct 29 05:45 initrd.img-6.12.47+rpt-rpi-v8
+lrwxrwxrwx  1 root root   18 Oct 29 05:45 issue.txt -> firmware/issue.txt
+lrwxrwxrwx  1 root root   17 Oct 29 05:25 overlays -> firmware/overlays
+-rw-r--r--  1 root root 7.2M Sep 16 12:31 vmlinuz-6.12.47+rpt-rpi-v6
+-rw-r--r--  1 root root 7.5M Sep 16 12:31 vmlinuz-6.12.47+rpt-rpi-v7
+-rw-r--r--  1 root root 9.6M Sep 16 12:31 vmlinuz-6.12.47+rpt-rpi-v8
+
+--- /boot/firmware (if exists) ---
+
+Full /boot/firmware structure:
+total 8.0K
+drwxr-xr-x 2 root root 4.0K Oct 29 05:36 .
+drwxr-xr-x 3 root root 4.0K Oct 29 05:45 ..
+
+--- /etc/systemd/system (services) ---
+/etc/systemd/system/audio-test.service
+/etc/systemd/system/full-test.service
+/etc/systemd/system/hdmi-test.service
+/etc/systemd/system/image-test.service
+/etc/systemd/system/pixel-test.service
+
+--- /usr/local/bin (executables) ---
+lrwxrwxrwx  1 root root   35 Oct 29 05:36 audio-test -> ../../../opt/hdmi-tester/audio-test
+lrwxrwxrwx  1 root root   42 Oct 29 05:36 detect-hdmi-audio -> ../../../opt/hdmi-tester/detect-hdmi-audio
+lrwxrwxrwx  1 root root   34 Oct 29 05:36 full-test -> ../../../opt/hdmi-tester/full-test
+lrwxrwxrwx  1 root root   43 Oct 29 05:36 hdmi-auto-launcher -> ../../../opt/hdmi-tester/hdmi-auto-launcher
+lrwxrwxrwx  1 root root   41 Oct 29 05:36 hdmi-diagnostics -> ../../../opt/hdmi-tester/hdmi-diagnostics
+lrwxrwxrwx  1 root root   34 Oct 29 05:36 hdmi-test -> ../../../opt/hdmi-tester/hdmi-test
+lrwxrwxrwx  1 root root   43 Oct 29 05:36 hdmi-tester-config -> ../../../opt/hdmi-tester/hdmi-tester-config
+lrwxrwxrwx  1 root root   35 Oct 29 05:36 image-test -> ../../../opt/hdmi-tester/image-test
+lrwxrwxrwx  1 root root   35 Oct 29 05:36 pixel-test -> ../../../opt/hdmi-tester/pixel-test
+
+--- /usr/local/lib/hdmi-tester (libraries) ---
+total 12K
+drwxr-xr-x 2 root root 4.0K Oct 29 05:36 .
+drwxr-xr-x 4 root root 4.0K Oct 29 05:36 ..
+-rw-r--r-- 1 root root 3.4K Oct 29 05:36 config-lib.sh
+
+==================================================================
+FULL /opt TREE
+==================================================================
+/tmp/tmp.edVtg9afHu/opt
+└── hdmi-tester
+    ├── audio-test
+    ├── audio.mp3
+    ├── black.png
+    ├── blue.png
+    ├── check-audio-health
+    ├── color-test.mp4
+    ├── color-test.webm
+    ├── detect-hdmi-audio
+    ├── full-test
+    ├── green.png
+    ├── hdmi-auto-launcher
+    ├── hdmi-diagnostics
+    ├── hdmi-test
+    ├── hdmi-tester-config
+    ├── image-test
+    ├── image-test.mp4
+    ├── image-test.webm
+    ├── image.png
+    ├── pixel-test
+    ├── red.png
+    ├── stereo.flac
+    ├── surround51.flac
+    └── white.png
+
+2 directories, 23 files
+
+==================================================================
+SEARCH FOR ALL EXPECTED FILES IN ALL LOCATIONS
+==================================================================
+
+--- Configuration Files ---
+/usr/local/lib/hdmi-tester/config-lib.sh
+
+--- Test Media Files ---
+/opt/hdmi-tester/image-test.webm
+/opt/hdmi-tester/color-test.webm
+/opt/hdmi-tester/stereo.flac
+/opt/hdmi-tester/surround51.flac
+/opt/hdmi-tester/image.png
+/opt/hdmi-tester/black.png
+/opt/hdmi-tester/blue.png
+/opt/hdmi-tester/green.png
+/opt/hdmi-tester/red.png
+/opt/hdmi-tester/white.png
+
+--- Test Scripts ---
+/opt/hdmi-tester/hdmi-test
+/opt/hdmi-tester/pixel-test
+/opt/hdmi-tester/image-test
+/opt/hdmi-tester/full-test
+/opt/hdmi-tester/audio-test
+/opt/hdmi-tester/hdmi-diagnostics
+/opt/hdmi-tester/detect-hdmi-audio
+
+--- User Tools ---
+/opt/hdmi-tester/hdmi-tester-config
+/opt/hdmi-tester/hdmi-auto-launcher
+
+--- Systemd Services ---
+/etc/systemd/system/hdmi-test.service
+/etc/systemd/system/pixel-test.service
+/etc/systemd/system/image-test.service
+/etc/systemd/system/audio-test.service
+/etc/systemd/system/full-test.service
+
+==================================================================
+SYMLINK VERIFICATION
+==================================================================
+
+Symlinks in /usr/local/bin:
+    20177      0 lrwxrwxrwx   1 root     root           43 Oct 29 05:36 /usr/local/bin/hdmi-auto-launcher -> ../../../opt/hdmi-tester/hdmi-auto-launcher
+    20180      0 lrwxrwxrwx   1 root     root           34 Oct 29 05:36 /usr/local/bin/hdmi-test -> ../../../opt/hdmi-tester/hdmi-test
+    20173      0 lrwxrwxrwx   1 root     root           35 Oct 29 05:36 /usr/local/bin/audio-test -> ../../../opt/hdmi-tester/audio-test
+    20174      0 lrwxrwxrwx   1 root     root           42 Oct 29 05:36 /usr/local/bin/detect-hdmi-audio -> ../../../opt/hdmi-tester/detect-hdmi-audio
+    20178      0 lrwxrwxrwx   1 root     root           41 Oct 29 05:36 /usr/local/bin/hdmi-diagnostics -> ../../../opt/hdmi-tester/hdmi-diagnostics
+    20181      0 lrwxrwxrwx   1 root     root           43 Oct 29 05:36 /usr/local/bin/hdmi-tester-config -> ../../../opt/hdmi-tester/hdmi-tester-config
+    20175      0 lrwxrwxrwx   1 root     root           34 Oct 29 05:36 /usr/local/bin/full-test -> ../../../opt/hdmi-tester/full-test
+    20182      0 lrwxrwxrwx   1 root     root           35 Oct 29 05:36 /usr/local/bin/image-test -> ../../../opt/hdmi-tester/image-test
+    20184      0 lrwxrwxrwx   1 root     root           35 Oct 29 05:36 /usr/local/bin/pixel-test -> ../../../opt/hdmi-tester/pixel-test
+
+==================================================================
+END OF FILESYSTEM STRUCTURE CAPTURE
+==================================================================
