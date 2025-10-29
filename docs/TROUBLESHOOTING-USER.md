@@ -366,7 +366,7 @@ If display supports HDMI audio but you still hear nothing:
    ```bash
    sudo systemctl status hdmi-audio.service
    journalctl -u hdmi-audio.service -n 50
-   
+
    # Also check ALSA audio devices
    aplay -l
    ```
@@ -437,11 +437,57 @@ When opening a GitHub issue, please provide:
 
 **4. Logs** (see below)
 
-### How to Get Logs from the Raspberry Pi
+### How to Get Diagnostic Information from the Raspberry Pi
 
-To help diagnose issues, we need logs from your Pi. There are two ways:
+To help diagnose issues, we need diagnostic information from your Pi. **The easiest way is to use the built-in diagnostics tool.**
 
-#### Option A: Via SSH (Easiest)
+#### Option A: Using hdmi-diagnostics (RECOMMENDED)
+
+This is the **easiest and most complete method** for gathering diagnostic information.
+
+**What you need**: USB keyboard (and optionally a USB flash drive)
+
+**Steps**:
+
+1. **Connect USB keyboard to Raspberry Pi**
+
+2. **Press `Ctrl + C`** to stop any running test (if needed)
+
+3. **You should see the terminal prompt**
+
+4. **Run the diagnostics command**:
+   ```bash
+   sudo hdmi-diagnostics
+   ```
+
+5. **The tool will collect**:
+   - Raspberry Pi model and hardware info
+   - HDMI configuration settings
+   - Audio device information
+   - Boot logs and system messages
+   - Service status (hdmi-test, audio-test, etc.)
+   - Network configuration
+   - All relevant troubleshooting data
+
+6. **Diagnostics will be saved to**:
+   - **If USB drive detected**: Automatically saved to USB as `hdmi-diagnostics-YYYYMMDD-HHMMSS.log`
+   - **If no USB drive**: Saved to `/home/pi/hdmi-diagnostics-YYYYMMDD-HHMMSS.log`
+
+7. **To save to USB** (if not auto-detected):
+   - Insert USB flash drive
+   - Wait 5 seconds
+   - Run: `sudo hdmi-diagnostics`
+   - Tool will automatically detect USB and save diagnostics there
+
+8. **Remove USB drive** (if used) and plug into your computer
+
+9. **The diagnostics file is ready** - attach it to your GitHub issue
+
+**This diagnostic file contains everything we need to help troubleshoot your issue!**
+
+---
+
+#### Option B: Via SSH (If You Prefer Network Access)
 
 SSH is enabled by default for troubleshooting.
 
@@ -467,52 +513,56 @@ SSH is enabled by default for troubleshooting.
    ssh pi@192.168.1.xxx
    ```
 
-4. **Check service status**:
+4. **Run the diagnostics tool**:
    ```bash
-   sudo systemctl status hdmi-audio.service
-   sudo systemctl status hdmi-display.service
+   sudo hdmi-diagnostics
    ```
 
-5. **Save logs**:
-   ```bash
-   echo "=== Display Service ===" > debug.log
-   sudo journalctl -u hdmi-display.service --no-pager >> debug.log
-   echo "" >> debug.log
-   echo "=== Audio Service ===" >> debug.log
-   sudo journalctl -u hdmi-audio.service --no-pager >> debug.log
-   echo "" >> debug.log
-   echo "=== System Log ===" >> debug.log
-   sudo journalctl -n 100 --no-pager >> debug.log
-   echo "" >> debug.log
-   echo "=== Boot Messages ===" >> debug.log
-   sudo dmesg >> debug.log
-   ```
-
-6. **Download log to your computer**:
+5. **Download diagnostics to your computer**:
    ```bash
    # In a NEW terminal on your computer (not on Pi)
-   scp pi@hdmi-tester.local:debug.log ~/Downloads/
+   scp pi@hdmi-tester.local:hdmi-diagnostics-*.log ~/Downloads/
    ```
 
-7. **Attach `debug.log` to GitHub issue**
+6. **Attach the diagnostics file to your GitHub issue**
 
-#### Option B: Via USB Keyboard (No Network)
+---
 
-**What you need**: USB keyboard
+#### Option C: Manual Log Collection (Advanced Users Only)
 
-**Steps**:
+**Only use this if `hdmi-diagnostics` doesn't work for some reason.**
 
-1. **Connect USB keyboard to Raspberry Pi**
+If you need to manually collect logs via SSH or keyboard:
 
-2. **Press `Ctrl + Alt + F2`** to switch to console
+**Via SSH**:
+```bash
+ssh pi@hdmi-tester.local
+# Password: raspberry
 
-3. **Login**:
-   - Username: `pi`
-   - Password: `raspberry`
+# Manually save specific logs
+echo "=== Display Service ===" > debug.log
+sudo journalctl -u hdmi-display.service --no-pager >> debug.log
+echo "" >> debug.log
+echo "=== Audio Service ===" >> debug.log
+sudo journalctl -u hdmi-audio.service --no-pager >> debug.log
+echo "" >> debug.log
+echo "=== System Log ===" >> debug.log
+sudo journalctl -n 100 --no-pager >> debug.log
+echo "" >> debug.log
+echo "=== Boot Messages ===" >> debug.log
+sudo dmesg >> debug.log
 
-4. **Insert USB flash drive** into Pi
+# Download to your computer
+# In a NEW terminal on your computer:
+scp pi@hdmi-tester.local:debug.log ~/Downloads/
+```
 
-5. **Wait 5 seconds**, then run:
+**Via USB Keyboard** (no network):
+1. Connect USB keyboard to Raspberry Pi
+2. Press `Ctrl + Alt + F2` to switch to console
+3. Login: username `pi`, password `raspberry`
+4. Insert USB flash drive into Pi
+5. Wait 5 seconds, then run:
    ```bash
    # Find USB drive
    lsblk
@@ -521,7 +571,7 @@ SSH is enabled by default for troubleshooting.
    # Mount it
    sudo mount /dev/sda1 /mnt
 
-   # Save logs
+   # Save logs manually
    echo "=== Display Service ===" > /mnt/debug.log
    sudo journalctl -u hdmi-display.service --no-pager >> /mnt/debug.log
    echo "" >> /mnt/debug.log
@@ -537,12 +587,9 @@ SSH is enabled by default for troubleshooting.
    # Safely unmount
    sudo umount /mnt
    ```
-
-6. **Remove USB drive** from Pi
-
-7. **Plug USB drive into computer**
-
-8. **File `debug.log` is now on USB drive** - attach it to GitHub issue
+6. Remove USB drive from Pi
+7. Plug USB drive into computer
+8. File `debug.log` is now on USB drive
 
 ### Submitting the Issue
 
@@ -550,13 +597,51 @@ SSH is enabled by default for troubleshooting.
 
 2. **Click "New Issue"**
 
-3. **Fill in**:
-   - **Title**: Short description (e.g., "No HDMI audio on Samsung TV")
-   - **Description**: Your hardware, problem details, what you tested
+3. **Fill in the title**: Short description of your issue
+   - Examples:
+     - "No HDMI audio on Samsung TV"
+     - "Black screen on Raspberry Pi 4"
+     - "Audio stuttering on Sony display"
 
-4. **Attach logs**: Drag and drop `debug.log` file onto the issue text box
+4. **In the description, include**:
 
-5. **Click "Submit new issue"**
+   **Hardware Details**:
+   ```
+   - Raspberry Pi Model: (e.g., Raspberry Pi 4 Model B 4GB)
+   - SD Card: (e.g., SanDisk Ultra 32GB Class 10)
+   - Power Supply: (e.g., Official Raspberry Pi 5V 3A)
+   - Display/TV: (e.g., Samsung UN55RU7100 55" 4K TV)
+   - HDMI Cable: (e.g., AmazonBasics High-Speed HDMI)
+   ```
+
+   **Problem Description**:
+   ```
+   - What you expected to happen
+   - What actually happened
+   - Does it happen every time or only sometimes?
+   - What test were you running? (hdmi-test, audio-test, etc.)
+   ```
+
+   **Troubleshooting Attempted**:
+   ```
+   - List what you tried from this guide
+   - Results of each troubleshooting step
+   ```
+
+5. **Attach the diagnostics file**:
+   - Drag and drop the `hdmi-diagnostics-YYYYMMDD-HHMMSS.log` file onto the issue text box
+   - This file contains all the technical information we need!
+
+6. **Click "Submit new issue"**
+
+**Important**: The diagnostics file from `hdmi-diagnostics` contains:
+- Complete hardware information
+- HDMI and audio configuration
+- Service logs and error messages
+- System information
+- Boot messages
+
+This single file gives us everything we need to help diagnose your issue quickly!
 
 We'll review and respond as soon as possible!
 
@@ -666,27 +751,50 @@ ssh pi@hdmi-tester.local
 # Password: raspberry
 ```
 
-### Useful Commands (via SSH or keyboard)
+### Diagnostic Tools
+
+**Primary tool for issue reporting**:
 ```bash
-# Check display service (framebuffer)
-systemctl status hdmi-display.service
+# Collect complete diagnostic information
+sudo hdmi-diagnostics
 
-# Check audio service (ALSA)
-systemctl status hdmi-audio.service
+# This captures:
+# - Hardware info (Pi model, memory, etc.)
+# - HDMI configuration
+# - Audio devices and settings
+# - Service logs (hdmi-test, audio-test, etc.)
+# - Boot messages and system logs
+# - Network configuration
+# All saved to USB drive or home directory
+```
 
-# View audio logs
-journalctl -u hdmi-audio.service -n 50
+**Advanced troubleshooting commands** (for experienced users):
+```bash
+# Check service status
+sudo systemctl status hdmi-test.service
+sudo systemctl status audio-test.service
+sudo systemctl status image-test.service
+sudo systemctl status pixel-test.service
+sudo systemctl status full-test.service
 
-# View display logs
-journalctl -u hdmi-display.service -n 50
+# View service logs
+journalctl -u hdmi-test.service -n 50
+journalctl -u audio-test.service -n 50
 
 # Check ALSA audio devices
 aplay -l
 amixer
 
+# View HDMI configuration
+cat /boot/firmware/config.txt | grep hdmi
+
+# Check system logs
+sudo journalctl -n 100
+sudo dmesg | tail -50
+
 # Restart services
-sudo systemctl restart hdmi-audio.service
-sudo systemctl restart hdmi-display.service
+sudo systemctl restart hdmi-test.service
+sudo systemctl restart audio-test.service
 
 # Reboot
 sudo reboot

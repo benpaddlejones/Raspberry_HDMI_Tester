@@ -4,7 +4,7 @@
 >
 > Professional-grade testing tools on a simple SD card - no configuration needed.
 
-A complete HDMI testing suite that runs on Raspberry Pi. Flash it to an SD card, boot up, and instantly access professional test patterns, audio verification, and diagnostic tools. Perfect for technicians, installers, trade shows, and anyone who needs reliable HDMI testing.
+A complete HDMI testing suite that runs on Raspberry Pi. Flash it to an SD card, boot up, and instantly access professional test patterns and audio verification. Perfect for technicians, installers, trade shows, and anyone who needs reliable HDMI testing.
 
 ## What Is This?
 
@@ -16,6 +16,7 @@ The Raspberry Pi HDMI Tester is a **ready-to-use testing toolkit** that:
 - 🔍 **Detects pixel issues** - Identify dead, stuck, or color-locked pixels
 - ⚙️ **Fully configurable** - Interactive menu system for all settings
 - 🚀 **Works on any Pi** - Compatible with Pi 3, 4, 5, Zero 2 W
+- 🔧 **Built-in diagnostics** - Troubleshooting tools for issue reporting
 
 Simply flash to an SD card, insert into a Raspberry Pi, connect HDMI, and start testing!
 
@@ -86,18 +87,20 @@ Simply flash to an SD card, insert into a Raspberry Pi, connect HDMI, and start 
 - Long-term reliability testing
 - Production line quality assurance
 
-### 🔧 Diagnostics - Troubleshooting & Support
-**What it does**: Captures complete system state for issue resolution
-- ✅ **Auto-saves to USB**: Plug in a USB drive for instant log export
-- ✅ **Comprehensive Logs**: System info, HDMI config, audio devices, boot logs
-- ✅ **GitHub Integration**: Easy issue reporting with diagnostic bundle
+### 🔧 Diagnostics - Issue Reporting & Troubleshooting
+**What it does**: Captures system information for debugging hardware compatibility issues
+- ✅ **Auto-saves to USB**: Plug in a USB drive for instant diagnostic export
+- ✅ **System Details**: Raspberry Pi model, HDMI config, audio devices, boot logs
+- ✅ **GitHub Issues**: Use diagnostics when reporting bugs or compatibility problems
 - ✅ **Debug Mode**: Enable verbose logging for detailed troubleshooting
 
-**Use cases**:
-- Troubleshooting HDMI issues
-- Technical support documentation
-- Issue reporting to manufacturers
-- Field service diagnostics
+**When to use**:
+- Experiencing issues with the HDMI Tester not working properly
+- Need to report a bug or hardware compatibility issue on GitHub
+- Troubleshooting why tests aren't running as expected
+- Developer requested diagnostic information for issue resolution
+
+**Note**: This is not a general HDMI testing tool - it's specifically for debugging this application and Raspberry Pi hardware compatibility.
 
 ## Use Cases
 
@@ -301,8 +304,7 @@ Runs the complete test sequence:
 
 ### Advanced Features
 - **Debug Mode**: Toggle verbose logging for troubleshooting
-- **USB Diagnostics**: Auto-save system diagnostics to USB drive
-- **GitHub Integration**: Built-in guidance for issue reporting
+- **USB Diagnostics**: Auto-save system info to USB for bug reports
 - **SSH Access**: Remote access for advanced configuration (default password: `raspberry`)
   - ⚠️ **Change password if exposing to network!**
 
