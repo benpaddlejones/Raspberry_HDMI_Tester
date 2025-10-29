@@ -39,8 +39,7 @@ trap 'error_handler ${LINENO}' ERR
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
 PI_GEN_DIR="${PI_GEN_DIR:-/opt/pi-gen}"
-# Use /tmp for work directory to avoid nodev mount restrictions in containers
-WORK_DIR="${PI_GEN_WORK_DIR:-/tmp/pi-gen-work-$$}"  # $$ adds process ID for uniqueness
+WORK_DIR="${PROJECT_ROOT}/build/pi-gen-work"
 CONFIG_FILE="${PROJECT_ROOT}/build/config"
 
 # Clean any previous build BEFORE setting up logging
@@ -48,28 +47,14 @@ CONFIG_FILE="${PROJECT_ROOT}/build/config"
 # CRITICAL: Preserve any early error log created by GitHub Actions workflow
 EARLY_LOG_BACKUP=""
 
-# Clean up old workspaces-based work directory location
-OLD_WORK_DIR="${PROJECT_ROOT}/build/pi-gen-work"
-if [ -d "${OLD_WORK_DIR}" ] && [ -f "${OLD_WORK_DIR}/build-detailed.log" ]; then
-    echo "💾 Preserving early error log from old location..."
-    EARLY_LOG_BACKUP=$(mktemp)
-    cp "${OLD_WORK_DIR}/build-detailed.log" "${EARLY_LOG_BACKUP}"
-fi
-
-if [ -d "${OLD_WORK_DIR}" ]; then
-    echo "🧹 Cleaning old build directory in workspaces..."
-    sudo rm -rf "${OLD_WORK_DIR}"
-fi
-
-# Clean up current temp work directory if it exists
-if [ -d "${WORK_DIR}" ] && [ -f "${WORK_DIR}/build-detailed.log" ] && [ -z "${EARLY_LOG_BACKUP}" ]; then
-    echo "💾 Preserving early error log from temp location..."
+if [ -d "${WORK_DIR}" ] && [ -f "${WORK_DIR}/build-detailed.log" ]; then
+    echo "💾 Preserving early error log..."
     EARLY_LOG_BACKUP=$(mktemp)
     cp "${WORK_DIR}/build-detailed.log" "${EARLY_LOG_BACKUP}"
 fi
 
 if [ -d "${WORK_DIR}" ]; then
-    echo "🧹 Cleaning previous temp build directory..."
+    echo "🧹 Cleaning previous build directory..."
     sudo rm -rf "${WORK_DIR}"
 fi
 
@@ -198,39 +183,6 @@ if ! command -v qemu-arm-static &> /dev/null; then
     exit 1
 fi
 log_info "✓ qemu-arm-static found"
-
-log_info "Checking binfmt_misc support for ARM emulation..."
-# Check if binfmt_misc is mounted
-if ! mount | grep -q binfmt_misc; then
-    log_info "binfmt_misc not mounted, attempting to mount..."
-    if sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null; then
-        log_info "✓ binfmt_misc mounted successfully"
-    else
-        log_event "❌" "Failed to mount binfmt_misc filesystem"
-        log_info "This is required for cross-architecture emulation"
-        end_stage_timer "Prerequisites Check" 1
-        finalize_log "failure" "Cannot mount binfmt_misc for ARM emulation"
-        exit 1
-    fi
-else
-    log_info "✓ binfmt_misc already mounted"
-fi
-
-# Check if qemu-arm is registered
-if [ ! -f /proc/sys/fs/binfmt_misc/qemu-arm ]; then
-    log_info "QEMU ARM format not registered, registering..."
-    if echo ':qemu-arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:F' | sudo tee /proc/sys/fs/binfmt_misc/register > /dev/null; then
-        log_info "✓ QEMU ARM format registered successfully"
-    else
-        log_event "❌" "Failed to register QEMU ARM format"
-        log_info "This is required for pi-gen to work in containers"
-        end_stage_timer "Prerequisites Check" 1
-        finalize_log "failure" "Cannot register QEMU ARM emulation"
-        exit 1
-    fi
-else
-    log_info "✓ QEMU ARM format already registered"
-fi
 
 log_info "Checking for pi-gen directory..."
 if [ ! -d "${PI_GEN_DIR}" ]; then
@@ -752,42 +704,6 @@ if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     log_info "✓ Build time breakdown added to GitHub Actions summary"
 fi
 
-# Copy final image to project directory for persistence
-start_stage_timer "Image Copy"
-log_event "📁" "Copying image to project directory..."
-
-# Create deploy directory in project if it doesn't exist
-PROJECT_DEPLOY_DIR="${PROJECT_ROOT}/build/deploy"
-mkdir -p "${PROJECT_DEPLOY_DIR}"
-
-if [ -n "${IMAGE_FILE}" ] && [ -f "${IMAGE_FILE}" ]; then
-    # Generate filename for project directory
-    IMAGE_BASENAME=$(basename "${IMAGE_FILE}")
-    PROJECT_IMAGE_FILE="${PROJECT_DEPLOY_DIR}/${IMAGE_BASENAME}"
-
-    log_info "Copying ${IMAGE_FILE} to ${PROJECT_IMAGE_FILE}..."
-
-    if cp "${IMAGE_FILE}" "${PROJECT_IMAGE_FILE}"; then
-        log_info "✓ Image copied successfully"
-        log_checksum "${PROJECT_IMAGE_FILE}" "Final Project Image"
-
-        # Update IMAGE_FILE to point to the project location
-        IMAGE_FILE="${PROJECT_IMAGE_FILE}"
-
-        log_event "✅" "Image available at: ${IMAGE_FILE}"
-    else
-        log_event "⚠️" "Failed to copy image to project directory"
-        log_info "Image remains at temporary location: ${IMAGE_FILE}"
-    fi
-else
-    log_event "❌" "No image file found to copy"
-    end_stage_timer "Image Copy" 1
-    finalize_log "failure" "No image file to copy to project directory"
-    exit 1
-fi
-
-end_stage_timer "Image Copy" 0
-
 # Success!
 finalize_log "success"
 
@@ -812,10 +728,3 @@ echo "Next steps:"
 echo "  1. Test the image: ./tests/qemu-test.sh"
 echo "  2. Flash to SD card: See docs/FLASHING.md"
 echo ""
-
-# Final cleanup: Remove temporary work directory
-log_info "Cleaning up temporary work directory..."
-if [ -d "${WORK_DIR}" ]; then
-    sudo rm -rf "${WORK_DIR}"
-    log_info "✓ Temporary directory ${WORK_DIR} cleaned up"
-fi
