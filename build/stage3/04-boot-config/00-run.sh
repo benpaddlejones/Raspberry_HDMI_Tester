@@ -283,3 +283,27 @@ ln -sf /etc/systemd/system/audio-health.service "${ROOTFS_DIR}/etc/systemd/syste
 
 echo "✅ Audio health check diagnostic installed"
 
+# Install HDMI Tester configuration file to boot partition
+echo "Installing HDMI Tester configuration file..."
+
+# Install to all found boot directories (same logic as config.txt above)
+for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
+    BOOT_DIR=$(dirname "${CONFIG_FILE}")
+    CONFIG_TARGET="${BOOT_DIR}/hdmi-tester.conf"
+
+    echo "  Installing hdmi-tester.conf to: ${CONFIG_TARGET}"
+
+    # Install the configuration file
+    install -m 644 "${SCRIPT_DIR}/files/hdmi-tester.conf" "${CONFIG_TARGET}"
+
+    # Verify installation
+    if [ ! -f "${CONFIG_TARGET}" ]; then
+        echo "❌ Error: Failed to install hdmi-tester.conf to ${CONFIG_TARGET}"
+        exit 1
+    fi
+
+    echo "  ✓ HDMI Tester configuration installed: ${CONFIG_TARGET#${ROOTFS_DIR}}"
+done
+
+echo "✅ HDMI Tester configuration deployment complete"
+
