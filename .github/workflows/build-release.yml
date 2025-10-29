@@ -502,12 +502,13 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
 
-      - name: Prepare build logs (commit only if build script failed)
+      - name: Commit build logs to repository (ALWAYS - regardless of failure point)
         if: always()
         run: |
           BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
           BUILD_EXIT_CODE="${{ env.BUILD_EXIT_CODE }}"
           VERSION="${{ steps.config.outputs.version }}"
+          VALIDATION_STATUS="${{ steps.validation.outputs.validation_status }}"
 
           # Fallback for timestamp if build failed before it was set
           if [ -z "$BUILD_TIMESTAMP" ]; then
@@ -525,25 +526,44 @@ jobs:
           mkdir -p logs/successful-builds
           mkdir -p logs/failed-builds
 
-          # CRITICAL CHANGE: Only commit logs for FAILED builds at this stage
-          # Successful builds will be committed AFTER validation/QEMU/release succeed
-          # This ensures logs are only in successful-builds if the ENTIRE workflow succeeds
-          if [ "${BUILD_EXIT_CODE}" = "0" ]; then
-            echo "📝 Build script succeeded - log will be committed AFTER validation and release creation"
-            echo "⏳ Deferring log commit until workflow completion..."
-            exit 0
-          else
+          # Determine if this was a successful or failed build
+          # Success only if: build succeeded (BUILD_EXIT_CODE=0) AND validation passed AND we're in a successful workflow
+          WORKFLOW_FAILED=false
+
+          # Check if this step is running due to failure
+          if [ "${{ job.status }}" = "failure" ] || [ "${{ job.status }}" = "cancelled" ]; then
+            WORKFLOW_FAILED=true
+          fi
+
+          # Check individual failure points
+          if [ "${BUILD_EXIT_CODE}" != "0" ]; then
+            WORKFLOW_FAILED=true
+            FAILURE_REASON="Build script failed (exit code ${BUILD_EXIT_CODE})"
+          elif [ "${VALIDATION_STATUS}" = "failed" ]; then
+            WORKFLOW_FAILED=true
+            FAILURE_REASON="Image validation failed"
+          elif [ "${WORKFLOW_FAILED}" = "true" ]; then
+            FAILURE_REASON="Workflow failed (job status: ${{ job.status }})"
+          fi
+
+          # Determine log directory and filename
+          if [ "${WORKFLOW_FAILED}" = "true" ]; then
             LOG_DIR="logs/failed-builds"
-            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}-v${VERSION}_FAILED.log"
-            echo "📝 Committing failed build log (build script failed)..."
+            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}_FAILED.log"
+            echo "📝 Committing FAILED build log..."
+            echo "   Reason: ${FAILURE_REASON:-Unknown failure}"
+          else
+            LOG_DIR="logs/successful-builds"
+            LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}.log"
+            echo "📝 Committing SUCCESSFUL build log..."
           fi
 
           # Copy log to repository or create error report
           if [ -f "build/pi-gen-work/build-detailed.log" ]; then
             cp build/pi-gen-work/build-detailed.log "${LOG_FILE}"
-            echo "✅ Log file copied"
-          elif [ "${BUILD_EXIT_CODE}" != "0" ]; then
-            # Build failed before log was created - create minimal error log
+            echo "✅ Log file copied from build directory"
+          else
+            # No log file - create minimal error report
             echo "⚠️  Build log file not found - creating minimal error report"
             {
               echo "================================================================"
@@ -555,11 +575,13 @@ jobs:
               echo "Build Number: ${GITHUB_RUN_NUMBER}"
               echo "Commit: ${GITHUB_SHA}"
               echo "Branch: ${GITHUB_REF_NAME}"
+              echo "Version: ${VERSION}"
               echo ""
-              echo "STATUS: FAILED EARLY (before detailed log could be created)"
+              echo "STATUS: FAILED (${FAILURE_REASON:-Unknown})"
               echo ""
-              echo "The build failed before the detailed logging system could initialize."
+              echo "The build failed before the detailed logging system could complete."
               echo "This typically indicates:"
+              echo "- Build failed during early initialization"
               echo "- Missing directory creation (build/pi-gen-work not created)"
               echo "- Permission issues with log file path"
               echo "- Script error before logging initialization"
@@ -570,17 +592,13 @@ jobs:
               echo "1. View the workflow run logs in GitHub Actions"
               echo "2. Look for errors in the 'Build Raspberry Pi image' step"
               echo "3. Check if directories exist and are writable"
+              echo "4. Review validation output if build succeeded but validation failed"
               echo ""
               echo "================================================================"
               echo "  END OF ERROR REPORT"
               echo "================================================================"
             } > "${LOG_FILE}"
             echo "✅ Minimal error log created"
-          else
-            echo "⚠️  Build log file not found at build/pi-gen-work/build-detailed.log"
-            echo "Build succeeded but no log - this should not happen"
-            # Don't commit anything if log is missing on successful build
-            exit 0
           fi
 
           # Compress if larger than 50MB to stay within GitHub limits
@@ -601,11 +619,33 @@ jobs:
             git add "${LOG_FILE}"
             git add logs/README.md logs/.gitkeep 2>/dev/null || true
 
-            git commit -m "logs: Add failed build log [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
+            if [ "${WORKFLOW_FAILED}" = "true" ]; then
+              git commit -m "logs: Add failed build log [${BUILD_TIMESTAMP}] - ${FAILURE_REASON}" || echo "No changes to commit"
+            else
+              git commit -m "logs: Add successful build log for v${VERSION} [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
+            fi
 
-            # Don't push yet - will be pushed at workflow end with other failed build artifacts
-            echo "✅ Failed build log committed (will push at workflow end)"
+            # Pull latest changes to avoid conflicts
+            git pull --rebase origin ${GITHUB_REF_NAME} || {
+              echo "⚠️ Rebase failed, trying merge..."
+              git pull origin ${GITHUB_REF_NAME}
+            }
+
+            # Push logs
+            if git push; then
+              echo "✅ Build log committed and pushed to repository"
+            else
+              echo "❌ Failed to push logs to repository"
+              exit 1
+            fi
+          else
+            echo "❌ Error: No log file created"
           fi
+
+      - name: Prepare build logs (deprecated - replaced by always-commit step above)
+        if: false  # Disabled - replaced by comprehensive logging above
+        run: |
+          echo "This step is now handled by 'Commit build logs to repository (ALWAYS)' step"
 
       - name: Validate built image
         id: validation
@@ -1305,63 +1345,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit successful build log
-        if: success()
+      - name: Commit successful build log (deprecated - now handled earlier)
+        if: false  # Disabled - now handled by 'Commit build logs to repository (ALWAYS)' step
         run: |
-          BUILD_TIMESTAMP="${{ env.BUILD_TIMESTAMP }}"
-          VERSION="${{ steps.config.outputs.version }}"
-
-          echo "📝 Committing successful build log (after complete validation & release)..."
-
-          # Create logs directory
-          mkdir -p logs/successful-builds
-
-          LOG_DIR="logs/successful-builds"
-          LOG_FILE="${LOG_DIR}/build-${BUILD_TIMESTAMP}_v${VERSION}.log"
-
-          # Copy log to repository
-          if [ -f "build/pi-gen-work/build-detailed.log" ]; then
-            cp build/pi-gen-work/build-detailed.log "${LOG_FILE}"
-            echo "✅ Log file copied"
-          else
-            echo "❌ Error: Build log file not found at build/pi-gen-work/build-detailed.log"
-            echo "This should not happen - build succeeded but log is missing"
-            exit 1
-          fi
-
-          # Compress if larger than 50MB to stay within GitHub limits
-          if [ -f "${LOG_FILE}" ]; then
-            LOG_SIZE=$(stat -c%s "${LOG_FILE}" 2>/dev/null || echo 0)
-            if [ ${LOG_SIZE} -gt 52428800 ]; then
-              echo "⚠️  Log file is large ($(( LOG_SIZE / 1048576 ))MB), compressing..."
-              gzip "${LOG_FILE}"
-              LOG_FILE="${LOG_FILE}.gz"
-            fi
-
-            # Configure git
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "github-actions[bot]"
-
-            # Add and commit log
-            git add "${LOG_FILE}"
-            git add logs/README.md logs/.gitkeep 2>/dev/null || true
-
-            git commit -m "logs: Add successful build log for v${VERSION} [${BUILD_TIMESTAMP}]" || echo "No changes to commit"
-
-            # Pull latest changes to avoid conflicts
-            git pull --rebase origin ${GITHUB_REF_NAME} || {
-              echo "⚠️ Rebase failed, trying merge..."
-              git pull origin ${GITHUB_REF_NAME}
-            }
-
-            # Push successful build log
-            git push || {
-              echo "❌ Failed to push logs"
-              exit 1
-            }
-
-            echo "✅ Successful build log committed and pushed to logs/successful-builds/"
-          fi
+          echo "This step is now handled earlier in the workflow"
 
       - name: Update README with release link
         run: |
@@ -1441,34 +1428,10 @@ jobs:
             echo "✅ README updates pushed successfully"
           fi
 
-      - name: Push failed build logs
-        if: failure()
+      - name: Push failed build logs (deprecated - now handled earlier)
+        if: false  # Disabled - now handled by 'Commit build logs to repository (ALWAYS)' step
         run: |
-          # If build failed, push the committed logs now
-          echo "📝 Pushing failed build logs to repository..."
-
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-          # Check if there are commits to push
-          if git log origin/${GITHUB_REF_NAME}..HEAD --oneline | grep -q .; then
-            echo "Found commits to push..."
-
-            git pull --rebase origin ${GITHUB_REF_NAME} || {
-              echo "⚠️ Rebase failed, trying merge..."
-              git pull origin ${GITHUB_REF_NAME}
-            }
-
-            git push || {
-              echo "❌ CRITICAL: Failed to push failed build logs"
-              echo "Manual intervention required to push logs"
-              exit 1
-            }
-
-            echo "✅ Failed build logs pushed successfully"
-          else
-            echo "No commits to push (logs may already be pushed)"
-          fi
+          echo "This step is now handled by the comprehensive logging step"
 
       - name: Build summary
         if: always()

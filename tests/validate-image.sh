@@ -202,7 +202,6 @@ FILES_TO_CHECK=(
     "/usr/local/bin/hdmi-tester-config|Configuration TUI Tool"
     "/usr/local/bin/hdmi-auto-launcher|Auto-Launcher Script"
     "/usr/local/lib/hdmi-tester/config-lib.sh|Configuration Library"
-    "/boot/firmware/hdmi-tester.conf|Configuration File"
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
     "/etc/systemd/system/image-test.service|Image Rotation Test Service"
@@ -409,10 +408,21 @@ echo ""
 echo "🔍 Checking configuration system..."
 echo ""
 
-# Check config file exists and has correct defaults
-CONFIG_FILE="${MOUNT_POINT}/boot/firmware/hdmi-tester.conf"
-if [ -f "${CONFIG_FILE}" ]; then
+# Check config file exists and has correct defaults (check both /boot/firmware and /boot)
+CONFIG_FILE=""
+if [ -f "${MOUNT_POINT}/boot/firmware/hdmi-tester.conf" ]; then
+    CONFIG_FILE="${MOUNT_POINT}/boot/firmware/hdmi-tester.conf"
     echo "  ✅ Configuration file exists: /boot/firmware/hdmi-tester.conf"
+elif [ -f "${MOUNT_POINT}/boot/hdmi-tester.conf" ]; then
+    CONFIG_FILE="${MOUNT_POINT}/boot/hdmi-tester.conf"
+    echo "  ✅ Configuration file exists: /boot/hdmi-tester.conf"
+else
+    echo "  ❌ Configuration file not found in /boot/firmware/ or /boot/"
+    VALIDATION_ERRORS+=("Configuration file missing from both /boot/firmware and /boot")
+    ALL_OK=false
+fi
+
+if [ -n "${CONFIG_FILE}" ]; then
 
     # Check for required config keys
     if grep -q "^DEBUG_MODE=" "${CONFIG_FILE}" 2>/dev/null; then
@@ -440,10 +450,6 @@ if [ -f "${CONFIG_FILE}" ]; then
         VALIDATION_ERRORS+=("DEFAULT_SERVICE missing from config file")
         ALL_OK=false
     fi
-else
-    echo "  ❌ Configuration file not found: /boot/firmware/hdmi-tester.conf"
-    VALIDATION_ERRORS+=("Configuration file missing")
-    ALL_OK=false
 fi
 
 # Check config library

@@ -33,11 +33,19 @@ mkdir -p "${ROOTFS_DIR}/usr/local/lib/hdmi-tester"
 install -m 644 "files/config-lib.sh" "${ROOTFS_DIR}/usr/local/lib/hdmi-tester/"
 echo "  ✓ Configuration library installed"
 
-# Install default configuration file to /boot/firmware
+# Install default configuration file to /boot/firmware (or /boot if firmware doesn't exist)
 echo "Installing default configuration..."
-mkdir -p "${ROOTFS_DIR}/boot/firmware"
-install -m 644 "files/hdmi-tester.conf" "${ROOTFS_DIR}/boot/firmware/"
-echo "  ✓ Default configuration installed to /boot/firmware/hdmi-tester.conf"
+
+# Determine correct boot path (Raspberry Pi OS Bookworm uses /boot/firmware, older versions use /boot)
+BOOT_CONFIG_PATH="${ROOTFS_DIR}/boot/firmware"
+if [ ! -d "${BOOT_CONFIG_PATH}" ]; then
+    echo "  ⚠️  /boot/firmware not found, using /boot (older Raspberry Pi OS)"
+    BOOT_CONFIG_PATH="${ROOTFS_DIR}/boot"
+fi
+
+mkdir -p "${BOOT_CONFIG_PATH}"
+install -m 644 "files/hdmi-tester.conf" "${BOOT_CONFIG_PATH}/"
+echo "  ✓ Default configuration installed to ${BOOT_CONFIG_PATH#${ROOTFS_DIR}}/hdmi-tester.conf"
 
 # Create log directory for runtime test logs
 echo "Creating /logs directory for runtime test logs..."
