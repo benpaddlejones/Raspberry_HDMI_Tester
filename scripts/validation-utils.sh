@@ -350,23 +350,10 @@ mount_partition() {
 validate_file_readable() {
     local file_path="$1"
 
-    # Check if file exists (this follows symlinks)
-    if [ ! -e "${file_path}" ]; then
+    # Check if file exists and is readable
+    # NOTE: -f follows symlinks, so this works for both regular files and symlinks
+    if [ ! -f "${file_path}" ]; then
         return 1
-    fi
-
-    # Check if it's a regular file OR a symlink pointing to a regular file
-    if [ ! -f "${file_path}" ] && [ ! -L "${file_path}" ]; then
-        return 1
-    fi
-
-    # For symlinks, verify the target exists
-    if [ -L "${file_path}" ]; then
-        local target
-        target=$(readlink -f "${file_path}")
-        if [ ! -f "${target}" ]; then
-            return 1
-        fi
     fi
 
     # Check file is readable
@@ -374,7 +361,7 @@ validate_file_readable() {
         return 1
     fi
 
-    # Check file is not empty (this follows symlinks)
+    # Check file is not empty
     if [ ! -s "${file_path}" ]; then
         return 1
     fi

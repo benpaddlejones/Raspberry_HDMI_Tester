@@ -79,7 +79,8 @@ for script in "${SCRIPTS[@]}"; do
 
     # Create relative symlink in /usr/local/bin for PATH convenience
     # Use relative path so symlink works when filesystem is mounted elsewhere
-    ln -sf "../../opt/hdmi-tester/${script}" "${ROOTFS_DIR}/usr/local/bin/${script}"
+    # From /usr/local/bin/ we need to go up 3 levels (../../../) to reach root
+    ln -sf "../../../opt/hdmi-tester/${script}" "${ROOTFS_DIR}/usr/local/bin/${script}"
 
     # Verify symlink was created
     if [ ! -L "${ROOTFS_DIR}/usr/local/bin/${script}" ]; then
