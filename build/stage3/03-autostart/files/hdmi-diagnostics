@@ -160,7 +160,42 @@ mkdir -p "${DIAG_DIR}"
         echo "Cmdline not found"
     fi
     echo ""
+
+    echo "=== Actual Kernel Boot Parameters (from /proc/cmdline) ==="
+    echo "This shows what the kernel ACTUALLY booted with:"
     cat /proc/cmdline 2>&1
+    echo ""
+    echo ""
+
+    echo "=== Audio Parameter Analysis ==="
+    echo "Comparing cmdline.txt FILE vs ACTUAL kernel boot:"
+    echo ""
+    echo "File content (what's in cmdline.txt):"
+    if [ -f /boot/firmware/cmdline.txt ]; then
+        grep -o "snd_bcm2835\.enable_hdmi=[01]" /boot/firmware/cmdline.txt 2>/dev/null | nl || echo "  (no audio params)"
+    elif [ -f /boot/cmdline.txt ]; then
+        grep -o "snd_bcm2835\.enable_hdmi=[01]" /boot/cmdline.txt 2>/dev/null | nl || echo "  (no audio params)"
+    fi
+    echo ""
+    echo "Actual kernel boot (what /proc/cmdline shows):"
+    grep -o "snd_bcm2835\.enable_hdmi=[01]" /proc/cmdline 2>/dev/null | nl || echo "  (no audio params)"
+    echo ""
+    echo "LAST enable_hdmi value (this one wins):"
+    LAST_HDMI=$(grep -o "snd_bcm2835\.enable_hdmi=[01]" /proc/cmdline 2>/dev/null | tail -1)
+    if [ -n "${LAST_HDMI}" ]; then
+        echo "  ${LAST_HDMI}"
+        if [ "${LAST_HDMI}" = "snd_bcm2835.enable_hdmi=0" ]; then
+            echo "  ⚠️  WARNING: HDMI audio is DISABLED by kernel parameters!"
+            echo "  This is why audio doesn't work."
+            echo ""
+            echo "  SOLUTION: System needs to reboot after fix-cmdline service runs."
+            echo "  Check: systemctl status fix-cmdline.service"
+        elif [ "${LAST_HDMI}" = "snd_bcm2835.enable_hdmi=1" ]; then
+            echo "  ✅ HDMI audio is ENABLED"
+        fi
+    else
+        echo "  (no enable_hdmi parameter found)"
+    fi
     echo ""
 
     # ============================================
@@ -683,8 +718,17 @@ echo ""
     if [ -f /var/lib/hdmi-tester/cmdline-fixed ]; then
         echo "✅ Marker exists - fix-cmdline has completed"
         ls -lh /var/lib/hdmi-tester/cmdline-fixed 2>&1
+        echo ""
+        echo "⚠️  If audio still doesn't work, check if system rebooted after fix:"
+        echo "   - Check 'systemctl status fix-cmdline.service' for reboot message"
+        echo "   - Check uptime: $(uptime -s) (should be after marker creation time)"
+        echo "   - If no reboot occurred, manually reboot now: sudo reboot"
     else
         echo "❌ Marker NOT FOUND - fix-cmdline has not run or failed"
+        echo ""
+        echo "   This means cmdline.txt has not been cleaned yet."
+        echo "   The service runs ONCE after first boot."
+        echo "   Check service status above for errors."
     fi
     echo ""
 
@@ -692,8 +736,26 @@ echo ""
     systemctl is-enabled fix-cmdline.service 2>&1 || echo "Service not enabled"
     echo ""
 
-    echo "=== Journal Entries ==="
-    journalctl -u fix-cmdline.service --no-pager 2>&1 || echo "No journal entries"
+    echo "=== Journal Entries (last 50 lines) ==="
+    journalctl -u fix-cmdline.service --no-pager -n 50 2>&1 || echo "No journal entries"
+    echo ""
+
+    echo "=== Reboot Detection ==="
+    if [ -f /var/lib/hdmi-tester/cmdline-fixed ]; then
+        MARKER_TIME=$(stat -c %Y /var/lib/hdmi-tester/cmdline-fixed 2>/dev/null || echo "0")
+        BOOT_TIME=$(date -d "$(uptime -s)" +%s 2>/dev/null || echo "0")
+        if [ "${BOOT_TIME}" -gt "${MARKER_TIME}" ]; then
+            echo "✅ System rebooted after cmdline fix (boot: $(uptime -s))"
+            echo "   Fixed cmdline.txt should be active"
+        else
+            echo "⚠️  WARNING: System has NOT rebooted since cmdline fix"
+            echo "   Marker created: $(date -d @${MARKER_TIME} 2>/dev/null || echo 'unknown')"
+            echo "   Last boot: $(uptime -s)"
+            echo "   ACTION REQUIRED: Reboot to apply fixes"
+        fi
+    else
+        echo "Marker not found - cannot check reboot status"
+    fi
     echo ""
 
     # ============================================

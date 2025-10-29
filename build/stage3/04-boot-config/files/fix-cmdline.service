@@ -13,9 +13,10 @@ Type=oneshot
 ExecStart=/usr/local/sbin/fix-cmdline.sh
 ExecStartPost=/bin/mkdir -p /var/lib/hdmi-tester
 ExecStartPost=/bin/touch /var/lib/hdmi-tester/cmdline-fixed
-# Make cmdline.txt immutable to prevent future corruption
-ExecStartPost=/usr/bin/chattr +i /boot/firmware/cmdline.txt
-ExecStartPost=/usr/bin/systemctl --no-block reboot
+# Reboot to apply changes (- prefix ignores chattr failure on FAT32)
+ExecStartPost=-/bin/sh -c 'chattr +i /boot/firmware/cmdline.txt 2>&1 | logger -t fix-cmdline -p user.info || logger -t fix-cmdline -p user.info "chattr +i failed (expected on FAT32)"'
+ExecStartPost=/bin/sh -c 'logger -t fix-cmdline -p user.notice "Rebooting to apply cmdline.txt changes"'
+ExecStartPost=-/usr/bin/systemctl --no-block reboot
 RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal
