@@ -708,19 +708,19 @@ jobs:
         if: failure() && steps.validation.outputs.validation_status == 'failed'
         run: |
           echo "📁 Capturing filesystem structure for debugging..."
-          
+
           VERSION="${{ steps.config.outputs.version }}"
           DEPLOY_DIR="build/pi-gen-work/deploy"
           STRUCTURE_FILE="build/validation-filesystem-structure.txt"
-          
+
           # Find the image file
           IMAGE_FILE=$(find "${DEPLOY_DIR}" -maxdepth 1 -name "*hdmi-tester*.img" -type f | head -n 1)
-          
+
           if [ -z "$IMAGE_FILE" ]; then
             echo "❌ No image file found, cannot capture structure"
             exit 0
           fi
-          
+
           {
             echo "=================================================================="
             echo "  FILESYSTEM STRUCTURE - VALIDATION FAILURE DEBUG"
@@ -734,27 +734,27 @@ jobs:
             echo "=================================================================="
             echo ""
           } > "${STRUCTURE_FILE}"
-          
+
           # Setup loop device
           LOOP_DEVICE=$(sudo losetup -f)
           sudo losetup -P "${LOOP_DEVICE}" "${IMAGE_FILE}" || {
             echo "❌ Failed to setup loop device" | tee -a "${STRUCTURE_FILE}"
             exit 0
           }
-          
+
           # Wait for partitions
           sleep 2
           sudo partprobe "${LOOP_DEVICE}" 2>/dev/null || true
-          
+
           # Create temporary mount point
           TEMP_MOUNT=$(mktemp -d)
-          
+
           # Mount root partition (usually partition 2)
           ROOT_PARTITION="${LOOP_DEVICE}p2"
           if [ ! -e "${ROOT_PARTITION}" ]; then
             ROOT_PARTITION="${LOOP_DEVICE}_2"
           fi
-          
+
           if sudo mount "${ROOT_PARTITION}" "${TEMP_MOUNT}" 2>/dev/null; then
             {
               echo "✅ Root partition mounted successfully"
@@ -763,7 +763,7 @@ jobs:
               echo "CRITICAL DIRECTORIES - DETAILED STRUCTURE"
               echo "=================================================================="
               echo ""
-              
+
               echo "--- /opt/hdmi-tester ---"
               if [ -d "${TEMP_MOUNT}/opt/hdmi-tester" ]; then
                 ls -lah "${TEMP_MOUNT}/opt/hdmi-tester"
@@ -771,7 +771,7 @@ jobs:
                 echo "❌ DIRECTORY DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "--- /boot (config files) ---"
               if [ -d "${TEMP_MOUNT}/boot" ]; then
                 find "${TEMP_MOUNT}/boot" -maxdepth 2 -type f -name "*.conf" -o -name "*.txt" | sed "s|${TEMP_MOUNT}||" | sort
@@ -782,7 +782,7 @@ jobs:
                 echo "❌ DIRECTORY DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "--- /boot/firmware (if exists) ---"
               if [ -d "${TEMP_MOUNT}/boot/firmware" ]; then
                 find "${TEMP_MOUNT}/boot/firmware" -maxdepth 1 -type f -name "*.conf" -o -name "*.txt" | sed "s|${TEMP_MOUNT}||" | sort
@@ -793,7 +793,7 @@ jobs:
                 echo "ℹ️  Directory does not exist (may use /boot instead)"
               fi
               echo ""
-              
+
               echo "--- /etc/systemd/system (services) ---"
               if [ -d "${TEMP_MOUNT}/etc/systemd/system" ]; then
                 find "${TEMP_MOUNT}/etc/systemd/system" -maxdepth 1 -name "*hdmi*" -o -name "*pixel*" -o -name "*image-test*" -o -name "*audio-test*" -o -name "*full-test*" | sed "s|${TEMP_MOUNT}||" | sort
@@ -801,7 +801,7 @@ jobs:
                 echo "❌ DIRECTORY DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "--- /usr/local/bin (executables) ---"
               if [ -d "${TEMP_MOUNT}/usr/local/bin" ]; then
                 ls -lah "${TEMP_MOUNT}/usr/local/bin" | grep -i hdmi || echo "No HDMI-related files"
@@ -809,7 +809,7 @@ jobs:
                 echo "❌ DIRECTORY DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "--- /usr/local/lib/hdmi-tester (libraries) ---"
               if [ -d "${TEMP_MOUNT}/usr/local/lib/hdmi-tester" ]; then
                 ls -lah "${TEMP_MOUNT}/usr/local/lib/hdmi-tester"
@@ -817,7 +817,7 @@ jobs:
                 echo "❌ DIRECTORY DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "=================================================================="
               echo "FULL /opt TREE"
               echo "=================================================================="
@@ -827,30 +827,30 @@ jobs:
                 echo "❌ /opt DOES NOT EXIST"
               fi
               echo ""
-              
+
               echo "=================================================================="
               echo "SEARCH FOR hdmi-tester.conf IN ALL LOCATIONS"
               echo "=================================================================="
               find "${TEMP_MOUNT}" -name "hdmi-tester.conf" 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "❌ NOT FOUND ANYWHERE"
               echo ""
-              
+
               echo "=================================================================="
               echo "END OF FILESYSTEM STRUCTURE CAPTURE"
               echo "=================================================================="
             } >> "${STRUCTURE_FILE}"
-            
+
             # Cleanup
             sudo umount "${TEMP_MOUNT}" 2>/dev/null || true
           else
             echo "❌ Failed to mount root partition" >> "${STRUCTURE_FILE}"
           fi
-          
+
           # Cleanup loop device
           sudo losetup -d "${LOOP_DEVICE}" 2>/dev/null || true
           rm -rf "${TEMP_MOUNT}"
-          
+
           echo "✅ Filesystem structure captured to ${STRUCTURE_FILE}"
-          
+
           # Show first 50 lines as preview
           echo ""
           echo "📄 Structure file preview (first 50 lines):"
