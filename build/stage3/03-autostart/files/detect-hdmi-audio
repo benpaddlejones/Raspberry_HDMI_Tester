@@ -75,37 +75,47 @@ resolve_device_for_card() {
 
 # Function to find HDMI audio device
 find_hdmi_audio() {
-    # STRATEGY: Try multiple detection methods in order of reliability
-    # PRIORITY: vc4-hdmi (DRM) over bcm2835 (legacy) for Pi 3B+/4/5 compatibility
+    # STRATEGY: Prioritize the most robust, format-converting PCM aliases first.
+    # These are defined in /etc/asound.conf and handle device complexity.
 
-    # Method 1a: Check for vc4-hdmi first (DRM/modern driver - Pi 3B+, Pi 4, Pi 5)
+    # Method 1: Use "hdmi_auto" PCM (the most robust option)
+    # This is a custom PCM that automatically finds the right HDMI output
+    # and applies necessary format conversions.
+    if pcm_alias_exists "hdmi_auto"; then
+        logger -t hdmi-audio-detect "Method 1: Using hdmi_auto (ALSA auto-routing with format conversion)"
+        echo "hdmi_auto"
+        return 0
+    fi
+
+    # Method 2: Check for vc4-hdmi (DRM/modern driver - Pi 3B+, Pi 4, Pi 5)
+    # If hdmi_auto isn't found, try to find the specific card's plug alias.
     local vc4_card
     vc4_card=$(aplay -l 2>/dev/null | grep -i "vc4-hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${vc4_card}" ]; then
-        resolve_device_for_card "${vc4_card}" "Method 1a: Found vc4-hdmi (DRM)"
+        resolve_device_for_card "${vc4_card}" "Method 2: Found vc4-hdmi (DRM)"
         return 0
     fi
 
-    # Method 1b: Check for legacy bcm2835 HDMI (older Pi models without DRM)
+    # Method 3: Check for legacy bcm2835 HDMI (older Pi models without DRM)
     local bcm_card
     bcm_card=$(aplay -l 2>/dev/null | grep -i "bcm2835 HDMI" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${bcm_card}" ]; then
-        resolve_device_for_card "${bcm_card}" "Method 1b: Found bcm2835 HDMI (legacy)"
+        resolve_device_for_card "${bcm_card}" "Method 3: Found bcm2835 HDMI (legacy)"
         return 0
     fi
 
-    # Method 1c: Generic HDMI detection (fallback for any HDMI device)
+    # Method 4: Generic HDMI detection (fallback for any HDMI device)
     local hdmi_card
     hdmi_card=$(aplay -l 2>/dev/null | grep -i "hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${hdmi_card}" ]; then
-        resolve_device_for_card "${hdmi_card}" "Method 1c: Found generic HDMI"
+        resolve_device_for_card "${hdmi_card}" "Method 4: Found generic HDMI"
         return 0
     fi
 
-    # Method 2: Check /proc/asound/cards for HDMI identifiers
+    # Method 5: Check /proc/asound/cards for HDMI identifiers
     # This works when aplay might not show friendly names
     local card_dir card_id card_num
     for card_dir in /proc/asound/card[0-9]*; do
@@ -114,22 +124,15 @@ find_hdmi_audio() {
             if echo "${card_id}" | grep -iqE "(hdmi|vc4)"; then
                 card_num=$(basename "${card_dir}" | grep -oP "[0-9]+")
                 if [ -n "${card_num}" ]; then
-                    resolve_device_for_card "${card_num}" "Method 2: Found HDMI via /proc/asound (${card_id})"
+                    resolve_device_for_card "${card_num}" "Method 5: Found HDMI via /proc/asound (${card_id})"
                     return 0
                 fi
             fi
         fi
     done
 
-    # Method 3: Fallback to "hdmi_auto" PCM (format-converting router)
-    if pcm_alias_exists "hdmi_auto"; then
-        logger -t hdmi-audio-detect "Method 3: Using hdmi_auto (ALSA auto-routing with format conversion)"
-        echo "hdmi_auto"
-        return 0
-    fi
-
-    # Method 4: Fallback to "default" PCM (whatever system provides)
-    logger -t hdmi-audio-detect "Method 4: Fallback to 'default' PCM"
+    # Method 6: Fallback to "default" PCM (whatever system provides)
+    logger -t hdmi-audio-detect "Method 6: All detection methods failed. Falling back to 'default' PCM."
     echo "default"
     return 0
 }

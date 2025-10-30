@@ -412,6 +412,52 @@ mkdir -p "${DIAG_DIR}"
     echo ""
 
     # ============================================
+    # AUDIO TEST SERVICE ANALYSIS
+    # ============================================
+    echo "==========================================="
+    echo "AUDIO TEST SERVICE ANALYSIS"
+    echo "==========================================="
+    echo ""
+    AUDIO_LOG="/logs/audio-test.log"
+    if [ -f "${AUDIO_LOG}" ]; then
+        echo "Analyzing ${AUDIO_LOG}..."
+        echo ""
+
+        echo "=== Last Detected Audio Device ==="
+        grep "Detected HDMI audio device:" "${AUDIO_LOG}" | tail -1 2>&1 || echo "  No device detection log found."
+        echo ""
+
+        echo "=== Last VLC Command Executed ==="
+        grep "Command: cvlc" "${AUDIO_LOG}" | tail -1 2>&1 || echo "  No VLC command log found."
+        echo ""
+
+        echo "=== Last 20 Lines of Audio Test Log (VLC Output) ==="
+        # Find the line where VLC output starts and tail from there
+        if grep -n "--- VLC Output Below ---" "${AUDIO_LOG}" | tail -1 | cut -d: -f1 > /tmp/vlc_start_line; then
+            VLC_START=$(cat /tmp/vlc_start_line)
+            if [ -n "${VLC_START}" ]; then
+                tail -n +"${VLC_START}" "${AUDIO_LOG}" | tail -20
+            else
+                echo "  Could not determine start of VLC output. Showing last 20 lines of file."
+                tail -20 "${AUDIO_LOG}"
+            fi
+            rm -f /tmp/vlc_start_line
+        else
+            echo "  Log format unrecognized. Showing last 20 lines of file."
+            tail -20 "${AUDIO_LOG}"
+        fi
+        echo ""
+
+        echo "=== Key Audio Errors ==="
+        grep -iE "error|fail|cannot open|no supported" "${AUDIO_LOG}" | tail -10 2>&1 || echo "  No obvious errors found in log."
+        echo ""
+    else
+        echo "Audio test log not found at ${AUDIO_LOG}"
+        echo "Service may not have run yet or failed to start."
+    fi
+    echo ""
+
+    # ============================================
     # VIDEO FILES
     # ============================================
 echo "==========================================="
