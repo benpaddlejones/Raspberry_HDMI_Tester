@@ -138,6 +138,9 @@ REBUILT="${CONSOLE_SERIAL} ${CONSOLE_TTY} ${ROOT_PARAM} ${ROOTFSTYPE} fsck.repai
 # Add boot optimization parameters
 REBUILT="${REBUILT} noswap quiet splash loglevel=1 fastboot"
 
+# Force HDMI hotplug so displays without HPD still expose audio
+REBUILT="${REBUILT} vc4.force_hotplug=3"
+
 # DO NOT add firmware parameters (coherent_pool, vc_mem, 8250.nr_uarts, cgroup_disable)
 # These are added by firmware during boot and cause conflicts with DRM/vc4
 # By not including them here, we ensure they don't accumulate across reboots
@@ -171,6 +174,12 @@ if ! echo "${FINAL}" | grep -q "console="; then
     log "   ⚠️  WARNING: No console= parameter"
 fi
 log "   ✅ Contains console="
+
+if ! echo "${FINAL}" | grep -q "vc4.force_hotplug=3"; then
+    log "   ❌ FATAL: Missing vc4.force_hotplug=3 parameter"
+    exit 1
+fi
+log "   ✅ Contains vc4.force_hotplug=3"
 
 # Check for conflicts (these should NOT exist after our rebuild)
 CONFLICTS=0

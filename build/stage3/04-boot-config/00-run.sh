@@ -157,6 +157,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
         -e 's/snd_bcm2835\.enable_hdmi=[^ ]*//g' \
         -e 's/snd_bcm2835\.enable_headphones=[^ ]*//g' \
         -e 's/snd_bcm2835\.enable_compat_alsa=[^ ]*//g' \
+        -e 's/vc4\.force_hotplug=[^ ]*//g' \
         -e 's/noswap//g' \
         -e 's/quiet//g' \
         -e 's/splash//g' \
@@ -169,7 +170,7 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
     # Append clean parameters ONCE to the single line (using line-specific anchor)
     # Firmware may inject parameters at the START of cmdline, so we append at the END
     # Kernel processes parameters left-to-right, LAST value wins
-    sed -i '1 s/$/ noswap quiet splash loglevel=1 fastboot/' "${CMDLINE_FILE}"
+    sed -i '1 s/$/ noswap quiet splash loglevel=1 fastboot vc4.force_hotplug=3/' "${CMDLINE_FILE}"
 
     # Verify file is single line (critical for boot)
     LINE_COUNT=$(wc -l < "${CMDLINE_FILE}")
@@ -212,6 +213,11 @@ for CMDLINE_FILE in "${CMDLINE_FILES[@]}"; do
 
     if ! grep -q "fastboot" "${CMDLINE_FILE}"; then
         echo "❌ Error: Failed to add fastboot parameter to ${CMDLINE_FILE}"
+        exit 1
+    fi
+
+    if ! grep -q "vc4.force_hotplug=3" "${CMDLINE_FILE}"; then
+        echo "❌ Error: Failed to add vc4.force_hotplug=3 to ${CMDLINE_FILE}"
         exit 1
     fi
 
