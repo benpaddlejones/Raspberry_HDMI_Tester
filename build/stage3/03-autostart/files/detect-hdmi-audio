@@ -12,7 +12,17 @@ pcm_alias_exists() {
         return 1
     fi
 
-    aplay -L 2>/dev/null | awk -F: 'NF{print $1}' | grep -Fxq "${pcm_name}"
+    if aplay -L 2>/dev/null | awk -F: 'NF{print $1}' | grep -Fxq "${pcm_name}"; then
+        return 0
+    fi
+
+    # Fallback: parse /etc/asound.conf directly (covers early-boot before ALSA cache refresh)
+    if [ -f /etc/asound.conf ] && \
+        grep -Eq "^pcm[[:space:]]+${pcm_name}[[:space:]]*\\{" /etc/asound.conf; then
+        return 0
+    fi
+
+    return 1
 }
 
 map_card_to_plug_alias() {
@@ -38,9 +48,22 @@ resolve_device_for_card() {
     local pcm_alias
     pcm_alias=$(map_card_to_plug_alias "${card}") || pcm_alias=""
 
-    if pcm_alias_exists "${pcm_alias}"; then
+    if [ -n "${pcm_alias}" ] && pcm_alias_exists "${pcm_alias}"; then
         logger -t hdmi-audio-detect "${driver_label}: using ${pcm_alias} (format-converting PCM)"
         echo "${pcm_alias}"
+        return 0
+    fi
+
+    local convert_alias="${pcm_alias/_plug/_convert}"
+    if [ -n "${convert_alias}" ] && [ "${convert_alias}" != "${pcm_alias}" ] && pcm_alias_exists "${convert_alias}"; then
+        logger -t hdmi-audio-detect "${driver_label}: ${pcm_alias:-no PCM alias} unavailable; using ${convert_alias}"
+        echo "${convert_alias}"
+        return 0
+    fi
+
+    if pcm_alias_exists "hdmi_auto"; then
+        logger -t hdmi-audio-detect "${driver_label}: falling back to hdmi_auto (global format-converting PCM)"
+        echo "hdmi_auto"
         return 0
     fi
 

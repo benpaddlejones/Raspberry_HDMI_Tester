@@ -21,20 +21,102 @@ source "${PROJECT_ROOT}/scripts/validation-utils.sh"
 
 # Show usage
 show_usage() {
-    echo "Usage: $0 <image_file.img>"
-    echo ""
-    echo "This script validates that the HDMI Tester image contains all required files."
-    echo ""
-    echo "Example: $0 build/pi-gen-work/deploy/image.img"
+    cat <<'USAGE'
+Usage: validate-image.sh [OPTIONS] [IMAGE_FILE]
+
+Validate that a Raspberry Pi HDMI Tester image contains all required files.
+
+Options:
+  --latest, -l   Automatically select the most recent .img from build outputs
+  --help, -h     Show this help message
+
+Arguments:
+  IMAGE_FILE     Explicit path to the image to validate
+
+Examples:
+  sudo ./tests/validate-image.sh build/pi-gen-work/deploy/hdmi-tester.img
+  sudo ./tests/validate-image.sh --latest
+
+If no IMAGE_FILE is provided, the script will attempt to locate the most
+recent image in standard build directories.
+USAGE
     exit 1
 }
 
-# Check arguments
-if [ $# -lt 1 ]; then
-    show_usage
-fi
+# Locate most recent image in default directories
+find_latest_image() {
+    local search_dirs=(
+        "${PROJECT_ROOT}/build/pi-gen-work/deploy"
+        "${PROJECT_ROOT}/build/output"
+        "${PROJECT_ROOT}/build"
+    )
 
-IMAGE_FILE="$1"
+    local latest_image=""
+    local latest_mtime=0
+
+    for dir in "${search_dirs[@]}"; do
+        [ -d "${dir}" ] || continue
+        while IFS= read -r -d '' img; do
+            local mtime
+            mtime=$(stat -c %Y "${img}" 2>/dev/null || echo 0)
+            if [ "${mtime}" -gt "${latest_mtime}" ]; then
+                latest_mtime="${mtime}"
+                latest_image="${img}"
+            fi
+        done < <(find "${dir}" -maxdepth 1 -type f -name "*.img" -print0 2>/dev/null)
+    done
+
+    echo "${latest_image}"
+}
+
+# Parse arguments
+IMAGE_FILE=""
+AUTO_DETECT=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --help|-h)
+            show_usage
+            ;;
+        --latest|-l)
+            AUTO_DETECT=1
+            ;;
+        --)
+            shift
+            if [ $# -gt 0 ] && [ -z "${IMAGE_FILE}" ]; then
+                IMAGE_FILE="$1"
+            fi
+            break
+            ;;
+        -* )
+            echo "❌ Unknown option: $1"
+            echo ""
+            show_usage
+            ;;
+        *)
+            if [ -z "${IMAGE_FILE}" ]; then
+                IMAGE_FILE="$1"
+            else
+                echo "❌ Multiple image paths provided"
+                echo ""
+                show_usage
+            fi
+            ;;
+    esac
+    shift
+done
+
+if [ -z "${IMAGE_FILE}" ]; then
+    if [ ${AUTO_DETECT} -eq 0 ]; then
+        IMAGE_FILE=$(find_latest_image)
+    fi
+
+    if [ -z "${IMAGE_FILE}" ]; then
+        echo "❌ Error: No image file specified and none found in default directories"
+        echo ""
+        show_usage
+    fi
+fi
 
 # Validate image file exists
 if [ ! -f "${IMAGE_FILE}" ]; then

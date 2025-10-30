@@ -31,6 +31,32 @@ REPORT_FILE="${TEST_DIR}/qemu-test-report.txt"
 BOOT_LOG="${TEST_DIR}/boot.log"
 TIMEOUT_SECONDS=120
 
+# Locate most recent local image
+find_latest_local_image() {
+    local search_dirs=(
+        "${PROJECT_ROOT}/build/pi-gen-work/deploy"
+        "${PROJECT_ROOT}/build/output"
+        "${PROJECT_ROOT}/build"
+    )
+
+    local latest_image=""
+    local latest_mtime=0
+
+    for dir in "${search_dirs[@]}"; do
+        [ -d "${dir}" ] || continue
+        while IFS= read -r -d '' img; do
+            local mtime
+            mtime=$(stat -c %Y "${img}" 2>/dev/null || echo 0)
+            if [ "${mtime}" -gt "${latest_mtime}" ]; then
+                latest_mtime="${mtime}"
+                latest_image="${img}"
+            fi
+        done < <(find "${dir}" -maxdepth 1 -type f -name "*.img" -print0 2>/dev/null)
+    done
+
+    echo "${latest_image}"
+}
+
 # Function to show usage
 show_usage() {
     echo "Usage: $0 [OPTIONS] [IMAGE_FILE]"
@@ -45,8 +71,8 @@ show_usage() {
     echo "  IMAGE_FILE      Path to .img file to test (optional)"
     echo ""
     echo "Examples:"
-    echo "  $0                          # Download and test latest release"
-    echo "  $0 --latest                 # Same as above"
+    echo "  $0                          # Test newest local build (download if none)"
+    echo "  $0 --latest                 # Force download from GitHub"
     echo "  $0 my-image.img             # Test specific image"
     echo ""
     echo "Output:"
@@ -142,23 +168,34 @@ download_latest_release() {
 
 # Parse arguments
 AUTO_DOWNLOAD=0
+FORCE_DOWNLOAD=0
 IMAGE_FILE=""
 
 if [ $# -eq 0 ]; then
-    AUTO_DOWNLOAD=1
+    IMAGE_FILE=$(find_latest_local_image)
+    if [ -n "${IMAGE_FILE}" ]; then
+        echo "ℹ️  Using latest local image: ${IMAGE_FILE}"
+    else
+        AUTO_DOWNLOAD=1
+    fi
 elif [ "$1" == "--latest" ] || [ "$1" == "-l" ]; then
     AUTO_DOWNLOAD=1
+    FORCE_DOWNLOAD=1
 elif [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     show_usage
 else
     IMAGE_FILE="$1"
-    if [ ! -f "${IMAGE_FILE}" ]; then
-        echo "❌ Error: Image file not found: ${IMAGE_FILE}"
-        echo ""
-        echo "Run '$0 --help' for usage information"
-        exit 1
-    fi
-    # Get absolute path
+fi
+
+# Validate image argument after parsing
+if [ -n "${IMAGE_FILE}" ] && [ ! -f "${IMAGE_FILE}" ]; then
+    echo "❌ Error: Image file not found: ${IMAGE_FILE}"
+    echo ""
+    echo "Run '$0 --help' for usage information"
+    exit 1
+fi
+
+if [ -n "${IMAGE_FILE}" ]; then
     IMAGE_FILE=$(readlink -f "${IMAGE_FILE}")
 fi
 
@@ -188,8 +225,24 @@ if [ ${AUTO_DOWNLOAD} -eq 1 ]; then
     IMAGE_FILE=$(download_latest_release)
     DL_EXIT=$?
     if [ ${DL_EXIT} -ne 0 ] || [ -z "${IMAGE_FILE}" ]; then
-        exit 1
+        echo "⚠️  Download failed"
+        if [ ${FORCE_DOWNLOAD} -eq 1 ]; then
+            exit 1
+        fi
+
+        IMAGE_FILE=$(find_latest_local_image)
+        if [ -n "${IMAGE_FILE}" ]; then
+            echo "ℹ️  Falling back to latest local image: ${IMAGE_FILE}"
+        else
+            echo "❌ No local images available to test"
+            exit 1
+        fi
     fi
+fi
+
+if [ -z "${IMAGE_FILE}" ]; then
+    echo "❌ Error: No image available for testing"
+    exit 1
 fi
 
 echo "=================================================="

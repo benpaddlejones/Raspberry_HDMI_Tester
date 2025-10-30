@@ -1,3 +1,5 @@
 # HDMI Audio Root Cause Analysis & Remediation Plan
 
 A recurring misconfiguration on Raspberry Pi platforms running the vc4 KMS stack shows up when the boot firmware injects legacy `snd_bcm2835.enable_hdmi=0` while Hot-Plug Detect never asserts, so the DRM driver never negotiates a display mode and ALSA never exposes an HDMI sink; to restore audio, confirm the lack of HPD with `kmsprint`, add `vc4.force_hotplug=<mask>` to `/boot/firmware/cmdline.txt` (forcing the relevant connector(s)), reboot and validate the link with `kmsprint`/`kmstest`, and only then retest audio routing once the connector reports as `connected`.
+
+**Status (2025-10-30):** `vc4.force_hotplug=3` now persists through build and first-boot cleanup; diagnostics show `card0-HDMI-A-1: connected`, yet VLC targeting `plughw:1,0` still returns `alsa audio output error: no supported sample format`, indicating the remaining blocker is the direct hardware device rejecting PCM instead of using the format-converting `hdmi_*` plug endpoints.
