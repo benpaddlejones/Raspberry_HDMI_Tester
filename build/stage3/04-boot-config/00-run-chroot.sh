@@ -227,6 +227,45 @@ pcm.hdmi2_plug {
     }
 }
 
+pcm.hdmi3_plug {
+    type plug
+    slave.pcm {
+        type hw
+        card 3
+        device 0
+    }
+    hint {
+        show on
+        description "HDMI Audio Output (Card 3) with Format Conversion"
+    }
+}
+
+pcm.hdmi4_plug {
+    type plug
+    slave.pcm {
+        type hw
+        card 4
+        device 0
+    }
+    hint {
+        show on
+        description "HDMI Audio Output (Card 4) with Format Conversion"
+    }
+}
+
+pcm.hdmi5_plug {
+    type plug
+    slave.pcm {
+        type hw
+        card 5
+        device 0
+    }
+    hint {
+        show on
+        description "HDMI Audio Output (Card 5) with Format Conversion"
+    }
+}
+
 # Legacy direct hardware access (without format conversion)
 # Kept for compatibility but not recommended for vc4-hdmi
 pcm.hdmi0 {
@@ -244,6 +283,24 @@ pcm.hdmi1 {
 pcm.hdmi2 {
     type hw
     card 2
+    device 0
+}
+
+pcm.hdmi3 {
+    type hw
+    card 3
+    device 0
+}
+
+pcm.hdmi4 {
+    type hw
+    card 4
+    device 0
+}
+
+pcm.hdmi5 {
+    type hw
+    card 5
     device 0
 }
 

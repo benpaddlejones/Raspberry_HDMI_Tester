@@ -5,6 +5,51 @@
 # NOTE: As of v1.0.0, /etc/asound.conf provides intelligent HDMI routing
 # This script is kept for explicit device selection and logging purposes
 
+pcm_alias_exists() {
+    local pcm_name="$1"
+
+    if [ -z "${pcm_name}" ]; then
+        return 1
+    fi
+
+    aplay -L 2>/dev/null | awk -F: 'NF{print $1}' | grep -Fxq "${pcm_name}"
+}
+
+map_card_to_plug_alias() {
+    local card="$1"
+
+    case "${card}" in
+        0) echo "hdmi0_plug" ;;
+        1) echo "hdmi1_plug" ;;
+        2) echo "hdmi2_plug" ;;
+        3) echo "hdmi3_plug" ;;
+        4) echo "hdmi4_plug" ;;
+        5) echo "hdmi5_plug" ;;
+        *) return 1 ;;
+    esac
+
+    return 0
+}
+
+resolve_device_for_card() {
+    local card="$1"
+    local driver_label="$2"
+
+    local pcm_alias
+    pcm_alias=$(map_card_to_plug_alias "${card}") || pcm_alias=""
+
+    if pcm_alias_exists "${pcm_alias}"; then
+        logger -t hdmi-audio-detect "${driver_label}: using ${pcm_alias} (format-converting PCM)"
+        echo "${pcm_alias}"
+        return 0
+    fi
+
+    local device="plughw:${card},0"
+    logger -t hdmi-audio-detect "${driver_label}: ${pcm_alias:-no PCM alias}; falling back to ${device}"
+    echo "${device}"
+    return 0
+}
+
 # Function to find HDMI audio device
 find_hdmi_audio() {
     # STRATEGY: Try multiple detection methods in order of reliability
@@ -15,10 +60,7 @@ find_hdmi_audio() {
     vc4_card=$(aplay -l 2>/dev/null | grep -i "vc4-hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${vc4_card}" ]; then
-        # vc4-hdmi found - prefer plughw to keep format conversion in path
-        local device="plughw:${vc4_card},0"
-        echo "${device}"
-        logger -t hdmi-audio-detect "Method 1a: Found vc4-hdmi (DRM): ${device}"
+        resolve_device_for_card "${vc4_card}" "Method 1a: Found vc4-hdmi (DRM)"
         return 0
     fi
 
@@ -27,10 +69,7 @@ find_hdmi_audio() {
     bcm_card=$(aplay -l 2>/dev/null | grep -i "bcm2835 HDMI" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${bcm_card}" ]; then
-        # Found legacy bcm2835 HDMI card
-        local device="plughw:${bcm_card},0"
-        echo "${device}"
-        logger -t hdmi-audio-detect "Method 1b: Found bcm2835 HDMI (legacy): ${device}"
+        resolve_device_for_card "${bcm_card}" "Method 1b: Found bcm2835 HDMI (legacy)"
         return 0
     fi
 
@@ -39,10 +78,7 @@ find_hdmi_audio() {
     hdmi_card=$(aplay -l 2>/dev/null | grep -i "hdmi" | head -1 | grep -oP "card \K[0-9]+")
 
     if [ -n "${hdmi_card}" ]; then
-        # Found HDMI card via aplay listing
-        local device="plughw:${hdmi_card},0"
-        echo "${device}"
-        logger -t hdmi-audio-detect "Method 1c: Found generic HDMI: ${device}"
+        resolve_device_for_card "${hdmi_card}" "Method 1c: Found generic HDMI"
         return 0
     fi
 
@@ -55,19 +91,23 @@ find_hdmi_audio() {
             if echo "${card_id}" | grep -iqE "(hdmi|vc4)"; then
                 card_num=$(basename "${card_dir}" | grep -oP "[0-9]+")
                 if [ -n "${card_num}" ]; then
-                    local device="plughw:${card_num},0"
-                    echo "${device}"
-                    logger -t hdmi-audio-detect "Method 2: Found HDMI via /proc/asound: ${device} (${card_id})"
+                    resolve_device_for_card "${card_num}" "Method 2: Found HDMI via /proc/asound (${card_id})"
                     return 0
                 fi
             fi
         fi
     done
 
-    # Method 3: Fallback to "default" PCM (uses /etc/asound.conf intelligent routing)
-    # This leverages Debian's standard ALSA configuration which handles multi-model support
+    # Method 3: Fallback to "hdmi_auto" PCM (format-converting router)
+    if pcm_alias_exists "hdmi_auto"; then
+        logger -t hdmi-audio-detect "Method 3: Using hdmi_auto (ALSA auto-routing with format conversion)"
+        echo "hdmi_auto"
+        return 0
+    fi
+
+    # Method 4: Fallback to "default" PCM (whatever system provides)
+    logger -t hdmi-audio-detect "Method 4: Fallback to 'default' PCM"
     echo "default"
-    logger -t hdmi-audio-detect "Method 3: Using 'default' PCM (ALSA auto-routing via /etc/asound.conf)"
     return 0
 }
 
