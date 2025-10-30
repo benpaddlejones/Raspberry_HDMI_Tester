@@ -392,10 +392,10 @@ echo "  ℹ️  Fixes vc4-hdmi 'no supported sample format' error on Pi 3B+/4/5"
 echo ""
 
 # Enable fix-cmdline service to clean up after Raspberry Pi OS firstboot
-echo "🔧 Enabling cmdline.txt cleanup service..."
-mkdir -p /etc/systemd/system/multi-user.target.wants
-ln -sf /etc/systemd/system/fix-cmdline.service /etc/systemd/system/multi-user.target.wants/fix-cmdline.service
-echo "  ✅ fix-cmdline.service enabled (Debian-compliant: runs AFTER first-boot scripts)"
+echo "🔧 Enabling cmdline.txt cleanup timer..."
+mkdir -p /etc/systemd/system/timers.target.wants
+ln -sf /etc/systemd/system/fix-cmdline.timer /etc/systemd/system/timers.target.wants/fix-cmdline.timer
+echo "  ✅ fix-cmdline.timer enabled (Deferred: runs once after first-boot scripts finish)"
 echo "  ⚠️  First boot will complete normally, then reboot to apply cmdline.txt fix"
 echo "  ℹ️  cmdline.txt will be made immutable (chattr +i) to prevent future corruption"
 echo ""

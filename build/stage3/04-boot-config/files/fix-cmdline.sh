@@ -3,7 +3,7 @@
 # This runs ONCE after first boot - AFTER all system first-boot scripts complete
 #
 # DEBIAN-COMPLIANT APPROACH:
-# - Runs AFTER multi-user.target (when all first-boot scripts are done)
+# - Triggered by systemd timer shortly after boot so first-boot scripts finish
 # - Lets userconf-pi, resize, and other system scripts complete first
 # - Cleans up any duplicates/conflicts they created
 # - Makes file immutable (chattr +i) to prevent future corruption
@@ -38,12 +38,11 @@ if [ -f "${MARKER_FILE}" ]; then
         CURRENT=$(cat "${CMDLINE_FILE}")
         LINE_COUNT=$(grep -c "." "${CMDLINE_FILE}" || echo "0")
 
-        # Check for conflicts or multi-line corruption
-        if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_hdmi=0" || \
-           echo "${CURRENT}" | grep -q "cgroup_disable=memory" || \
-           echo "${CURRENT}" | grep -q "8250.nr_uarts=0" || \
-           [ "$(echo "${CURRENT}" | grep -o "snd_bcm2835.enable_hdmi" | wc -l)" -gt 1 ] || \
-           [ "${LINE_COUNT}" -gt 1 ]; then
+          # Check for conflicts or multi-line corruption
+          if echo "${CURRENT}" | grep -q "snd_bcm2835.enable_" || \
+              echo "${CURRENT}" | grep -q "cgroup_disable=memory" || \
+              echo "${CURRENT}" | grep -q "8250.nr_uarts=0" || \
+              [ "${LINE_COUNT}" -gt 1 ]; then
             log "⚠️  WARNING: Marker exists but cmdline has issues (conflicts or multi-line) - re-running"
             log "   Line count: ${LINE_COUNT} (should be 1)"
             log "   First 200 chars: $(echo "${CURRENT}" | head -c 200)"
@@ -136,10 +135,6 @@ log "✅ Console: ${CONSOLE_SERIAL} ${CONSOLE_TTY}"
 # This REPLACES ALL firmware-injected parameters to prevent conflicts
 REBUILT="${CONSOLE_SERIAL} ${CONSOLE_TTY} ${ROOT_PARAM} ${ROOTFSTYPE} fsck.repair=yes rootwait"
 
-# Add our audio parameters (EXACTLY ONCE, no conflicts)
-# These must be the ONLY audio parameters - no firmware additions
-REBUILT="${REBUILT} snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1"
-
 # Add boot optimization parameters
 REBUILT="${REBUILT} noswap quiet splash loglevel=1 fastboot"
 
@@ -191,11 +186,6 @@ if echo "${FINAL}" | grep -q "vc_mem\."; then
     CONFLICTS=$((CONFLICTS + 1))
 fi
 
-if echo "${FINAL}" | grep -q "snd_bcm2835.enable_hdmi=0"; then
-    log "   ❌ CONFLICT: Found enable_hdmi=0"
-    CONFLICTS=$((CONFLICTS + 1))
-fi
-
 if echo "${FINAL}" | grep -q "cgroup_disable=memory"; then
     log "   ❌ CONFLICT: Found cgroup_disable=memory (causes issues)"
     CONFLICTS=$((CONFLICTS + 1))
@@ -206,22 +196,9 @@ if echo "${FINAL}" | grep -q "8250.nr_uarts=0"; then
     CONFLICTS=$((CONFLICTS + 1))
 fi
 
-# Count occurrences of critical parameters (must be exactly 1)
-HDMI_COUNT=$(echo "${FINAL}" | grep -o "snd_bcm2835.enable_hdmi=1" | wc -l)
-HEADPHONE_COUNT=$(echo "${FINAL}" | grep -o "snd_bcm2835.enable_headphones=1" | wc -l)
-
-if [ "${HDMI_COUNT}" -ne 1 ]; then
-    log "   ❌ ERROR: enable_hdmi=1 appears ${HDMI_COUNT} times (must be 1)"
+if echo "${FINAL}" | grep -q "snd_bcm2835.enable_"; then
+    log "   ❌ CONFLICT: Found legacy snd_bcm2835 parameters (handled via modprobe now)"
     CONFLICTS=$((CONFLICTS + 1))
-else
-    log "   ✅ enable_hdmi=1 appears exactly once"
-fi
-
-if [ "${HEADPHONE_COUNT}" -ne 1 ]; then
-    log "   ❌ ERROR: enable_headphones=1 appears ${HEADPHONE_COUNT} times (must be 1)"
-    CONFLICTS=$((CONFLICTS + 1))
-else
-    log "   ✅ enable_headphones=1 appears exactly once"
 fi
 
 if [ "${CONFLICTS}" -gt 0 ]; then
@@ -262,9 +239,8 @@ log "CMDLINE.TXT CLEANUP - COMPLETE"
 log "=========================================="
 log "✅ Duplicates removed"
 log "✅ Conflicts resolved"
-log "✅ HDMI audio enabled (snd_bcm2835.enable_hdmi=1)"
-log "✅ Headphone audio enabled (snd_bcm2835.enable_headphones=1)"
 log "✅ Boot optimization enabled (noswap, quiet, fastboot)"
+log "✅ HDMI/audio defaults handled via modprobe configuration"
 log "✅ Serial console preserved (${CONSOLE_SERIAL})"
 log ""
 log "📋 Backup saved to: ${BACKUP_FILE}"

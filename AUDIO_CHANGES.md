@@ -16,3 +16,11 @@ These adjustments ensure the stage 3 test services produce HDMI audio on every s
 - Delegating to the existing wrapper script keeps the logging, retries, and validation logic in one place, reducing the risk of regressions when new audio flows or codecs are introduced.
 
 Rebuild the image after these updates; the stage 3 HDMI tests will bind to the correct ALSA endpoint and emit audio immediately once the services start.
+
+## October 2025 Update – First-Boot cmdline Cleanup & Module Defaults
+
+- **Deferred cmdline fix** – `fix-cmdline.service` now runs under a timer, eliminating the multi-user.target ordering loop so the cleanup executes once the first boot settles (and still triggers the protective reboot).
+- **State directory provisioning** – `/var/lib/hdmi-tester/` is shipped in the image to satisfy the service’s `ConditionPathExists` guard without race conditions.
+- **Kernel line hygiene** – We stop injecting `snd_bcm2835.*` flags into `cmdline.txt`; the fixer script rebuilds the line with only core boot knobs and rejects any legacy audio parameters left behind by firmware.
+- **Modprobe-based audio enablement** – A new `hdmi-audio.conf` in `modprobe.d` keeps HDMI and headphone outputs forced on at module load, removing the need for kernel parameter overrides while still protecting against firmware toggles.
+- **Validation logging** – Updated messaging highlights that audio defaults now flow through ALSA/module configuration, clarifying where to adjust behavior for future boards.

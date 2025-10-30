@@ -1,10 +1,9 @@
 [Unit]
 Description=Fix cmdline.txt after first boot (Debian-compliant approach)
 Documentation=https://github.com/benpaddlejones/Raspberry_HDMI_Tester
-# DEBIAN-CORRECT: Run AFTER all first-boot scripts complete
-# This allows userconf-pi, resize scripts, etc. to finish BEFORE we clean up
-After=multi-user.target
-Requires=boot-firmware.mount
+# Ensure boot partition is mounted before we attempt to rewrite it
+After=local-fs.target
+RequiresMountsFor=/boot /boot/firmware
 # Only run once
 ConditionPathExists=!/var/lib/hdmi-tester/cmdline-fixed
 
@@ -20,6 +19,3 @@ ExecStartPost=-/usr/bin/systemctl --no-block reboot
 RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal
-
-[Install]
-WantedBy=multi-user.target

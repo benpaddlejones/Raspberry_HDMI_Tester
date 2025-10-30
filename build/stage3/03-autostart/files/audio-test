@@ -35,7 +35,9 @@ rotate_logs() {
 rotate_logs "${LOG_FILE}"
 
 # Setup unbuffered logging (survives crashes)
-exec > >(tee -a "${LOG_FILE}") 2>&1# Trap handler to ensure logs are flushed on exit/error
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
 cleanup() {
     echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
     sync  # Flush filesystem buffers
