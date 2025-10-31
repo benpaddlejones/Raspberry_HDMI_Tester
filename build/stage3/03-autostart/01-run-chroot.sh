@@ -5,6 +5,9 @@ echo "Enabling HDMI audio services..."
 # Enable the service that prepares the ALSA config
 systemctl enable hdmi-audio-ready.service
 
+# Enable the dynamic ALSA config generator service
+systemctl enable hdmi-audio-config.service
+
 # Enable the main audio test service
 systemctl enable audio-test.service
 

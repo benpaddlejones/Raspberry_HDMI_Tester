@@ -132,8 +132,11 @@ for service in "${SERVICES[@]}"; do
     fi
 done
 
-echo "✅ Systemd services installed but NOT enabled"
-echo "   (Services are available for future enablement)"
+# Install dynamic ALSA config generator
+install -m 755 files/generate-asound-conf "${ROOTFS_DIR}/usr/local/bin/"
+install -m 644 files/hdmi-audio-config.service "${ROOTFS_DIR}/etc/systemd/system/"
+
+echo "✅ HDMI tester services and scripts installed."
 
 # NOTE: Services are intentionally NOT enabled for manual testing phase
 # To enable services later, run on the Pi:

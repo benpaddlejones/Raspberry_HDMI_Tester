@@ -1,0 +1,14 @@
+[Unit]
+Description=Dynamic ALSA Configuration for HDMI Audio
+DefaultDependencies=no
+After=local-fs.target systemd-modules-load.service
+Before=alsa-restore.service sound.target
+ConditionPathExists=!/etc/asound.conf
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/generate-asound-conf
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
