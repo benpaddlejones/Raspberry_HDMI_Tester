@@ -1,0 +1,15 @@
+[Unit]
+Description=HDMI Audio Pre-start Check
+Documentation=https://github.com/benpaddlejones/Raspberry_HDMI_Tester
+After=fix-cmdline.service
+Wants=fix-cmdline.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/detect-hdmi-audio
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

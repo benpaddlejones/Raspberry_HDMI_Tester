@@ -1,7 +1,8 @@
 [Unit]
 Description=HDMI Audio Test - Stereo and 5.1 Surround FLAC Loop
-After=local-fs.target sound.target systemd-user-sessions.service
+After=local-fs.target sound.target systemd-user-sessions.service hdmi-audio-ready.service
 Wants=sound.target
+Requires=hdmi-audio-ready.service
 
 # CRITICAL: Wait for ALSA/bcm2835 driver initialization to complete
 # The bcm2835 audio driver needs time to communicate with VideoCore firmware

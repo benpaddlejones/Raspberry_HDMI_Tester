@@ -92,7 +92,7 @@ echo "Installing systemd service files (disabled)..."
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
 
 # Install test services based on test commands (VLC only)
-SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service" "image-test.service")
+SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service" "image-test.service" "hdmi-audio-ready.service")
 for service in "${SERVICES[@]}"; do
     if [ -f "files/${service}" ]; then
         # Validate source file is not empty
