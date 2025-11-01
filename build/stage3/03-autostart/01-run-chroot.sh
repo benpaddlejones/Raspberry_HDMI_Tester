@@ -8,10 +8,7 @@ systemctl enable hdmi-audio-ready.service
 # Enable the dynamic ALSA config generator service
 systemctl enable hdmi-audio-config.service
 
-# Enable the main audio test service
-systemctl enable audio-test.service
+# NOTE: Test services are intentionally NOT enabled by default
+# Users should configure via hdmi-tester-config or manually enable
 
-# Also enable the image test service as a default
-systemctl enable image-test.service
-
-echo "✅ Default services (hdmi-audio-ready, audio-test, image-test) enabled."
+echo "✅ Audio configuration services enabled. Test services available but disabled by default."
