@@ -32,14 +32,17 @@ cat > "${TEMP_FILE}" << 'EOF'
 
 EOF
 
-# Define individual card outputs as PCM slaves
-echo "# Define PCM devices for each detected card" >> "${TEMP_FILE}"
+# Define individual card outputs as PCM slaves, wrapped in 'plug' for conversion
+echo "# Define PCM devices for each detected card, wrapped in 'plug' for conversion" >> "${TEMP_FILE}"
 for card in "${CARDS[@]}"; do
     cat >> "${TEMP_FILE}" << EOF
-pcm.card${card}_output {
-    type hw
-    card ${card}
-    device 0
+pcm.card${card}_plug {
+    type plug
+    slave.pcm {
+        type hw
+        card ${card}
+        device 0
+    }
 }
 
 EOF
@@ -51,7 +54,11 @@ if [ ${#CARDS[@]} -eq 1 ]; then
 # Only one card detected, using it directly with plug for format conversion
 pcm.!default {
     type plug
-    slave.pcm "card${CARDS[0]}_output"
+    slave.pcm {
+        type hw
+        card ${CARDS[0]}
+        device 0
+    }
 }
 
 ctl.!default {
@@ -77,7 +84,7 @@ slave_letters=()
 for i in "${!CARDS[@]}"; do
     letter=$(printf "\\$(printf '%03o' $((97 + i)))")  # a=97, b=98, c=99...
     slave_letters+=("$letter")
-    echo "        ${letter} { pcm \"card${CARDS[$i]}_output\" channels 2 }" >> "${TEMP_FILE}"
+    echo "        ${letter} { pcm \"card${CARDS[$i]}_plug\" channels 2 }" >> "${TEMP_FILE}"
 done
 
 cat >> "${TEMP_FILE}" << 'EOF'
