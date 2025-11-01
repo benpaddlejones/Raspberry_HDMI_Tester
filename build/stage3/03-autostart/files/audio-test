@@ -188,8 +188,8 @@ echo ""
     cvlc --loop --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
         --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
         "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1 &
-    
+
     VLC_PID=$!
-    
+
     # Wait for VLC to complete (or be interrupted)
     wait ${VLC_PID}

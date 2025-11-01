@@ -260,8 +260,8 @@ echo ""
         --no-audio-time-stretch --audio-replay-gain-mode=none \
         --sub-source marq --marq-marquee="${RESOLUTION}" --marq-position=6 --marq-size=24 \
         ${VLC_FLAGS} "${VIDEO_FILE}" 2>&1 &
-    
+
     VLC_PID=$!
-    
+
     # Wait for VLC to complete (or be interrupted)
     wait ${VLC_PID}
