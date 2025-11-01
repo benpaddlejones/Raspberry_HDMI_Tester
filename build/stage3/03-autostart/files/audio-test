@@ -165,31 +165,40 @@ echo ""
     ps aux | grep -E "vlc|aplay|paplay" | grep -v grep || echo "None"
     echo ""
 
-    # Detect HDMI audio device dynamically
-    echo "=== Detecting HDMI Audio Device ==="
+    # Detect primary HDMI audio device for surround sound test
+    echo "=== Detecting Primary HDMI Audio Device for 5.1 Test ==="
+    # Use detect-hdmi-audio script to find the correct format-converting plug device
     HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
-    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
+    echo "Detected HDMI audio device for 5.1 test: ${HDMI_DEVICE}"
     echo ""
 
     echo "=== Starting VLC Audio Loop (Verbose Mode) ==="
-    echo "Command: cvlc --loop --no-video --aout=alsa --alsa-audio-device=${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${STEREO_FILE} ${SURROUND_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
-    echo "--- VLC Output Below ---"
-    echo ""
-
-    # Run VLC with verbose output (use -vv for detailed debugging until stable)
-    # Use --alsa-audio-device to explicitly set HDMI device (AUDIODEV env var doesn't work)
 
     # Get debug flags from config
     VLC_FLAGS=$(get_vlc_flags)
 
-    # Run in background so we can catch Ctrl+C and properly kill VLC
-    cvlc --loop --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
-        --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
-        "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1 &
+    # Loop forever, playing stereo then surround
+    while true; do
+        # --- Play Stereo Test (using default multi-card output) ---
+        echo "--- Playing Stereo Test (all outputs) ---"
+        echo "Command: cvlc --play-and-exit --no-video --aout=alsa --alsa-audio-device=default ${VLC_FLAGS} ${STEREO_FILE}"
+        cvlc --play-and-exit --no-video --aout=alsa --alsa-audio-device="default" \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
+            "${STEREO_FILE}" 2>&1
+        echo "--- Stereo test finished ---"
+        echo ""
+        sleep 2
 
-    VLC_PID=$!
+        # --- Play Surround Test (explicitly targeting HDMI) ---
+        echo "--- Playing 5.1 Surround Test (HDMI output only) ---"
+        echo "Command: cvlc --play-and-exit --no-video --aout=alsa --alsa-audio-device=${HDMI_DEVICE} ${VLC_FLAGS} ${SURROUND_FILE}"
+        cvlc --play-and-exit --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
+            "${SURROUND_FILE}" 2>&1
+        echo "--- 5.1 Surround test finished ---"
+        echo ""
+        sleep 2
+    done
 
-    # Wait for VLC to complete (or be interrupted)
-    wait ${VLC_PID}

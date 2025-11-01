@@ -32,19 +32,26 @@ cat > "${TEMP_FILE}" << 'EOF'
 
 EOF
 
+# Define raw hardware devices first
+echo "# 1. Define raw hardware devices for each card" >> "${TEMP_FILE}"
+for card in "${CARDS[@]}"; do
+    cat >> "${TEMP_FILE}" << EOF
+pcm.card${card}_hw {
+    type hw
+    card ${card}
+    device 0
+}
+EOF
+done
+
 # Define individual card outputs as PCM slaves, wrapped in 'plug' for conversion
-echo "# Define PCM devices for each detected card, wrapped in 'plug' for conversion" >> "${TEMP_FILE}"
+echo -e "\n# 2. Define 'plug' wrappers for each hardware device to handle format conversion" >> "${TEMP_FILE}"
 for card in "${CARDS[@]}"; do
     cat >> "${TEMP_FILE}" << EOF
 pcm.card${card}_plug {
     type plug
-    slave.pcm {
-        type hw
-        card ${card}
-        device 0
-    }
+    slave.pcm "card${card}_hw"
 }
-
 EOF
 done
 
@@ -72,7 +79,7 @@ EOF
 fi
 
 # Multiple cards: create multi plugin
-echo "# Create multi plugin to duplicate audio to all cards" >> "${TEMP_FILE}"
+echo -e "\n# 3. Create the 'multi' plugin to bind the 'plug' wrappers together" >> "${TEMP_FILE}"
 cat >> "${TEMP_FILE}" << 'EOF'
 pcm.multi_output {
     type multi
@@ -113,6 +120,8 @@ EOF
 # Create route plugin to duplicate stereo input to all outputs
 total_channels=$((${#CARDS[@]} * 2))
 cat >> "${TEMP_FILE}" << EOF
+
+# 4. Create a route plugin to map the stereo input to the multi-channel output
 # Route stereo input to all ${#CARDS[@]} card(s) (${total_channels} total channels)
 pcm.multi_route {
     type route
@@ -142,9 +151,10 @@ pcm.!default {
     slave.pcm "multi_route"
 }
 
+# Default control device should point to the first card (usually master)
 ctl.!default {
     type hw
-    card 0
+    card ${CARDS[0]}
 }
 EOF
 
