@@ -8,6 +8,9 @@ systemctl enable hdmi-audio-ready.service
 # Enable the dynamic ALSA config generator service
 systemctl enable hdmi-audio-config.service
 
+# Enable the multi-card audio router
+systemctl enable alsa-multi-card.service
+
 # NOTE: Test services are intentionally NOT enabled by default
 # Users should configure via hdmi-tester-config or manually enable
 

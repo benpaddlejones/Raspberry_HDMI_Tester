@@ -12,7 +12,7 @@ validate_rootfs_dir || exit 1
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test" "hdmi-tester-config" "hdmi-auto-launcher")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test" "hdmi-tester-config" "hdmi-auto-launcher" "generate-multi-card-asound")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -135,6 +135,9 @@ done
 # Install dynamic ALSA config generator
 install -m 755 files/generate-asound-conf "${ROOTFS_DIR}/usr/local/bin/"
 install -m 644 files/hdmi-audio-config.service "${ROOTFS_DIR}/etc/systemd/system/"
+
+# Install multi-card ALSA config generator and service
+install -m 644 files/alsa-multi-card.service "${ROOTFS_DIR}/etc/systemd/system/"
 
 echo "✅ HDMI tester services and scripts installed."
 
