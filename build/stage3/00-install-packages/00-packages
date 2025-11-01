@@ -43,6 +43,9 @@ raspberrypi-sys-mods
 # resulting in VCHI timeouts and system crashes. VLC works perfectly with ALSA-only
 # when using --aout=alsa flag (which all our scripts use).
 
+# HDMI EDID troubleshooting utility
+edid-decode
+
 # Conservative removals (codecs not needed for our specific test files):
 # - libwebm1 (WebM container - ffmpeg/libavformat-extra handles this)
 # - libx265-199 (H.265/HEVC encoder - not needed)

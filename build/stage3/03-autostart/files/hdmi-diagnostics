@@ -264,6 +264,26 @@ mkdir -p "${DIAG_DIR}"
     done
     echo ""
 
+    echo "=== EDID Dump and Decode ==="
+    if command -v edid-decode &> /dev/null && command -v get-edid &> /dev/null; then
+        echo "Attempting to dump and decode EDID from connected display..."
+        # Use get-edid which should find the right display
+        if get-edid > "${DIAG_DIR}/edid.bin"; then
+            echo "Successfully dumped EDID to edid.bin"
+            echo ""
+            echo "--- Decoded EDID ---"
+            edid-decode "${DIAG_DIR}/edid.bin"
+            echo "--- End Decoded EDID ---"
+        else
+            echo "Failed to dump EDID using get-edid."
+            echo "This may happen if no display is connected or the display does not provide EDID."
+        fi
+    else
+        echo "edid-decode or get-edid command not found. Skipping EDID dump."
+        echo "Install 'edid-decode' package to enable this."
+    fi
+    echo ""
+
     echo "=== Framebuffer Information ==="
     fbset 2>&1 || echo "fbset not available"
     echo ""

@@ -356,26 +356,52 @@ If display supports HDMI audio but you still hear nothing:
 
 **Use the troubleshooting script** (requires keyboard or SSH access):
 
-1. **Connect USB keyboard to Pi**
+1.  **Connect USB keyboard to Pi**
 
-2. **Press `Ctrl + Alt + F2`** (switch to console)
+2.  **Press `Ctrl + Alt + F2`** (switch to console)
 
-3. **Login**: username `pi`, password `raspberry`
+3.  **Login**: username `pi`, password `raspberry`
 
-4. **Check audio service status**:
-   ```bash
-   sudo systemctl status hdmi-audio.service
-   journalctl -u hdmi-audio.service -n 50
+4.  **Check audio service status**:
+    ```bash
+    sudo systemctl status hdmi-audio.service
+    journalctl -u hdmi-audio.service -n 50
 
-   # Also check ALSA audio devices
-   aplay -l
-   ```
+    # Also check ALSA audio devices
+    aplay -l
+    ```
 
-5. **Look for errors in output**
+5.  **Look for errors in output**
 
-6. **Take photos of screen with phone** (for reporting issue)
+6.  **Take photos of screen with phone** (for reporting issue)
 
-7. **Press `Ctrl + Alt + F1`** to return to display
+7.  **Press `Ctrl + Alt + F1`** to return to display
+
+### New: Investigating EDID (Extended Display Identification Data)
+
+Recent findings suggest that audio issues can be caused by the Raspberry Pi failing to correctly read the display's capabilities from its EDID information. We can now check this directly.
+
+**What you need**: USB keyboard
+
+**Steps**:
+
+1.  **Connect USB keyboard to Pi**
+
+2.  **Press `Ctrl + C`** to stop any running test.
+
+3.  **At the terminal prompt, run the following command**:
+    ```bash
+    sudo get-edid > /tmp/edid.bin && edid-decode /tmp/edid.bin
+    ```
+
+4.  **Examine the output**. Look for a section called **"Audio Data Block"**.
+    -   **If an "Audio Data Block" is present**: This means your display is correctly reporting its audio capabilities. The problem lies elsewhere in the Pi's software.
+    -   **If there is NO "Audio Data Block"**: This is the root of the problem. The Pi does not think your display supports audio. This could be due to a faulty HDMI cable, an issue with the display itself, or a bug in the Pi's firmware.
+
+5.  **What to do with this information**:
+    -   When reporting an issue, copy the entire output of the `edid-decode` command. This is extremely valuable for debugging.
+    -   Try a different, high-quality HDMI cable.
+    -   Check the settings on your display to ensure HDMI audio is enabled.
 
 ### Audio Plays But Sounds Bad
 

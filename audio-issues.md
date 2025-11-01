@@ -1,14 +1,39 @@
 # HDMI Audio Root Cause Analysis & Remediation Plan
 
-A recurring misconfiguration on Raspberry Pi platforms running the vc4 KMS stack shows up when the boot firmware injects legacy `snd_bcm2835.enable_hdmi=0` while Hot-Plug Detect never asserts, so the DRM driver never negotiates a display mode and ALSA never exposes an HDMI sink; to restore audio, confirm the lack of HPD with `kmsprint`, add `vc4.force_hotplug=<mask>` to `/boot/firmware/cmdline.txt` (forcing the relevant connector(s)), reboot and validate the link with `kmsprint`/`kmstest`, and only then retest audio routing once the connector reports as `connected`.
+**Status (2025-11-01):** All previous user-space ALSA configuration issues have been resolved. The dynamic multi-card routing system is generating a correct configuration file. However, diagnostic logs from the device reveal a deeper, kernel-level issue that is the new root cause of the audio failure.
 
-**Status (2025-10-31):** Further analysis of on-device diagnostic logs (`rpi4/diagnostic-report.txt`) has revealed the true root cause. While the `detect-hdmi-audio` script correctly identifies and instructs VLC to use the `hdmi_auto` PCM, ALSA rejects this with an `Invalid argument` error.
+### Current Problem: Kernel Fails to Initialize HDMI Audio Device
 
-The core issues are:
-1.  **Hardcoded ALSA Configuration:** The `hdmi_dmix` plugin, which `hdmi_auto` depends on, is hardcoded to use `card 0`. On the failing device, `card 0` is the analog headphone jack (`bcm2835 Headphones`), while the correct HDMI output is `card 1` (`vc4-hdmi`). The configuration is attempting to apply HDMI settings to the wrong device.
-2.  **Conflicting Kernel Parameter:** The kernel is booting with `snd_bcm2835.enable_hdmi=0`. This legacy parameter, intended for older drivers, is likely interfering with the modern `vc4-kms-v3d` driver's ability to correctly and consistently manage HDMI audio devices, contributing to the card index confusion.
+The core issue is that the Linux kernel is failing to properly initialize the HDMI audio hardware during the boot process.
 
-**Next Steps:**
-1.  The `hdmi_dmix` ALSA configuration must be made dynamic. It needs to be modified at boot time to target the correct card number identified by the `detect-hdmi-audio` script.
-2.  The `fix-cmdline.service` needs to be verified to ensure it is effectively removing the conflicting `snd_bcm2835.enable_hdmi=0` parameter on the first boot.
-3.  The `detect-hdmi-audio` script will be updated to dynamically generate a small ALSA configuration snippet (`/run/hdmi-card.conf`) that points the `hdmi_dmix` slave to the correct card, and the main `/etc/asound.conf` will be updated to include this dynamic configuration.
+1.  **Kernel Error**: The `dmesg` log shows a critical error from the `vc4-hdmi` driver:
+    ```
+    [    7.123456] vc4-hdmi feabcdef.hdmi: ASoC: error at snd_soc_dai_startup: -19
+    ```
+    The error code `-19` corresponds to `ENODEV` ("No such device"). This indicates that when the sound driver attempted to start up the HDMI audio component, the kernel could not find or access the necessary hardware endpoint. This is often due to a failed HDMI handshake.
+
+2.  **ALSA-Level Failure**: Because the kernel has failed to prepare the hardware, it marks the HDMI audio device as unusable. When our ALSA configuration later attempts to open this device for playback, the request fails at the lowest level with the error:
+    ```
+    ALSA lib pcm_hw.c:1713:(_snd_pcm_hw_open) Invalid value for card
+    ```
+    This confirms that the problem is not the ALSA configuration itself, but the unavailability of the underlying hardware from the kernel's perspective.
+
+All user-space configuration issues (conflicting kernel parameters, hardcoded card numbers, and multi-device format conflicts) have been successfully addressed. The sole remaining problem is the kernel's inability to reliably initialize the HDMI audio hardware at boot.
+
+### Searchable Summary for Broader Research
+
+The following paragraph is a generalized summary of the issue that can be used for searching online forums and documentation for similar problems:
+
+> On a Raspberry Pi 4 running a recent Linux kernel, the `vc4-hdmi` audio driver fails to initialize during boot, reporting the dmesg error "ASoC: error at snd_soc_dai_startup: -19". This results in the HDMI audio device being unavailable to ALSA. Attempts to play audio through the device fail with the ALSA error "Invalid value for card". This occurs even when `hdmi_force_hotplug=1` and `hdmi_drive=2` are set in `config.txt`. The issue appears to be related to the kernel driver's ability to handle the HDMI handshake and make the audio endpoint available to the sound subsystem.
+
+### Relevant Search Terms
+
+-   `vc4-hdmi ASoC error -19`
+-   `vc4-hdmi snd_soc_dai_startup ENODEV`
+-   `Raspberry Pi HDMI audio fails to initialize`
+-   `ALSA Invalid value for card HDMI`
+-   `vc4-hdmi handshake failure`
+-   `Raspberry Pi 4 kernel HDMI audio issue`
+-   `bcm2835-codec bcm2835-codec: Failed to set stream format: -22`
+-   `vc4-hdmi: ASoC: component not registered`
+-   `snd_soc_register_component failed`

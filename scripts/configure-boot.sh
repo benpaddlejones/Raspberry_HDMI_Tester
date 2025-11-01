@@ -44,9 +44,12 @@ fi
 # Append HDMI configuration
 cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Auto-detect Resolution
+# HDMI Tester Configuration
 # Force HDMI output even if no display detected
 hdmi_force_hotplug=1
+
+# Force audio through HDMI, even if EDID data says it's not supported
+hdmi_force_edid_audio=1
 
 # Use HDMI audio (not 3.5mm jack)
 hdmi_drive=2
@@ -66,8 +69,8 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 
-# Enable vc4-kms-v3d for Wayland (Mesa GPU driver)
-dtoverlay=vc4-kms-v3d
+# Enable vc4-fkms-v3d for broad compatibility (Mesa GPU driver)
+dtoverlay=vc4-fkms-v3d
 EOF
 
 echo "✅ Boot configuration complete"
