@@ -64,10 +64,24 @@ while true; do
     echo "--- Starting ${DEFAULT_SERVICE} ---"
     echo ""
 
-    # Run the service
-    # If user presses Ctrl+C, the trap will launch config menu
-    "${SERVICE_SCRIPT}" || {
+    # Run the service in background so we can catch Ctrl+C
+    # This allows the trap to work even when service is running
+    "${SERVICE_SCRIPT}" &
+    SERVICE_PID=$!
+    
+    # Wait for the service to complete
+    # If user presses Ctrl+C during wait, the trap will fire
+    wait ${SERVICE_PID} 2>/dev/null || {
         EXIT_CODE=$?
+        
+        # If exit code is 130 (SIGINT/Ctrl+C), don't restart
+        if [ ${EXIT_CODE} -eq 130 ] || [ ${EXIT_CODE} -eq 143 ]; then
+            echo ""
+            echo "Service interrupted by user"
+            hdmi-tester-config
+            exit 0
+        fi
+        
         echo ""
         echo "⚠️  Service exited with code ${EXIT_CODE}"
         echo ""

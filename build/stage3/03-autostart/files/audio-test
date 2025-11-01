@@ -40,6 +40,10 @@ exec > >(tee -a "${LOG_FILE}") 2>&1
 # Trap handler to ensure logs are flushed on exit/error
 cleanup() {
     echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    # Kill VLC if it's still running
+    if [ -n "${VLC_PID}" ] && kill -0 "${VLC_PID}" 2>/dev/null; then
+        kill -TERM "${VLC_PID}" 2>/dev/null
+    fi
     sync  # Flush filesystem buffers
 }
 trap cleanup EXIT INT TERM
@@ -180,6 +184,12 @@ echo ""
     # Get debug flags from config
     VLC_FLAGS=$(get_vlc_flags)
 
-    exec cvlc --loop --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+    # Run in background so we can catch Ctrl+C and properly kill VLC
+    cvlc --loop --no-video --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
         --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
-        "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1
+        "${STEREO_FILE}" "${SURROUND_FILE}" 2>&1 &
+    
+    VLC_PID=$!
+    
+    # Wait for VLC to complete (or be interrupted)
+    wait ${VLC_PID}
