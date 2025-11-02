@@ -315,4 +315,3 @@ install -v -m 644 "${SCRIPT_DIR}/files/hdmi-audio.conf" "${ROOTFS_DIR}/etc/modpr
 }
 
 echo "✅ ALSA module defaults installed"
-

@@ -25,6 +25,25 @@ LOG_FILE="/var/log/audio-health.log"
     aplay -l 2>&1
     echo ""
 
+    # Check EDID information
+    echo "=== EDID Information ==="
+    if command -v edid-decode &> /dev/null; then
+        # Find the EDID file for the first connected HDMI port
+        EDID_FILE=$(find /sys/class/drm/ -name "edid" -print -quit)
+        if [ -n "${EDID_FILE}" ] && [ -f "${EDID_FILE}" ]; then
+            echo "Found EDID file at: ${EDID_FILE}"
+            echo "--- Decoded EDID ---"
+            edid-decode < "${EDID_FILE}"
+            echo "--- End Decoded EDID ---"
+        else
+            echo "⚠️ WARNING: edid-decode is installed, but no EDID file found in /sys/class/drm/"
+            echo "   This may indicate the display is not connected or not detected properly."
+        fi
+    else
+        echo "❌ ERROR: edid-decode command not found, but it should be installed."
+    fi
+    echo ""
+
     # Check for kernel audio errors
     echo "=== Recent Audio Errors (dmesg) ==="
     dmesg | grep -iE "(bcm2835|vchi|audio|timeout)" | tail -20

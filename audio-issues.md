@@ -1,6 +1,6 @@
 # HDMI Audio Root Cause Analysis & Remediation Plan
 
-**Status (2025-11-01):** All previous user-space ALSA configuration issues have been resolved. The dynamic multi-card routing system is generating a correct configuration file. However, diagnostic logs from the device reveal a deeper, kernel-level issue that is the new root cause of the audio failure.
+**Status (2025-11-02):** Corrective actions for the kernel-level `ENODEV` error have been implemented directly into the `pi-gen` build system. The image is now pending a new build and hardware validation to confirm the fix.
 
 ### Current Problem: Kernel Fails to Initialize HDMI Audio Device
 
@@ -18,32 +18,27 @@ The core issue is that the Linux kernel is failing to properly initialize the HD
     ```
     This confirms that the problem is not the ALSA configuration itself, but the unavailability of the underlying hardware from the kernel's perspective.
 
-### Troubleshooting and Remediation Attempts
+### Troubleshooting and Remediation
 
-Based on user-provided research and community forums, several hypotheses have been investigated.
+After initial attempts to modify configuration post-build proved ineffective, a review of the `pi-gen` build process led to the correct implementation strategy. The following fixes have been integrated directly into the build stages.
 
-#### Hypothesis 1: ALSA Configuration is Overly Complex
+#### Hypothesis 1: ALSA Configuration is Overly Complex (Previously Investigated)
 
-*   **Theory:** A complex, dynamic `asound.conf` might be failing to correctly identify the HDMI device, especially if device ordering changes between boots.
-*   **Action Taken:** The dynamic `asound.conf` was replaced with a minimal, static configuration that forces the default ALSA device to `card 1`.
-    ```
-    defaults.pcm.card 1
-    defaults.ctl.card 1
-    ```
-*   **Rationale:** This is a common troubleshooting step to eliminate user-space configuration errors and confirm if the hardware is accessible at a basic level.
+*   **Theory:** A complex, dynamic `asound.conf` might be failing to correctly identify the HDMI device.
+*   **Action Taken:** The dynamic `asound.conf` was replaced with a minimal, static configuration. While this was a valid troubleshooting step, it did not resolve the underlying kernel issue.
 
-#### Hypothesis 2: Faulty EDID Prevents Audio Detection
+#### Hypothesis 2: Faulty EDID Prevents Audio Detection (Implemented in Build)
 
 *   **Theory:** The kernel may be failing to parse the display's EDID (Extended Display Identification Data), or the EDID itself may not correctly report audio capabilities, causing the driver to disable the audio endpoint.
-*   **Actions Taken:**
-    1.  **Added `edid-decode`:** The `edid-decode` package was added to the build to allow for manual inspection of EDID data from connected displays.
-    2.  **Forced EDID Audio:** The setting `hdmi_force_edid_audio=1` was added to `/boot/config.txt`. This instructs the firmware to enable HDMI audio even if the EDID data suggests it is not supported.
+*   **Actions Implemented in Build:**
+    1.  **Added `edid-decode`:** The `edid-decode` package has been added to `build/stage3/00-install-packages/00-packages` for future diagnostics.
+    2.  **Forced EDID Audio:** The setting `hdmi_force_edid_audio=1` is now injected into `/boot/config.txt` by the `build/stage3/04-boot-config/00-run.sh` script. This instructs the firmware to enable HDMI audio even if the EDID data suggests it is not supported.
 
-#### Hypothesis 3: Kernel Driver Incompatibility
+#### Hypothesis 3: Kernel Driver Incompatibility (Implemented in Build)
 
-*   **Theory:** The standard KMS (Kernel Mode Setting) video driver may have compatibility issues with certain displays, leading to an incomplete handshake that affects audio initialization.
-*   **Action Taken:** The `dtoverlay` in `/boot/config.txt` was changed from `vc4-kms-v3d` to `vc4-fkms-v3d`.
-*   **Rationale:** The `fkms` ("fake" KMS) driver uses a different, less-coupled mechanism for display management that is often more robust and can resolve initialization failures seen with the full KMS driver.
+*   **Theory:** The standard KMS (Kernel Mode Setting) video driver (`vc4-kms-v3d`) may have compatibility issues with certain displays, leading to an incomplete handshake that affects audio initialization.
+*   **Action Implemented in Build:** The `dtoverlay` in `/boot/config.txt` is now set to `vc4-fkms-v3d` by the `build/stage3/04-boot-config/00-run.sh` script.
+*   **Rationale:** The `fkms` ("fake" KMS) driver uses a different, less-coupled mechanism for display management that is often more robust and is the primary candidate for resolving the `ENODEV` error.
 
 ### Options Considered But Not Taken
 
