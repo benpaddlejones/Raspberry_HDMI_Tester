@@ -1,0 +1,31 @@
+================================================================
+  RASPBERRY PI HDMI TESTER - BUILD LOG (INCOMPLETE)
+================================================================
+
+Build Started: 2025-11-02 06:34:43 UTC
+Build ID: 19008543614
+Build Number: 122
+Commit: cf21259b3c68cc2fa4639f1ee3994aac95c35086
+Branch: main
+Version: 0.9.7.8.6
+
+STATUS: FAILED (Build script failed (exit code ))
+
+The build failed before the detailed logging system could complete.
+This typically indicates:
+- Build failed during early initialization
+- Missing directory creation (build/pi-gen-work not created)
+- Permission issues with log file path
+- Script error before logging initialization
+
+Check the GitHub Actions workflow output for the actual error message.
+
+To debug:
+1. View the workflow run logs in GitHub Actions
+2. Look for errors in the 'Build Raspberry Pi image' step
+3. Check if directories exist and are writable
+4. Review validation output if build succeeded but validation failed
+
+================================================================
+  END OF ERROR REPORT
+================================================================
