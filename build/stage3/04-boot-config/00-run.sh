@@ -40,10 +40,26 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
         exit 1
     fi
 
-    # Check if configuration already exists
-    if grep -q "HDMI Tester Configuration" "${CONFIG_FILE}"; then
-        echo "  ⚠️  Configuration already exists in ${CONFIG_FILE}, skipping..."
+    # Remove legacy vc4-kms overlay entries before writing the new block
+    sed -i '/^dtoverlay=vc4-kms-v3d$/d' "${CONFIG_FILE}"
+    sed -i '/^dtoverlay=vc6-kms-v3d$/d' "${CONFIG_FILE}"
+
+    # Skip when V2 block already present, otherwise clean out older block
+    if grep -q "HDMI Tester Configuration V2" "${CONFIG_FILE}"; then
+        echo "  ✓ HDMI Tester Configuration V2 already present"
         continue
+    fi
+
+    if grep -q "HDMI Tester Configuration" "${CONFIG_FILE}"; then
+        tmp_file="${CONFIG_FILE}.tmp"
+        awk '
+            /^# HDMI Tester Configuration/ {skip=1; next}
+            skip && /^$/ {skip=0; next}
+            skip {next}
+            {print}
+        ' "${CONFIG_FILE}" > "${tmp_file}"
+        mv "${tmp_file}" "${CONFIG_FILE}"
+        echo "  ℹ️  Removed legacy HDMI configuration block"
     fi
 
     # Append configuration (dtparam=audio=on is already in base image, so we skip it)
