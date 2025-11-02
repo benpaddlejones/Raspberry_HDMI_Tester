@@ -49,49 +49,60 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     # Append configuration (dtparam=audio=on is already in base image, so we skip it)
     cat >> "${CONFIG_FILE}" << 'EOF'
 
-# HDMI Tester Configuration - Auto-detect Display Resolution
-# Force HDMI output even if no display detected
+# --- HDMI Tester Configuration V2 ---
+# This version includes critical fixes for HDMI audio failures (ENODEV -19)
+# on Raspberry Pi 3B+ and some Pi 4 models.
+
+# --- Display & Audio Driver Configuration ---
+# Use the FKMS (Fake KMS) driver instead of the full KMS driver.
+# This is the primary fix for the vc4-hdmi audio bug where the audio device
+# fails to register. FKMS is more compatible with a wider range of displays.
+dtoverlay=vc4-fkms-v3d
+
+# Force the kernel to read EDID audio data, even if the display reports none.
+# This resolves issues where displays have faulty EDID information.
+hdmi_force_edid_audio=1
+
+# Force HDMI output even if no display is detected on boot.
 hdmi_force_hotplug=1
 
-# Use HDMI audio (not 3.5mm jack)
+# Use HDMI for audio output (instead of the 3.5mm jack).
 hdmi_drive=2
 
-# Auto-detect HDMI mode (allows flexibility for different displays)
-# hdmi_group=0 and hdmi_mode=0 let the Pi negotiate with the display
-# This supports: 720p, 1080p, 1440p, 4K, and non-standard resolutions
+# --- Resolution & Performance ---
+# Auto-detect HDMI mode to support 720p, 1080p, 4K, etc.
 hdmi_group=0
 hdmi_mode=0
 
-# GPU memory for video playback (minimum 256MB for smooth VP9 decoding)
+# Allocate sufficient GPU memory for smooth 1080p/4K video playback.
 gpu_mem=256
 
-# Disable rainbow splash screen
+# --- Boot Experience ---
+# Disable the rainbow splash screen.
 disable_splash=1
 
-# Reduce boot delay
+# Reduce boot delay to 0 seconds.
 boot_delay=0
 
-# Model-specific conservative overclock for faster boot and better performance
+# --- Overclocking (Conservative) ---
+# Model-specific overclocks for faster boot and better performance.
+# These are mild and safe for continuous operation.
 # Pi 5 (BCM2712): Default 2400MHz, overclock to 2600MHz (+8%)
 # Pi 4 (BCM2711): Default 1500MHz, overclock to 1800MHz (+20%)
-# Pi 3 (BCM2837): Default 1200MHz, overclock to 1350MHz (+12.5%, safe and tested)
+# Pi 3 (BCM2837): Default 1200MHz, overclock to 1350MHz (+12.5%)
 # Pi 2/Zero 2 (BCM2836/2837): Default 900MHz, overclock to 1000MHz (+11%)
-
 [pi5]
 arm_freq=2600
-
 [pi4]
 arm_freq=1800
-
 [pi3]
 arm_freq=1350
-
 [pi2]
 arm_freq=1000
-
 [all]
 
-# Audio configuration for both outputs (dtparam=audio=on already set in base image)
+# --- Final Audio Settings ---
+# Ensure PWM audio mode is set correctly.
 dtparam=audio_pwm_mode=2
 EOF
 
