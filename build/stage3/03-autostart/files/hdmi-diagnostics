@@ -295,6 +295,47 @@ mkdir -p "${DIAG_DIR}"
     fi
     echo ""
 
+    echo "=== DRM/KMS Details (modetest) ==="
+    if command -v modetest &> /dev/null; then
+        # Test only the first available card to avoid excessive output
+        CONNECTOR_ID=$(modetest -c | grep -oE '^[0-9]+' | head -1)
+        if [ -n "$CONNECTOR_ID" ]; then
+            modetest -c 2>&1 | head -n 50
+            echo ""
+            echo "--- Detailed mode info for connector ${CONNECTOR_ID} ---"
+            modetest -c | grep -A 20 "id ${CONNECTOR_ID}"
+        else
+            echo "Could not find a DRM connector to test."
+        fi
+    else
+        echo "modetest not available (install libdrm-tests)"
+    fi
+    echo ""
+
+    echo "=== OpenGL/GLES Information ==="
+    if command -v glxinfo &> /dev/null; then
+        echo "--- glxinfo ---"
+        glxinfo -B 2>&1 || echo "glxinfo failed"
+        echo ""
+    fi
+    if command -v es2info &> /dev/null; then
+        echo "--- es2info ---"
+        es2info 2>&1 | head -n 30 || echo "es2info failed"
+        echo ""
+    fi
+    if ! command -v glxinfo &> /dev/null && ! command -v es2info &> /dev/null; then
+        echo "glxinfo/es2info not available (install mesa-utils)"
+    fi
+    echo ""
+
+    echo "=== Vulkan Information ==="
+    if command -v vulkaninfo &> /dev/null; then
+        vulkaninfo --summary 2>&1 || echo "vulkaninfo failed"
+    else
+        echo "vulkaninfo not available (install vulkan-tools)"
+    fi
+    echo ""
+
     # ============================================
     # AUDIO CONFIGURATION
     # ============================================
@@ -361,14 +402,6 @@ mkdir -p "${DIAG_DIR}"
 
     echo "=== Loaded Kernel Modules (Audio Related) ==="
     lsmod | grep -Ei "snd|vc4|bcm2835" 2>&1 || echo "No audio modules loaded"
-    echo ""
-
-    echo "=== Detected HDMI Audio Device ==="
-    if [ -x /opt/hdmi-tester/detect-hdmi-audio ]; then
-        /opt/hdmi-tester/detect-hdmi-audio 2>&1
-    else
-        echo "detect-hdmi-audio helper not found"
-    fi
     echo ""
 
     echo "=== PulseAudio Status ==="

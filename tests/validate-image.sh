@@ -280,9 +280,7 @@ FILES_TO_CHECK=(
     "/opt/hdmi-tester/full-test|Full Test Script"
     "/opt/hdmi-tester/audio-test|Audio Test Script"
     "/opt/hdmi-tester/hdmi-diagnostics|HDMI Diagnostics Script"
-    "/opt/hdmi-tester/detect-hdmi-audio|Detect HDMI Audio Script"
     "/usr/local/bin/hdmi-tester-config|Configuration TUI Tool"
-    "/usr/local/bin/hdmi-auto-launcher|Auto-Launcher Script"
     "/usr/local/lib/hdmi-tester/config-lib.sh|Configuration Library"
     "/etc/systemd/system/hdmi-test.service|HDMI Test Service"
     "/etc/systemd/system/pixel-test.service|Pixel Test Service"
@@ -561,28 +559,6 @@ else
     ALL_OK=false
 fi
 
-# Check auto-launcher
-if [ -f "${MOUNT_POINT}/usr/local/bin/hdmi-auto-launcher" ] && [ -x "${MOUNT_POINT}/usr/local/bin/hdmi-auto-launcher" ]; then
-    echo "  ✅ Auto-launcher exists and is executable"
-else
-    echo "  ❌ Auto-launcher missing or not executable"
-    VALIDATION_ERRORS+=("Auto-launcher missing or not executable")
-    ALL_OK=false
-fi
-
-# Check bashrc integration
-if [ -f "${MOUNT_POINT}/home/pi/.bashrc" ]; then
-    if grep -q "hdmi-auto-launcher" "${MOUNT_POINT}/home/pi/.bashrc" 2>/dev/null; then
-        echo "  ✅ Auto-launcher integrated into .bashrc"
-    else
-        echo "  ❌ Auto-launcher not integrated into .bashrc"
-        VALIDATION_ERRORS+=("Auto-launcher not in .bashrc")
-        ALL_OK=false
-    fi
-else
-    echo "  ⚠️  /home/pi/.bashrc not found"
-fi
-
 echo ""
 
 # Check for required packages
@@ -671,7 +647,12 @@ else
 fi
 
 REQUIRED_PACKAGES=(
+    "vlc|VLC Media Player"
     "alsa-utils|ALSA Utilities"
+    "edid-decode|EDID Decoder"
+    "libdrm-tests|DRM Tests (modetest)"
+    "mesa-utils|Mesa Utilities"
+    "vulkan-tools|Vulkan Tools"
 )
 
 for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
@@ -690,8 +671,33 @@ for pkg_entry in "${REQUIRED_PACKAGES[@]}"; do
     # Fallback: Check for key binaries directly in filesystem
     if [ "${PKG_INSTALLED}" = false ]; then
         case "${package}" in
+            vlc)
+                if [ -f "${MOUNT_POINT}/usr/bin/cvlc" ] && [ -x "${MOUNT_POINT}/usr/bin/cvlc" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
             alsa-utils)
                 if [ -f "${MOUNT_POINT}/usr/bin/aplay" ] && [ -x "${MOUNT_POINT}/usr/bin/aplay" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            edid-decode)
+                if [ -f "${MOUNT_POINT}/usr/bin/edid-decode" ] && [ -x "${MOUNT_POINT}/usr/bin/edid-decode" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            libdrm-tests)
+                if [ -f "${MOUNT_POINT}/usr/bin/modetest" ] && [ -x "${MOUNT_POINT}/usr/bin/modetest" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            mesa-utils)
+                if [ -f "${MOUNT_POINT}/usr/bin/glxinfo" ] || [ -f "${MOUNT_POINT}/usr/bin/es2_info" ]; then
+                    PKG_INSTALLED=true
+                fi
+                ;;
+            vulkan-tools)
+                if [ -f "${MOUNT_POINT}/usr/bin/vulkaninfo" ] && [ -x "${MOUNT_POINT}/usr/bin/vulkaninfo" ]; then
                     PKG_INSTALLED=true
                 fi
                 ;;

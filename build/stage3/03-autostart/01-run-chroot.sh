@@ -1,17 +1,24 @@
 #!/bin/bash -e
 
-echo "Enabling HDMI audio services..."
+echo "Disabling all HDMI audio and test services by default..."
 
-# Enable the service that prepares the ALSA config
-systemctl enable hdmi-audio-ready.service
+# List of all services that should be disabled
+services=(
+    "image-test.service"
+    "hdmi-test.service"
+    "pixel-test.service"
+    "audio-test.service"
+    "full-test.service"
+)
 
-# Enable the dynamic ALSA config generator service
-systemctl enable hdmi-audio-config.service
+for service in "${services[@]}"; do
+    if systemctl list-unit-files | grep -q "^${service}"; then
+        echo "Disabling ${service}..."
+        systemctl disable "${service}"
+    else
+        echo "Service ${service} not found, skipping."
+    fi
+done
 
-# Enable the multi-card audio router
-systemctl enable alsa-multi-card.service
-
-# NOTE: Test services are intentionally NOT enabled by default
-# Users should configure via hdmi-tester-config or manually enable
-
-echo "✅ Audio configuration services enabled. Test services available but disabled by default."
+echo "✅ All auto-start services have been disabled."
+echo "The system will boot to a terminal for manual testing."

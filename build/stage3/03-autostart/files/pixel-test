@@ -204,18 +204,12 @@ echo ""
     ps aux | grep -E "vlc|ffmpeg" | grep -v grep || echo "None"
     echo ""
 
-    # Detect HDMI audio device dynamically
-    echo "=== Detecting HDMI Audio Device ==="
-    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
-    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
-    echo ""
-
     # Use VLC auto-detect for video output
     # VLC will automatically select the best available output
 
     echo "=== Starting VLC (Verbose Mode) ==="
     echo "Video Output: auto-detect (VLC will choose best available)"
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --aout=alsa --alsa-audio-device=${HDMI_DEVICE} --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
@@ -230,7 +224,7 @@ echo ""
 
     # Run in background so we can catch Ctrl+C and properly kill VLC
     cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
-        --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+        --aout=alsa \
         --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
         "${VIDEO_FILE}" 2>&1 &
 

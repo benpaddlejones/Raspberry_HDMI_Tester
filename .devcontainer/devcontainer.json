@@ -4,7 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": "."
   },
-  
+
   // Configure properties specific to VS Code
   "customizations": {
     "vscode": {
@@ -20,7 +20,7 @@
         "timonwong.shellcheck",
         "foxundermoon.shell-format"
       ],
-      
+
       // Settings for the container
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
@@ -76,16 +76,17 @@
 
   // Set container user
   "remoteUser": "vscode",
-  
+
   // Configure tool-specific properties
   "mounts": [
     // Mount docker socket for Docker-in-Docker
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
 
-  // Add required capabilities for image building
+  // Add required capabilities for image building. Privileged mode is essential for pi-gen.
   "runArgs": [
-    "--privileged"
+    "--privileged",
+    "--volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
   ],
 
   // Environment variables

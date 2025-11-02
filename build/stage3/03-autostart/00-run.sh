@@ -12,7 +12,7 @@ validate_rootfs_dir || exit 1
 echo "🔧 Installing HDMI tester scripts (manual execution mode)..."
 
 # Validate source files exist
-SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "detect-hdmi-audio" "image-test" "hdmi-tester-config" "hdmi-auto-launcher" "generate-multi-card-asound")
+SCRIPTS=("hdmi-test" "pixel-test" "full-test" "audio-test" "hdmi-diagnostics" "image-test" "hdmi-tester-config")
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "files/${script}" ]; then
         echo "❌ Error: ${script} script not found"
@@ -92,7 +92,7 @@ echo "Installing systemd service files (disabled)..."
 mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
 
 # Install test services based on test commands (VLC only)
-SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service" "image-test.service" "hdmi-audio-ready.service")
+SERVICES=("hdmi-test.service" "pixel-test.service" "audio-test.service" "full-test.service" "image-test.service")
 for service in "${SERVICES[@]}"; do
     if [ -f "files/${service}" ]; then
         # Validate source file is not empty
@@ -131,13 +131,6 @@ for service in "${SERVICES[@]}"; do
         echo "⚠️  Warning: ${service} not found"
     fi
 done
-
-# Install dynamic ALSA config generator
-install -m 755 files/generate-asound-conf "${ROOTFS_DIR}/usr/local/bin/"
-install -m 644 files/hdmi-audio-config.service "${ROOTFS_DIR}/etc/systemd/system/"
-
-# Install multi-card ALSA config generator and service
-install -m 644 files/alsa-multi-card.service "${ROOTFS_DIR}/etc/systemd/system/"
 
 echo "✅ HDMI tester services and scripts installed."
 
@@ -201,10 +194,6 @@ echo "Press Ctrl+C to stop any test and return to config menu"
 echo "========================================="
 echo ""
 WELCOME_EOF
-
-# Add auto-launcher snippet to bashrc
-echo "Configuring auto-launcher..."
-cat "files/bashrc-hdmi-launcher.sh" >> "${ROOTFS_DIR}/home/pi/.bashrc"
 
 # Set correct ownership
 chown -R 1000:1000 "${ROOTFS_DIR}/home/pi"

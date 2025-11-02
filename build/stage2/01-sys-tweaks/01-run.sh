@@ -78,3 +78,14 @@ EOF
 if [ -e "${ROOTFS_DIR}/etc/avahi/avahi-daemon.conf" ]; then
 	sed -i 's/^#\?publish-workstation=.*/publish-workstation=yes/' "${ROOTFS_DIR}/etc/avahi/avahi-daemon.conf"
 fi
+
+# Set timezone to UTC
+rm "${ROOTFS_DIR}/etc/localtime"
+chroot "${ROOTFS_DIR}" ln -s /usr/share/zoneinfo/UTC /etc/localtime
+
+# Enable console autologin for user 'pi'
+# This is the standard method for Raspberry Pi OS.
+# It creates a systemd override for getty@tty1.service.
+on_chroot << EOF
+raspi-config nonint do_boot_behaviour B2
+EOF

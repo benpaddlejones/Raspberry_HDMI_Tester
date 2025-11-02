@@ -34,28 +34,13 @@ fi
 echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
-# Core packages that must be installed
-REQUIRED_PACKAGES="alsa-utils ffmpeg libx264-164"
+# Core packages that must be installed (matching 00-packages file)
+REQUIRED_PACKAGES="vlc edid-decode libdrm-tests mesa-utils vulkan-tools"
 
 for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
         VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || echo "unknown")
         echo "  ✅ $pkg: Installed (version: ${VERSION})"
-    else
-        echo "  ❌ $pkg: NOT INSTALLED!"
-        PACKAGES_OK=false
-    fi
-done
-
-# Check for codec libraries (these are critical for video playback)
-CODEC_PACKAGES="libavcodec-extra libavformat-extra libvpx7 libopus0 libvorbis0a libmp3lame0 libmpg123-0 libflac12"
-
-echo ""
-echo "🔍 Verifying codec libraries..."
-for pkg in ${CODEC_PACKAGES}; do
-    if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-        VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || echo "unknown")
-        echo "  ✅ $pkg: Installed (${VERSION})"
     else
         echo "  ❌ $pkg: NOT INSTALLED!"
         PACKAGES_OK=false

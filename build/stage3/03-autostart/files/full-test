@@ -111,12 +111,6 @@ echo ""
     cvlc --version 2>&1 | head -5
     echo ""
 
-    # Detect HDMI audio device dynamically
-    echo "=== Detecting HDMI Audio Device ==="
-    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
-    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
-    echo ""
-
     # Loop counter
     LOOP_COUNT=0
 
@@ -143,9 +137,9 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: image-test.${VIDEO_FORMAT} (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${IMAGE_VIDEO}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${IMAGE_VIDEO}"
         cvlc --play-and-exit --no-video-title-show --no-osd \
-            ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+            ${VIDEO_FLAGS} --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${IMAGE_VIDEO}" 2>&1
         VLC_EXIT=$?
@@ -155,10 +149,10 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: color-test.${VIDEO_FORMAT} (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --alsa-audio-device=${HDMI_DEVICE} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${COLOR_VIDEO}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${COLOR_VIDEO}"
         cvlc --play-and-exit --fullscreen --no-autoscale \
             --no-video-title-show --no-osd \
-            ${VIDEO_FLAGS} --aout=alsa --alsa-audio-device="${HDMI_DEVICE}" \
+            ${VIDEO_FLAGS} --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${COLOR_VIDEO}" 2>&1
         VLC_EXIT=$?

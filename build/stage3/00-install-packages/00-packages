@@ -1,54 +1,10 @@
-# Audio/Video playback (console mode)
-vlc-bin
-vlc-plugin-base
-vlc-plugin-video-output
-
-# Video codecs and FFmpeg libraries (required for VLC video playback)
-# NOTE: libavcodec-extra includes codecs, libavformat-extra includes formats
-# DO NOT install both libavformat59 and libavformat-extra (they conflict)
-ffmpeg
-libavcodec-extra
-libavformat-extra
-libavutil57
-
-# WebM codec support (VP8/VP9 video, Vorbis/Opus audio) - REQUIRED for test files
-libvpx7
-libvorbis0a
-libopus0
-
-# Audio codecs (REQUIRED for all audio formats used in test files)
-# MP3 (audio.mp3 standalone file)
-libmp3lame0
-libmpg123-0
-
-# FLAC (stereo.flac, surround51.flac standalone files)
-libflac12
-
-# AAC (embedded in MP4 video files for Pi 3)
-# Note: AAC support is included in libavcodec-extra, but we ensure it explicitly
-
-# H.264 codec (REQUIRED for MP4 playback on Pi 3 and earlier models)
-# Pi 4+ use WebM/VP9, but Pi 3 and earlier need MP4/H.264 for hardware acceleration
-libx264-164
-
-# Audio system
-# ALSA for direct hardware access (VLC uses ALSA directly via --aout=alsa)
-alsa-utils
-libasound2-plugins
-
-# Raspberry Pi specific audio/hardware configurations
-raspberrypi-sys-mods
-
-# NOTE: PulseAudio is REMOVED - it causes race conditions with bcm2835 audio driver
-# resulting in VCHI timeouts and system crashes. VLC works perfectly with ALSA-only
-# when using --aout=alsa flag (which all our scripts use).
+# Audio/Video playback
+vlc
 
 # HDMI EDID troubleshooting utility
 edid-decode
 
-# Conservative removals (codecs not needed for our specific test files):
-# - libwebm1 (WebM container - ffmpeg/libavformat-extra handles this)
-# - libx265-199 (H.265/HEVC encoder - not needed)
-# - libtheora0 (Theora codec - not used in our test files)
-# - libaom3 (AV1 codec - not used in our test files)
-# - mpg123 (MP3 player - we use VLC, only need libmpg123-0 for decoding)
+# Graphics and GPU diagnostics
+libdrm-tests
+mesa-utils
+vulkan-tools

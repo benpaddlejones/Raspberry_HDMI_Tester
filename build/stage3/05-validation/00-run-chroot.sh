@@ -58,19 +58,15 @@ validate_vlc_module() {
 echo "=== Critical Package Validation ==="
 echo ""
 
-echo "VLC Video Output Packages:"
-validate_package "vlc-bin" "VLC binary"
-validate_package "vlc-plugin-base" "Core VLC plugins (fbdev, vout)"
-validate_package "vlc-plugin-video-output" "Additional video output modules"
+echo "Core Packages:"
+validate_package "vlc" "VLC media player (includes all modules)"
 echo ""
 
-echo "ALSA Audio Packages:"
-validate_package "alsa-utils" "ALSA utilities"
-validate_package "libasound2-plugins" "ALSA plugin system"
-echo ""
-
-echo "Raspberry Pi Specific Packages:"
-validate_package "raspberrypi-sys-mods" "Raspberry Pi system modifications (bcm2835 configs)"
+echo "Diagnostic Tools:"
+validate_package "edid-decode" "EDID decoder for display diagnostics"
+validate_package "libdrm-tests" "DRM/KMS testing tools (modetest)"
+validate_package "mesa-utils" "OpenGL utilities (glxinfo, es2info)"
+validate_package "vulkan-tools" "Vulkan diagnostics (vulkaninfo)"
 echo ""
 
 echo "=== VLC Module Validation ==="
@@ -84,38 +80,13 @@ echo "  ℹ️  VLC will auto-detect best available output (fb, x11, egl, etc.)"
 echo "  ℹ️  Module validation skipped - package installation confirms availability"
 echo ""
 
-echo "VLC Audio Output Modules:"
-# Note: VLC module detection is unreliable in chroot environments
-# Instead, verify VLC can be invoked and ALSA packages are installed
-if command -v cvlc >/dev/null 2>&1 && dpkg -l | grep -q "alsa-utils"; then
-    echo "  ✓ VLC binary available and ALSA packages installed"
-    echo "  ℹ️  VLC will use ALSA output via --aout=alsa flag (verified by package installation)"
+echo "VLC Binary:"
+if command -v cvlc >/dev/null 2>&1; then
+    echo "  ✓ VLC binary available"
+    echo "  ℹ️  VLC includes all necessary audio/video modules via metapackage"
 else
-    echo "  ❌ VLC binary or ALSA packages missing"
+    echo "  ❌ VLC binary missing"
     VALIDATION_FAILED=1
-fi
-echo ""
-
-echo "=== ALSA Configuration Files ==="
-echo ""
-
-echo "Raspberry Pi ALSA Card Definitions:"
-# Note: raspberrypi-sys-mods may install these in different locations
-# Check multiple possible locations
-if [ -f /usr/share/alsa/cards/bcm2835_hdmi.conf ] || \
-   [ -f /usr/share/alsa/cards/bcm2835.conf ] || \
-   [ -d /usr/share/raspberrypi-sys-mods ]; then
-    echo "  ✓ Raspberry Pi ALSA configurations found"
-else
-    echo "  ℹ️  Raspberry Pi ALSA card definitions not in standard locations"
-    echo "     This is normal - ALSA will auto-detect bcm2835 audio hardware"
-    echo "     Checking if raspberrypi-sys-mods installed correctly..."
-    if dpkg -L raspberrypi-sys-mods | grep -q alsa; then
-        echo "  ✓ raspberrypi-sys-mods contains ALSA files"
-    else
-        echo "  ℹ️  raspberrypi-sys-mods has no explicit ALSA configurations (normal)"
-        echo "     ALSA functionality confirmed via package installation and explicit device targeting"
-    fi
 fi
 echo ""
 
@@ -150,9 +121,11 @@ echo ""
 echo "Test Scripts:"
 validate_file "/opt/hdmi-tester/hdmi-test" "Main HDMI test script (video+audio)"
 validate_file "/opt/hdmi-tester/image-test" "Image rotation test script"
+validate_file "/opt/hdmi-tester/pixel-test" "Pixel test script"
 validate_file "/opt/hdmi-tester/audio-test" "Audio-only test script"
-validate_file "/opt/hdmi-tester/detect-hdmi-audio" "HDMI audio device detection"
+validate_file "/opt/hdmi-tester/full-test" "Full test script"
 validate_file "/opt/hdmi-tester/hdmi-diagnostics" "Diagnostic information script"
+validate_file "/opt/hdmi-tester/hdmi-tester-config" "Configuration script"
 echo ""
 
 echo "=== Systemd Services Validation ==="
@@ -161,7 +134,9 @@ echo ""
 echo "Service Files:"
 validate_file "/etc/systemd/system/hdmi-test.service" "HDMI test service"
 validate_file "/etc/systemd/system/image-test.service" "Image test service"
+validate_file "/etc/systemd/system/pixel-test.service" "Pixel test service"
 validate_file "/etc/systemd/system/audio-test.service" "Audio test service"
+validate_file "/etc/systemd/system/full-test.service" "Full test service"
 echo ""
 
 echo "=========================================="

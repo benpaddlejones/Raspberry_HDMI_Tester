@@ -145,12 +145,6 @@ echo "User: $(whoami)"
     cvlc --version 2>&1 | head -5
     echo ""
 
-    # Detect HDMI audio device dynamically
-    echo "=== Detecting HDMI Audio Device ==="
-    HDMI_DEVICE=$(/opt/hdmi-tester/detect-hdmi-audio)
-    echo "Detected HDMI audio device: ${HDMI_DEVICE}"
-    echo ""
-
     echo "=== Starting Image Rotation ==="
     echo "Starting infinite loop at $(date '+%Y-%m-%d %H:%M:%S')"
     echo ""

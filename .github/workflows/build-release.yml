@@ -858,12 +858,10 @@ jobs:
               find "${TEMP_MOUNT}" -name "full-test" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  full-test: ❌ NOT FOUND"
               find "${TEMP_MOUNT}" -name "audio-test" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  audio-test: ❌ NOT FOUND"
               find "${TEMP_MOUNT}" -name "hdmi-diagnostics" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  hdmi-diagnostics: ❌ NOT FOUND"
-              find "${TEMP_MOUNT}" -name "detect-hdmi-audio" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  detect-hdmi-audio: ❌ NOT FOUND"
               echo ""
 
               echo "--- User Tools ---"
               find "${TEMP_MOUNT}" -name "hdmi-tester-config" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  hdmi-tester-config: ❌ NOT FOUND"
-              find "${TEMP_MOUNT}" -name "hdmi-auto-launcher" -type f 2>/dev/null | sed "s|${TEMP_MOUNT}||" || echo "  hdmi-auto-launcher: ❌ NOT FOUND"
               echo ""
 
               echo "--- Systemd Services ---"
