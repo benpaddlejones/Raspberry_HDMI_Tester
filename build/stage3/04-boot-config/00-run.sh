@@ -384,3 +384,11 @@ install -v -m 644 "${SCRIPT_DIR}/files/hdmi-audio.conf" "${ROOTFS_DIR}/etc/modpr
 }
 
 echo "✅ ALSA module defaults installed"
+
+# Install ALSA configuration for multi-output (HDMI + 3.5mm jack)
+install -v -m 644 "${SCRIPT_DIR}/files/asound.conf" "${ROOTFS_DIR}/etc/asound.conf" || {
+    echo "❌ Error: Failed to install asound.conf"
+    exit 1
+}
+
+echo "✅ ALSA multi-output configuration installed"

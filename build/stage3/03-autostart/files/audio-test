@@ -91,12 +91,27 @@ echo ""
 
     # Audio devices
     echo "=== Audio Devices ==="
-    echo "ALSA Devices:"
-    aplay -l 2>&1 || echo "No ALSA devices found"
+
+    # Always show multi-output status
+    if [ -f /etc/asound.conf ]; then
+        echo "Audio Output: Multi-output enabled (HDMI + 3.5mm jack)"
+    else
+        echo "Audio Output: HDMI only"
+    fi
     echo ""
-    echo "Audio Sinks:"
-    pactl list sinks short 2>&1 || echo "PulseAudio not available"
-    echo ""
+
+    # Detailed audio device info (debug mode only)
+    if is_debug_enabled; then
+        echo "ALSA Devices (Debug):"
+        aplay -l 2>&1 || echo "No ALSA devices found"
+        echo ""
+        echo "ALSA PCM Devices (Debug):"
+        aplay -L 2>&1 | head -20 || echo "No ALSA PCM devices found"
+        echo ""
+        echo "Audio Sinks (Debug):"
+        pactl list sinks short 2>&1 || echo "PulseAudio not available"
+        echo ""
+    fi
 
     # Check audio files
     echo "=== Audio File Check ==="
@@ -175,8 +190,8 @@ echo ""
 
     # Loop forever, playing stereo then surround
     while true; do
-        # --- Play Stereo Test (using default multi-card output) ---
-        echo "--- Playing Stereo Test (all outputs) ---"
+        # --- Play Stereo Test ---
+        echo "--- Playing Stereo Test ---"
         echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${STEREO_FILE}"
         cvlc --play-and-exit --no-video --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
@@ -185,8 +200,8 @@ echo ""
         echo ""
         sleep 2
 
-        # --- Play Surround Test (explicitly targeting HDMI) ---
-        echo "--- Playing 5.1 Surround Test (HDMI output only) ---"
+        # --- Play 5.1 Surround Test ---
+        echo "--- Playing 5.1 Surround Test ---"
         echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${SURROUND_FILE}"
         cvlc --play-and-exit --no-video --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
