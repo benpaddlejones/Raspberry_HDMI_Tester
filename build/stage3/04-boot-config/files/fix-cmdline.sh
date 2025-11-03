@@ -265,6 +265,19 @@ log "   Systemd will trigger reboot in a few seconds"
 log "   After reboot, audio parameters will be active"
 log ""
 
+# Schedule a reboot to ensure new parameters take effect.
+log "♻️  Scheduling automatic reboot (shutdown -r now)"
+if command -v shutdown >/dev/null 2>&1; then
+    (sleep 5 && /sbin/shutdown -r now "Applying cmdline.txt fix" >/dev/null 2>&1) &
+    log "   ⏳ Reboot requested via shutdown (executes in ~5s)"
+elif command -v systemctl >/dev/null 2>&1; then
+    /usr/bin/systemctl --no-block reboot || true
+    log "   ⏳ Reboot requested via systemctl --no-block"
+else
+    log "   ⚠️  Unable to locate shutdown/systemctl. Please reboot manually."
+fi
+log ""
+
 # Flush logs before reboot
 sync
 

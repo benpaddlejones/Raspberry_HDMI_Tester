@@ -100,6 +100,9 @@ disable_splash=1
 # Reduce boot delay to 0 seconds.
 boot_delay=0
 
+# Hide low voltage and overtemperature warning overlays (field deployments often lack pristine power).
+avoid_warnings=1
+
 # --- Overclocking (Conservative) ---
 # Model-specific overclocks for faster boot and better performance.
 # These are mild and safe for continuous operation.
@@ -120,6 +123,11 @@ arm_freq=1000
 # --- Final Audio Settings ---
 # Ensure PWM audio mode is set correctly.
 dtparam=audio_pwm_mode=2
+
+# --- Security Hardening ---
+# Disable onboard WiFi and Bluetooth to ensure the tester remains offline.
+dtoverlay=disable-wifi
+dtoverlay=disable-bt
 EOF
 
     # Verify configuration was added
@@ -323,6 +331,51 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
 done
 
 echo "✅ HDMI Tester configuration deployment complete"
+
+# Provision user credentials to skip interactive first-boot setup
+DEFAULT_USER="${FIRST_USER_NAME:-pi}"
+DEFAULT_PASS="${FIRST_USER_PASS:-raspberry}"
+
+if [ -z "${DEFAULT_USER}" ] || [ -z "${DEFAULT_PASS}" ]; then
+    echo "❌ Error: FIRST_USER_NAME or FIRST_USER_PASS is undefined; cannot create userconf.txt"
+    exit 1
+fi
+
+echo "Configuring userconf.txt for automatic ${DEFAULT_USER} provisioning..."
+
+if command -v openssl >/dev/null 2>&1; then
+    PASSWORD_HASH=$(openssl passwd -6 "${DEFAULT_PASS}")
+elif command -v python3 >/dev/null 2>&1; then
+    PASSWORD_HASH=$(python3 -c "import crypt, sys; print(crypt.crypt(sys.argv[1], crypt.mksalt(crypt.METHOD_SHA512)))" "${DEFAULT_PASS}")
+else
+    echo "⚠️  Warning: openssl and python3 unavailable; using precomputed SHA-512 hash"
+    PASSWORD_HASH='$6$c8Cfxkwz1kn1Wmhv$hWAuKtdS6MRyOqH4SngCYNc/c240f1Qo9/upcF77M3KzyNePHbZCMFkcmCZ4Cd5djEBEuWc5bHj6u8QqNRf1s0'
+fi
+
+if [ -z "${PASSWORD_HASH}" ]; then
+    echo "❌ Error: Failed to generate password hash for userconf.txt"
+    exit 1
+fi
+
+for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
+    BOOT_DIR=$(dirname "${CONFIG_FILE}")
+    USERCONF_PATH="${BOOT_DIR}/userconf.txt"
+
+    printf '%s:%s\n' "${DEFAULT_USER}" "${PASSWORD_HASH}" > "${USERCONF_PATH}"
+    chmod 600 "${USERCONF_PATH}"
+
+    if [ ! -s "${USERCONF_PATH}" ]; then
+        echo "❌ Error: Failed to create ${USERCONF_PATH}"
+        exit 1
+    fi
+
+    echo "  ✓ userconf.txt created at ${USERCONF_PATH#${ROOTFS_DIR}}"
+done
+
+unset DEFAULT_PASS
+unset PASSWORD_HASH
+
+echo "✅ userconf.txt configured to bypass first-boot login prompts"
 
 # Provide ALSA module defaults to keep HDMI audio enabled without cmdline overrides
 install -v -m 644 "${SCRIPT_DIR}/files/hdmi-audio.conf" "${ROOTFS_DIR}/etc/modprobe.d/hdmi-audio.conf" || {

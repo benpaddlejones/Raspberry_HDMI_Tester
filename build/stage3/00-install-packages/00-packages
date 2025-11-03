@@ -1,10 +1,15 @@
 # Audio/Video playback
 vlc
+ffmpeg
 
 # HDMI EDID troubleshooting utility
 edid-decode
+read-edid
 
 # Graphics and GPU diagnostics
 libdrm-tests
 mesa-utils
 vulkan-tools
+
+# System resource diagnostics
+sysstat

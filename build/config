@@ -11,8 +11,8 @@ TARGET_HOSTNAME="hdmi-tester"
 FIRST_USER_NAME="pi"
 FIRST_USER_PASS="raspberry"
 
-# Enable SSH for debugging
-ENABLE_SSH=1
+# Disable SSH for hardened field image
+ENABLE_SSH=0
 
 # Stage list: Build up to our custom stage3
 STAGE_LIST="stage0 stage1 stage2 stage3"

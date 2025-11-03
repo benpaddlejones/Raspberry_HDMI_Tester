@@ -45,6 +45,11 @@ disable_service "avahi-daemon.socket" "Avahi mDNS/DNS-SD socket"
 disable_service "bluetooth.service" "Bluetooth service"
 disable_service "hciuart.service" "Bluetooth UART service"
 
+# Ensure SSH remains disabled regardless of earlier stages
+disable_service "ssh.service" "SSH server"
+disable_service "ssh.socket" "SSH socket"
+disable_service "regenerate-ssh-keys.service" "SSH host key regeneration"
+
 # Disable rsyslog (use journald only for simpler logging)
 disable_service "rsyslog.service" "Rsyslog service"
 

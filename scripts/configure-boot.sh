@@ -69,6 +69,9 @@ disable_splash=1
 # Reduce boot delay
 boot_delay=0
 
+# Hide low voltage and overtemperature warning overlays
+avoid_warnings=1
+
 # Enable vc4-fkms-v3d for broad compatibility (Mesa GPU driver)
 dtoverlay=vc4-fkms-v3d
 EOF

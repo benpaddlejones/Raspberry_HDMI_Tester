@@ -35,7 +35,7 @@ echo "🔍 Verifying required packages are installed..."
 PACKAGES_OK=true
 
 # Core packages that must be installed (matching 00-packages file)
-REQUIRED_PACKAGES="vlc edid-decode libdrm-tests mesa-utils vulkan-tools"
+REQUIRED_PACKAGES="vlc ffmpeg edid-decode read-edid libdrm-tests mesa-utils vulkan-tools sysstat"
 
 for pkg in ${REQUIRED_PACKAGES}; do
     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then

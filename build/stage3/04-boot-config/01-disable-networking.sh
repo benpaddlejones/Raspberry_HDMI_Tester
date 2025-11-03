@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Disable all networking (Ethernet and WiFi) for security
+# Disable all networking (Ethernet, WiFi, Bluetooth) for security
 
 echo "🔒 Disabling networking for security..."
 
@@ -24,6 +24,14 @@ blacklist brcmfmac     # Broadcom WiFi (Pi 3/4/5)
 blacklist brcmutil     # Broadcom WiFi utility
 blacklist cfg80211     # Generic WiFi configuration
 blacklist mac80211     # Generic WiFi MAC
+
+# Bluetooth drivers
+blacklist bluetooth    # Core Bluetooth stack
+blacklist btusb        # USB Bluetooth adapters
+blacklist btbcm        # Broadcom Bluetooth firmware loader
+blacklist btrtl        # Realtek Bluetooth
+blacklist btintel      # Intel Bluetooth
+blacklist hci_uart     # UART-attached Bluetooth
 
 # Additional network protocols
 blacklist ipv6         # IPv6 protocol
@@ -97,6 +105,5 @@ EOF
 chmod 644 "${ROOTFS_DIR}/etc/sysctl.d/99-disable-ipv6.conf"
 echo "    ✅ IPv6 disabled"
 
-echo "✅ Networking completely disabled (Ethernet and WiFi)"
-echo "  ℹ️  SSH over USB-OTG may still work if enabled"
+echo "✅ Networking completely disabled (Ethernet, WiFi, Bluetooth)"
 echo ""

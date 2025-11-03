@@ -486,7 +486,7 @@ mkdir -p "${DIAG_DIR}"
 
         echo "=== Last 20 Lines of Audio Test Log (VLC Output) ==="
         # Find the line where VLC output starts and tail from there
-        if grep -n "--- VLC Output Below ---" "${AUDIO_LOG}" | tail -1 | cut -d: -f1 > /tmp/vlc_start_line; then
+        if grep -n -- "--- VLC Output Below ---" "${AUDIO_LOG}" | tail -1 | cut -d: -f1 > /tmp/vlc_start_line; then
             VLC_START=$(cat /tmp/vlc_start_line)
             if [ -n "${VLC_START}" ]; then
                 tail -n +"${VLC_START}" "${AUDIO_LOG}" | tail -20
