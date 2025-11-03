@@ -92,13 +92,13 @@ Use the provided helper scripts to analyze logs:
 See `logs/README.md` for detailed documentation on the logging system.
 
 ### Build Stages
-The build process uses these custom stages:
+The build process uses these custom stages (in stage3):
 
-1. **00-install-packages** - Installs VLC (audio/video player), ALSA audio
-2. **01-test-image** - Deploys test pattern to `/opt/hdmi-tester/image.png`
-3. **02-audio-test** - Deploys audio file from `assets/audio.mp3`
-4. **03-autostart** - Configures systemd services (framebuffer display + audio)
-5. **04-boot-config** - Sets HDMI to 1920x1080@60Hz, enables audio, minimal GPU memory
+1. **00-install-packages** - Installs VLC, ffmpeg, edid-decode, read-edid, GPU diagnostics tools
+2. **01-test-image** - Deploys test videos (WebM/MP4) and test pattern images
+3. **02-audio-test** - Deploys audio files from `assets/stereo.flac` and `assets/surround51.flac`
+4. **03-autostart** - Configures test services and interactive configuration tool
+5. **04-boot-config** - Sets HDMI configuration, boot optimizations, auto-login
 
 ### Build Time
 - **First build**: 45-60 minutes (downloads packages)
@@ -109,9 +109,9 @@ After successful build, you'll find:
 ```
 build/pi-gen-work/
 ├── deploy/
-│   ├── RaspberryPi_HDMI_Tester.img      # Bootable image file
-│   └── RaspberryPi_HDMI_Tester.img.zip  # Compressed image
-└── build-detailed.log                    # Comprehensive build log
+│   ├── RPi_HDMI_Tester_PiOS.img      # Bootable image file
+│   └── RPi_HDMI_Tester_PiOS.img.zip  # Compressed image
+└── build-detailed.log                 # Comprehensive build log
 
 logs/successful-builds/
 └── build-YYYY-MM-DD_HH-MM-SS_vX.X.X.log # Committed log file
@@ -236,15 +236,15 @@ Replace `assets/audio.mp3` with your own audio file, then rebuild.
 
 Key settings in `build/config`:
 
-| Setting | Default | Description |
+| Setting | Value | Description |
 |---------|---------|-------------|
-| `IMG_NAME` | `RaspberryPi_HDMI_Tester` | Output image filename |
+| `IMG_NAME` | `RPi_HDMI_Tester_PiOS` | Output image filename |
 | `RELEASE` | `bookworm` | Debian version (12) |
 | `TARGET_HOSTNAME` | `hdmi-tester` | System hostname |
 | `FIRST_USER_NAME` | `pi` | Default username |
 | `FIRST_USER_PASS` | `raspberry` | Default password |
-| `ENABLE_SSH` | `1` | SSH enabled for troubleshooting |
-| `ENABLE_REDUCE_DISK_USAGE` | `1` | Minimize image size |
+| `ENABLE_SSH` | `0` | SSH disabled by default for security |
+| `DEPLOY_COMPRESSION` | `zip` | Compression format for final image |
 
 ## Clean Build
 
@@ -264,14 +264,14 @@ After the build completes, download the image from Codespaces:
 
 ### Method 1: Download via VS Code
 1. Navigate to `build/pi-gen-work/deploy/` in the file explorer
-2. Right-click `RaspberryPi_HDMI_Tester.img.zip`
+2. Right-click `RPi_HDMI_Tester_PiOS.img.zip`
 3. Select **Download**
 4. Save to your local computer
 
 ### Method 2: Using the Terminal
 ```bash
 # The image is located at:
-ls -lh build/pi-gen-work/deploy/RaspberryPi_HDMI_Tester.img*
+ls -lh build/pi-gen-work/deploy/RPi_HDMI_Tester_PiOS.img*
 
 # You can download it through the VS Code interface
 ```

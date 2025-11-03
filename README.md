@@ -140,7 +140,7 @@ Simply flash to an SD card, insert into a Raspberry Pi, connect HDMI, and start 
 ### Step 1: Download the Image
 
 1. Go to [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
-2. Download `RaspberryPi_HDMI_Tester-v0.9.8-RC.img.gz`
+2. Download `RPi_HDMI_Tester_PiOS-v0.9.9.3-RC.img.zip`
 3. Extract if needed (some tools extract automatically)
 
 ### Step 2: Flash to SD Card
@@ -410,8 +410,7 @@ See the [User Troubleshooting Guide](docs/TROUBLESHOOTING-USER.md) for:
 - **Image Size**: ~1.5-2GB (compressed)
 - **GPU Memory**: 64MB (minimal allocation for console mode)
 - **Configuration**: `/boot/firmware/hdmi-tester.conf` (accessible from Windows/Mac)
-- **SSH**: Enabled by default for remote configuration (username: `pi`, password: `raspberry`)
-  - ⚠️ **Change password if exposing to network!**
+- **SSH**: Disabled by default for security (can be enabled in build config)
 - **Network**: WiFi not configured by default (offline operation)
 - **Debug Mode**: Toggle verbose logging via configuration menu
 - **Auto-Start**: Optional auto-boot to any test mode
@@ -455,9 +454,10 @@ For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md
 
 ## Development Status
 
-**Current Version**: v0.9.8 Release Candidate (RC)
+**Current Version**: v0.9.9.3 Release Candidate (RC)
 
-### What's New in v0.9.8
+### What's New in v0.9.9.3
+- ✅ **Auto-Start Configuration Fixed**: Default service now properly auto-launches on boot
 - ✅ **Interactive Configuration System**: Easy-to-use menu (`hdmi-tester-config`)
 - ✅ **Debug Mode Toggle**: Enable/disable verbose logging without editing files
 - ✅ **Auto-Start Support**: Set any test to launch automatically on boot
@@ -466,6 +466,7 @@ For complete technical architecture, see [Development Guide](docs/DEVELOPMENT.md
 - ✅ **Multi-Channel Audio**: 2.1 audio (HDMI test) + stereo/5.1 FLAC (audio test)
 - ✅ **Pixel Detection**: Dead, stuck, and color-locked pixel identification
 - ✅ **Configuration File**: `/boot/firmware/hdmi-tester.conf` accessible from any OS
+- ✅ **Default Debug Mode**: Changed to false for optimized performance by default
 
 ### Roadmap
 - ⏳ Hardware testing on additional Pi models (ongoing)

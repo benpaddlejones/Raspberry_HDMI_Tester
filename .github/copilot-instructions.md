@@ -60,14 +60,15 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 ### Completed Components
 - ✅ Dev container configuration (Ubuntu 24.04)
 - ✅ Build configuration (`build/config`)
-- ✅ 5 custom pi-gen stages (00 through 04)
-- ✅ Test assets (WebM videos in `assets/image-test.webm` and `assets/color-test.webm`, FLAC audio in `assets/stereo.flac` and `assets/surround51.flac`)
-- ✅ Build scripts (`build-image.sh`, `configure-boot.sh`)
+- ✅ 5 custom pi-gen stages in stage3 (00 through 04)
+- ✅ Test assets (Dual-format videos: WebM for Pi 4+, MP4 for Pi 3; FLAC audio: stereo + 5.1 surround)
+- ✅ Build scripts (`build-image.sh`, comprehensive logging system)
 - ✅ Testing scripts (`qemu-test.sh`, `validate-image.sh`)
 - ✅ User documentation (end-user focused)
-- ✅ First successful build (v1.0.0)
+- ✅ Interactive configuration system (`hdmi-tester-config`)
+- ✅ Auto-start configuration system
 - ✅ QEMU validation completed
-- ✅ SSH enabled by default for troubleshooting
+- ✅ SSH disabled by default for security
 
 ### Future Enhancements
 - ⏳ Hardware testing on additional Pi models
@@ -76,10 +77,11 @@ This is a **Raspberry Pi OS image builder project** that creates a lightweight, 
 - ⏳ Multi-resolution support
 
 ### Key Technical Details
-- **Test Videos**: `assets/image-test.webm`, `assets/color-test.webm` - WebM VP9 videos
+- **Test Videos**: `assets/image-test.webm`, `assets/color-test.webm` (Pi 4+), `assets/image-test.mp4`, `assets/color-test.mp4` (Pi 3)
+- **Test Audio**: `assets/stereo.flac`, `assets/surround51.flac` - Lossless FLAC audio files
 - **HDMI Resolution**: Auto-detect via `hdmi_group=0` and `hdmi_mode=0` (supports 720p, 1080p, 4K)
-- **SSH**: Enabled by default (username: `pi`, password: `raspberry`)
-- **Auto-start**: Console auto-login, systemd services start display + audio
+- **SSH**: Disabled by default for security (can be enabled in build config: `ENABLE_SSH=1`)
+- **Auto-start**: Console auto-login, optional systemd service auto-start via configuration
 - **Architecture**: x86_64 host building ARM images in GitHub Codespaces
 
 ---

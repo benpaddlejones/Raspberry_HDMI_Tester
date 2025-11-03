@@ -38,7 +38,7 @@ Complete guide for Linux users including:
 
 ### Prerequisites
 
-- **Downloaded Image**: `RaspberryPi_HDMI_Tester.img.zip` from [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
+- **Downloaded Image**: `RPi_HDMI_Tester_PiOS.img.zip` from [Releases](https://github.com/benpaddlejones/Raspberry_HDMI_Tester/releases)
 - **SD Card**: 4GB minimum, 8GB+ recommended
 - **SD Card Reader**: USB or built-in
 - **Flashing Tool**: Raspberry Pi Imager (recommended)
@@ -60,11 +60,11 @@ Visit https://www.raspberrypi.com/software/ and download Raspberry Pi Imager for
 
 ### Step 2: Extract the Image
 
-1. Locate `RaspberryPi_HDMI_Tester.img.zip` in your Downloads folder
+1. Locate `RPi_HDMI_Tester_PiOS.img.zip` in your Downloads folder
 2. Extract the `.img` file:
    - **Windows**: Right-click → "Extract All"
    - **macOS**: Double-click the ZIP file
-   - **Linux**: `unzip RaspberryPi_HDMI_Tester.img.zip`
+   - **Linux**: `unzip RPi_HDMI_Tester_PiOS.img.zip`
 
 ### Step 3: Flash the Image
 

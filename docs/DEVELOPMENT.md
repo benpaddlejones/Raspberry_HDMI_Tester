@@ -204,58 +204,62 @@ Raspberry_HDMI_Tester/
 Edit `build/config` to customize:
 
 ```bash
-# Image naming
-IMG_NAME="RaspberryPi_HDMI_Tester"
+```bash
+# Example build/config for HDMI Tester
+IMG_NAME="RPi_HDMI_Tester_PiOS"
 
 # Target Raspberry Pi OS release
 RELEASE="bookworm"
 
-# Localization
-LOCALE_DEFAULT="en_US.UTF-8"
-TIMEZONE_DEFAULT="America/New_York"
-
 # Networking
-ENABLE_SSH=0  # Disabled for security
-HOSTNAME="hdmi-tester"
+ENABLE_SSH=0  # Disabled by default for security
+TARGET_HOSTNAME="hdmi-tester"
 
 # User configuration
 FIRST_USER_NAME="pi"
 FIRST_USER_PASS="raspberry"  # Change for production!
 
 # Build stages to include
-STAGE_LIST="stage0 stage1 stage2 stage-custom"
+STAGE_LIST="stage0 stage1 stage2 stage3"
 
 # Compression
-COMPRESSION="zip"  # zip, xz, or none
+DEPLOY_COMPRESSION="zip"  # zip or xz
+```
 ```
 
 ### Custom Build Stages
 
-The project uses 5 custom stages:
+The project uses custom stages in `build/stage3/`:
 
-#### Stage 00: Install Packages
+#### Stage3/00: Install Packages
 
 **Purpose**: Install required system packages
 
 **Files**:
 - `00-packages`: List of apt packages (one per line)
-- `00-run-chroot.sh`: Runs inside chroot, installs packages
 
 **Packages installed**:
-- `vlc` - Audio/video player (ALSA backend, console mode)
-- `alsa-utils` - ALSA audio utilities for direct hardware access
+- `vlc` - Audio/video player with hardware acceleration
+- `ffmpeg` - Multimedia framework for codec support
+- `edid-decode` - HDMI EDID troubleshooting utility
+- `read-edid` - EDID reading tools
+- `libdrm-tests` - GPU diagnostics
+- `mesa-utils` - OpenGL utilities
+- `vulkan-tools` - Vulkan diagnostics
+- `sysstat` - System resource monitoring
 
-#### Stage 01: Test Image
+#### Stage3/01: Test Image
 
-**Purpose**: Deploy test pattern image
+**Purpose**: Deploy test videos and images
 
 **Files**:
 - `00-run.sh`: Copy script (runs on host)
-- `files/image.png`: Test pattern (1920x1080)
+- `files/`: Test pattern images and videos (WebM/MP4 formats)
 
 **What it does**:
 - Creates `/opt/hdmi-tester/` directory
-- Copies `image.png` to target
+- Copies test videos (image-test.webm, image-test.mp4, color-test.webm, color-test.mp4)
+- Copies test images (image.png, black.png, white.png, red.png, green.png, blue.png)
 - Sets proper permissions
 
 #### Stage 02: Audio Test
@@ -407,7 +411,7 @@ Test the image in an emulator before hardware:
 
 ```bash
 # Test built image
-./tests/qemu-test.sh build/output/RaspberryPi_HDMI_Tester.img
+./tests/qemu-test.sh build/pi-gen-work/deploy/RPi_HDMI_Tester_PiOS.img
 
 # Test with custom options
 ./tests/qemu-test.sh --ram 1024 --cpu cortex-a53 image.img
@@ -423,7 +427,7 @@ Test the image in an emulator before hardware:
 Validate the image before distribution:
 
 ```bash
-./tests/validate-image.sh build/output/RaspberryPi_HDMI_Tester.img
+./tests/validate-image.sh build/pi-gen-work/deploy/RPi_HDMI_Tester_PiOS.img
 ```
 
 **Checks**:

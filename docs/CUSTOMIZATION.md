@@ -115,11 +115,11 @@ You can replace the static test pattern with a looping video. **You must provide
 ## Replacing the Audio File
 
 ### Requirements
-- **Format**: MP3, WAV, OGG, or WebM
-- **Duration**: Any (will loop infinitely)
-- **Recommended**: Short loops (5-30 seconds) for smaller file size
-- **Size**: < 10MB recommended
-- **Location**: `assets/audio.mp3`
+- **Format**: FLAC (lossless), MP3, WAV, or OGG
+- **Sample rate**: 44.1kHz or 48kHz
+- **Channels**: Stereo (2.0) or 5.1 surround
+- **Size**: < 20MB recommended
+- **Location**: `assets/stereo.flac` and `assets/surround51.flac`
 
 ### Supported Audio Codecs
 The image includes comprehensive codec support:
@@ -132,20 +132,27 @@ The image includes comprehensive codec support:
 
 ### Steps in GitHub Codespaces
 
-1. **Upload your audio file to Codespaces**:
+1. **Upload your audio file(s) to Codespaces**:
    - Drag and drop into the file explorer
    - Or use the upload button in VS Code
 
 2. **Prepare your audio** (optional - convert if needed):
    ```bash
    # ffmpeg is pre-installed in Codespaces
-   # Convert to MP3 if needed
-   ffmpeg -i your-audio.wav -b:a 96k assets/audio.mp3
+   # Convert to FLAC if needed (lossless)
+   ffmpeg -i your-audio.wav assets/stereo.flac
+
+   # For 5.1 surround audio
+   ffmpeg -i your-surround.wav -c:a flac assets/surround51.flac
    ```
 
-3. **Replace the existing file**:
+3. **Replace the existing files**:
    ```bash
-   cp your-audio.mp3 assets/audio.mp3
+   # Replace stereo audio
+   cp your-stereo.flac assets/stereo.flac
+
+   # Replace 5.1 surround audio (optional)
+   cp your-surround.flac assets/surround51.flac
    ```
 
 4. **Rebuild the image in GitHub Codespaces**:
@@ -370,12 +377,12 @@ FIRST_USER_PASS="newsecurepassword"
 
 ### Enable SSH
 
-Edit `build/config`:
+SSH is **disabled by default** for security. To enable it, edit `build/config`:
 ```bash
 ENABLE_SSH=1
 ```
 
-**Warning**: If enabling SSH, change the default password!
+**Warning**: If enabling SSH, **change the default password** to prevent unauthorized access!
 
 ### Add WiFi Credentials
 

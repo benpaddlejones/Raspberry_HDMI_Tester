@@ -18,33 +18,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Default Debug Mode**: Changed from `DEBUG_MODE=true` to `DEBUG_MODE=false` for optimized performance by default
 
 ### Core Features
-- **Configuration System**: Centralized configuration file (`/boot/firmware/hdmi-tester.conf`)
+
+#### Configuration System
+- **Centralized Configuration File**: `/boot/firmware/hdmi-tester.conf`
   - `DEBUG_MODE`: Control verbose logging system-wide (true/false)
   - `DEFAULT_SERVICE`: Set auto-start service on boot (or none for terminal) - **NOW WORKING**
-  - Accessible from Windows/Mac when SD card is mounted
+  - Accessible from Windows/Mac when SD card is mounted before first boot
+  - Can be edited directly or through interactive tool
 
-- **Interactive Configuration Tool**: `hdmi-tester-config`
-  - User-friendly TUI menu (raspi-config style)
-  - Toggle debug mode on/off
-  - Set default service to auto-start on boot
-  - Run any service one-time without changing defaults
-  - View/edit configuration file
-  - Enhanced feedback showing auto-start status
+#### Interactive Configuration Tool (`hdmi-tester-config`)
+- **User-Friendly TUI Menu**: raspi-config style interface
+- **Debug Mode Control**: Toggle verbose logging on/off for troubleshooting
+- **Default Service Management**: Set which test auto-starts on boot
+- **One-Time Service Execution**: Run any test without changing defaults
+- **Configuration Viewer**: View/edit config file directly from menu
+- **Real-Time Status**: Shows current auto-start configuration
+- **Ctrl+C Integration**: Press Ctrl+C during any test to return to menu
+- **Help & Guidance**: Built-in instructions for diagnostics workflow
 
-- **Auto-Launch System** - **IMPROVED**
-  - Boots to console with auto-login (user: pi)
-  - **NEW**: Automatically launches configured default service on boot
-  - **NEW**: Skips auto-start for SSH connections (shows normal terminal)
-  - Ctrl+C from any service returns to configuration menu
-  - No default service = boot to terminal with welcome message
+#### Auto-Launch System - **IMPROVED**
+- **Console Auto-Login**: Boots directly to `pi` user without password
+- **Automatic Service Launch**: Configured default service starts immediately on boot
+- **SSH Detection**: Auto-start skipped for SSH sessions (normal terminal shown)
+- **No Default = Terminal**: When no service configured, boots to welcome message
+- **Interactive Menu Access**: Ctrl+C from any service returns to configuration tool
+- **No GUI Overhead**: Console-only for maximum performance
 
-### Test Services
-- **hdmi-test**: Loop HDMI video test pattern with resolution overlay
-- **pixel-test**: Fullscreen color test pattern (stretched to all pixels)
-- **image-test**: Rotate through static color test images
-- **audio-test**: Loop stereo and 5.1 surround FLAC audio
-- **full-test**: Combined video and audio test sequence
-- **hdmi-diagnostics**: Complete system diagnostics with USB auto-save
+### Professional Test Services
+
+#### 🎬 HDMI Test (`hdmi-test`)
+**Video & Audio Verification**
+- High-quality WebM VP9 test video with embedded 2.1 channel audio
+- Full HD resolution with on-screen resolution overlay
+- Continuous looping for extended testing
+- Tests HDMI handshake, video quality, and basic audio sync
+- Automatic HDMI audio device detection
+- Configurable VLC debug flags via `DEBUG_MODE`
+
+**Use cases**: Quick HDMI connectivity verification, trade show displays, digital signage validation
+
+#### 🔊 Audio Test (`audio-test`)
+**Comprehensive Audio System Validation**
+- **Stereo (2.0 channel)**: High-fidelity FLAC stereo test
+- **Surround 5.1 channel**: Full 5.1 surround sound verification
+- Lossless audio reproduction for accurate testing
+- Individual channel identification
+- Tests HDMI audio passthrough and receiver compatibility
+- Continuous looping for burn-in testing
+
+**Use cases**: Home theater setup, soundbar verification, AV receiver calibration, channel mapping
+
+#### 🎨 Pixel Test (`pixel-test`)
+**Dead & Stuck Pixel Detection**
+- Fullscreen solid color patterns (black, white, red, green, blue)
+- Stretched to fill all pixels (no letterboxing)
+- Cycles through colors automatically
+- Identifies dead pixels (won't illuminate)
+- Detects stuck pixels (always on or locked to color)
+- Perfect for quality control and warranty claims
+
+**Use cases**: New display inspection, pre-purchase verification, warranty documentation, monitor returns
+
+#### 🖼️ Image Test (`image-test`)
+**Color Calibration & Resolution Verification**
+- Rotates through professional test pattern images
+- Color accuracy verification
+- Native resolution confirmation
+- Aspect ratio and geometry validation
+- Custom test pattern support (add your own PNGs)
+- Timed rotation for unattended testing
+
+**Use cases**: Display calibration, multi-display uniformity, projector alignment, video wall setup
+
+#### 🎯 Full Test (`full-test`)
+**Complete A/V System Validation**
+- Automated sequence of video and audio tests
+- End-to-end HDMI connectivity verification
+- Unattended operation for burn-in testing
+- Comprehensive coverage of all test modes
+- Continuous looping for long-term reliability testing
+
+**Use cases**: System validation before deployment, burn-in testing, production QA, reliability testing
+
+#### 🔧 HDMI Diagnostics (`hdmi-diagnostics`)
+**System Troubleshooting & Issue Reporting**
+- **Auto-Save to USB**: Plug in USB drive for instant diagnostic export
+- **Comprehensive System Capture**: Pi model, HDMI config, audio devices, boot logs, dmesg output
+- **Debug Mode Integration**: Captures verbose logs when debug mode enabled
+- **GitHub Integration**: Pre-formatted for issue reporting
+- **Interactive Workflow**: Built-in guidance for troubleshooting process
+- **Debug Mode Reminder**: Prompts to enable debug before diagnostics if disabled
+- **Post-Diagnostics Instructions**: Clear next steps for GitHub issue submission
+
+**Contents of diagnostic archive**:
+- System information (hardware model, OS version, kernel)
+- HDMI configuration (`/boot/firmware/config.txt`)
+- Audio device detection (ALSA, PulseAudio)
+- Service logs (systemd journal for all test services)
+- Boot logs (dmesg output)
+- Test asset checksums
+- System resource usage
+
+**When to use**: Reporting bugs, hardware compatibility issues, troubleshooting test failures
 
 ### Media Assets
 - WebM VP9 video format (Pi 4+) with H.264 fallback (Pi 3)
@@ -75,11 +150,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub issue integration in diagnostics tool
 
 ### System Features
-- SSH enabled by default (username: pi, password: raspberry)
-- Compatible with Pi 3, 4, 5, Zero 2 W
-- Console auto-login on TTY1
-- Systemd services for all test modes
-- Comprehensive logging with rotation
+
+#### Raspberry Pi Compatibility
+- **Raspberry Pi 3**: Hardware tested and verified (H.264 video codec)
+- **Raspberry Pi 4**: Ready for testing (WebM VP9 codec)
+- **Raspberry Pi 5**: Ready for testing (WebM VP9 codec)
+- **Raspberry Pi Zero 2 W**: Supported (H.264 fallback)
+- **Automatic Codec Selection**: Detects Pi model and uses optimal video format
+
+#### System Configuration
+- **SSH Disabled by Default**: For security in field deployments
+  - Can be enabled by setting `ENABLE_SSH=1` in build config
+  - Username: `pi`
+  - Password: `raspberry`
+  - ⚠️ Change password if enabling SSH and exposing to network
+- **Console Auto-Login**: TTY1 auto-login for immediate access
+- **Systemd Services**: All test modes available as systemd units
+- **Service Control**: Start/stop/restart any test via systemctl
+- **Logging System**: Comprehensive logging with automatic rotation
+  - Service logs: `/var/log/hdmi-tester/`
+  - System journal: `journalctl -u <service-name>`
+  - Debug mode: Verbose logging when enabled
+
+#### HDMI Configuration
+- **Auto-Resolution Detection**: Automatically detects display capabilities
+  - `hdmi_group=0` and `hdmi_mode=0` for maximum compatibility
+  - Supports 720p, 1080p, and 4K displays
+- **Force HDMI Output**: `hdmi_force_hotplug=1` for reliable detection
+- **HDMI Audio**: `hdmi_drive=2` enables audio over HDMI
+- **GPU Memory**: 256MB allocated for smooth video playback
+- **Serial Console**: UART enabled for hardware troubleshooting
+
+#### Boot Configuration
+- **Fast Boot**: ~30 seconds from power-on to display
+- **Silent Boot**: Minimal console output for clean appearance
+- **cmdline.txt Fixes**: Automatic correction of common boot parameter issues
+- **Audio Health Checks**: Periodic verification of ALSA/PulseAudio state
+- **Networking Disabled**: Faster boot, reduced overhead (SSH still works over USB)
+
+#### File System & Storage
+- **Optimized Image Size**: 400-500MB reduction through package optimization
+- **zerofree**: Unused blocks freed before compression for smaller downloads
+- **Filesystem Integrity**: Validated during build process
+- **Read-Only Root Option**: Can be configured for kiosk/appliance use
 
 ### Default Configuration
 - `DEBUG_MODE=false` - Verbose logging disabled by default (optimized performance)
