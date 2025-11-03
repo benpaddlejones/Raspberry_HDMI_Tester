@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced bash profile to check for and execute `DEFAULT_SERVICE` configuration
   - Added proper integration between config system and startup process
   - Auto-start now works as expected when default service is configured
+- **Default Debug Mode**: Changed from `DEBUG_MODE=true` to `DEBUG_MODE=false` for optimized performance by default
 
 ### Core Features
 - **Configuration System**: Centralized configuration file (`/boot/firmware/hdmi-tester.conf`)
@@ -81,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive logging with rotation
 
 ### Default Configuration
-- `DEBUG_MODE=true` - Verbose logging enabled by default
+- `DEBUG_MODE=false` - Verbose logging disabled by default (optimized performance)
 - `DEFAULT_SERVICE=` - No auto-start service (boots to terminal)
 - User can configure via `hdmi-tester-config` tool or edit `/boot/firmware/hdmi-tester.conf`
 
