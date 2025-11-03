@@ -160,39 +160,109 @@ if [ ! -f "${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
 fi
 echo "✅ Auto-login configured for user 'pi'"
 
-# Create welcome message with instructions
-echo "Creating welcome message..."
+# Create welcome message with instructions and auto-start logic
+echo "Creating welcome message with auto-start capability..."
 cat > "${ROOTFS_DIR}/home/pi/.bash_profile" << 'WELCOME_EOF'
-# HDMI Tester Welcome Message
-echo ""
-echo "========================================="
-echo "   Raspberry Pi HDMI Tester"
-echo "========================================="
-echo ""
-echo "Configuration:"
-echo ""
-echo "  hdmi-tester-config         - Interactive configuration menu"
-echo "                               (Set debug mode, default service)"
-echo ""
-echo "Available test commands:"
-echo ""
-echo "  hdmi-test                  - Loop image-test.webm"
-echo "  pixel-test                 - Play color-test.webm fullscreen"
-echo "  image-test                 - Rotate through color test images (10s each)"
-echo "  full-test                  - Play both videos in sequence"
-echo "  audio-test                 - Loop stereo and 5.1 surround audio"
-echo ""
-echo "Diagnostic tools:"
-echo ""
-echo "  hdmi-diagnostics           - Capture complete system diagnostics"
-echo "                               (Creates timestamped .tar.gz bundle)"
-echo ""
-echo "Configuration file: /boot/firmware/hdmi-tester.conf"
-echo "  (Accessible from Windows/Mac when SD card is mounted)"
-echo ""
-echo "Press Ctrl+C to stop any test and return to config menu"
-echo "========================================="
-echo ""
+# HDMI Tester Welcome Message and Auto-Start Logic
+
+# Only run auto-start on interactive shell (not for ssh, etc.)
+if [[ $- == *i* ]] && [ -z "$SSH_CONNECTION" ]; then
+    # Source configuration library if available
+    if [ -f "/usr/local/lib/hdmi-tester/config-lib.sh" ]; then
+        source /usr/local/lib/hdmi-tester/config-lib.sh
+
+        # Check for default service to auto-start
+        DEFAULT_SERVICE=$(get_default_service 2>/dev/null)
+
+        if [ -n "${DEFAULT_SERVICE}" ] && [ "${DEFAULT_SERVICE}" != "" ]; then
+            echo ""
+            echo "========================================="
+            echo "   Raspberry Pi HDMI Tester"
+            echo "========================================="
+            echo ""
+            echo "Auto-starting default service: ${DEFAULT_SERVICE}"
+            echo "Press Ctrl+C to stop and return to config menu"
+            echo ""
+            echo "To change default service, run: hdmi-tester-config"
+            echo "========================================="
+            echo ""
+
+            # Auto-start the default service
+            case "${DEFAULT_SERVICE}" in
+                "hdmi-test")
+                    /usr/local/bin/hdmi-test
+                    ;;
+                "audio-test")
+                    /usr/local/bin/audio-test
+                    ;;
+                "image-test")
+                    /usr/local/bin/image-test
+                    ;;
+                "pixel-test")
+                    /usr/local/bin/pixel-test
+                    ;;
+                "full-test")
+                    /usr/local/bin/full-test
+                    ;;
+                "hdmi-diagnostics")
+                    echo "Running system diagnostics..."
+                    sudo /usr/local/bin/hdmi-diagnostics
+                    ;;
+                *)
+                    echo "Warning: Unknown default service '${DEFAULT_SERVICE}'"
+                    echo "Please run 'hdmi-tester-config' to fix this."
+                    ;;
+            esac
+
+            # After service exits (user pressed Ctrl+C or service ended), show config menu
+            echo ""
+            echo "Service stopped. Opening configuration menu..."
+            /usr/local/bin/hdmi-tester-config
+        else
+            # No default service - show welcome message and wait for user input
+            echo ""
+            echo "========================================="
+            echo "   Raspberry Pi HDMI Tester"
+            echo "========================================="
+            echo ""
+            echo "Configuration:"
+            echo ""
+            echo "  hdmi-tester-config         - Interactive configuration menu"
+            echo "                               (Set debug mode, default service)"
+            echo ""
+            echo "Available test commands:"
+            echo ""
+            echo "  hdmi-test                  - Loop image-test.webm"
+            echo "  pixel-test                 - Play color-test.webm fullscreen"
+            echo "  image-test                 - Rotate through color test images (10s each)"
+            echo "  full-test                  - Play both videos in sequence"
+            echo "  audio-test                 - Loop stereo and 5.1 surround audio"
+            echo ""
+            echo "Diagnostic tools:"
+            echo ""
+            echo "  hdmi-diagnostics           - Capture complete system diagnostics"
+            echo "                               (Creates timestamped .tar.gz bundle)"
+            echo ""
+            echo "Configuration file: /boot/firmware/hdmi-tester.conf"
+            echo "  (Accessible from Windows/Mac when SD card is mounted)"
+            echo ""
+            echo "Press Ctrl+C to stop any test and return to config menu"
+            echo "========================================="
+            echo ""
+        fi
+    else
+        # Config library not available - show basic message
+        echo ""
+        echo "========================================="
+        echo "   Raspberry Pi HDMI Tester"
+        echo "========================================="
+        echo ""
+        echo "Configuration system not yet available."
+        echo "Please wait for system to finish setup or run: hdmi-tester-config"
+        echo "========================================="
+        echo ""
+    fi
+fi
 WELCOME_EOF
 
 # Set correct ownership

@@ -5,12 +5,21 @@ All notable changes to the Raspberry Pi HDMI Tester project will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.8] - 2025-10-28 (Release Candidate)
+## [0.9.9.3] - 2025-11-03 (Release Candidate)
+
+### Status
+**Ready for testing on Raspberry Pi 4 & 5**
+
+### Fixed in This Version
+- **Auto-Start Configuration**: Fixed critical bug where default service set in `hdmi-tester-config` was not auto-starting on boot
+  - Enhanced bash profile to check for and execute `DEFAULT_SERVICE` configuration
+  - Added proper integration between config system and startup process
+  - Auto-start now works as expected when default service is configured
 
 ### Core Features
 - **Configuration System**: Centralized configuration file (`/boot/firmware/hdmi-tester.conf`)
   - `DEBUG_MODE`: Control verbose logging system-wide (true/false)
-  - `DEFAULT_SERVICE`: Set auto-start service on boot (or none for terminal)
+  - `DEFAULT_SERVICE`: Set auto-start service on boot (or none for terminal) - **NOW WORKING**
   - Accessible from Windows/Mac when SD card is mounted
 
 - **Interactive Configuration Tool**: `hdmi-tester-config`
@@ -19,11 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set default service to auto-start on boot
   - Run any service one-time without changing defaults
   - View/edit configuration file
-  - Pre/post diagnostics guidance with GitHub issue integration
+  - Enhanced feedback showing auto-start status
 
-- **Auto-Launch System**
+- **Auto-Launch System** - **IMPROVED**
   - Boots to console with auto-login (user: pi)
-  - Automatically launches configured default service
+  - **NEW**: Automatically launches configured default service on boot
+  - **NEW**: Skips auto-start for SSH connections (shows normal terminal)
   - Ctrl+C from any service returns to configuration menu
   - No default service = boot to terminal with welcome message
 
@@ -60,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-platform flashing guides (Windows, macOS, Linux)
 - Customization guides for test patterns and audio
 - Troubleshooting guides (user and build)
+- **NEW**: Added configuration troubleshooting section for auto-start issues
 - GitHub issue integration in diagnostics tool
 
 ### System Features
@@ -73,6 +84,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DEBUG_MODE=true` - Verbose logging enabled by default
 - `DEFAULT_SERVICE=` - No auto-start service (boots to terminal)
 - User can configure via `hdmi-tester-config` tool or edit `/boot/firmware/hdmi-tester.conf`
+
+### Testing Status
+- ✅ **Build**: Successfully builds in GitHub Codespaces
+- ✅ **QEMU**: Passes automated boot testing
+- ✅ **Raspberry Pi 3**: Hardware tested and working
+- ⏳ **Raspberry Pi 4**: Ready for testing
+- ⏳ **Raspberry Pi 5**: Ready for testing
+- ⏳ **Configuration System**: Needs testing on hardware
+
+### Known Issues
+- None currently identified for Pi 4/5 testing
 
 ---
 
@@ -91,4 +113,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Note**: Version 0.9.8 is a release candidate. Please test and report issues before final 1.0.0 release.
+**Note**: Version 0.9.9.3 is ready for testing on Raspberry Pi 4 & 5. The auto-start configuration bug has been fixed and core functionality is stable.

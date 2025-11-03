@@ -38,8 +38,10 @@ show_current_config() {
     echo -e "  Debug Mode:      ${CYAN}${debug_mode}${NC}"
     if [ -z "${default_service}" ]; then
         echo -e "  Default Service: ${YELLOW}(none - boot to terminal)${NC}"
+        echo -e "                   ${YELLOW}Manual start required for tests${NC}"
     else
         echo -e "  Default Service: ${GREEN}${default_service}${NC}"
+        echo -e "                   ${GREEN}Will auto-start on boot${NC}"
     fi
     echo ""
 }
@@ -111,10 +113,12 @@ set_default_service() {
     if set_config_value "DEFAULT_SERVICE" "${service}"; then
         if [ -z "${service}" ]; then
             echo -e "${GREEN}✓ Default service cleared - will boot to terminal${NC}"
+            echo "  You can manually run test commands after login."
         else
             echo -e "${GREEN}✓ Default service set to: ${service}${NC}"
-            echo "  This will auto-start on next boot."
+            echo "  This will auto-start immediately on next boot."
             echo "  Press Ctrl+C during service to return to this menu."
+            echo "  Change this setting anytime with: hdmi-tester-config"
         fi
     else
         echo -e "${RED}✗ Failed to update default service${NC}"

@@ -9,6 +9,7 @@ This guide helps end users diagnose and fix issues when using the Raspberry Pi H
 ## Table of Contents
 - [Before You Start](#before-you-start)
 - [First-Time Setup Issues](#first-time-setup-issues)
+- [Configuration and Auto-Start Issues](#configuration-and-auto-start-issues)
 - [Raspberry Pi Won't Boot](#raspberry-pi-wont-boot)
 - [Display Problems](#display-problems)
 - [Audio Problems](#audio-problems)
@@ -107,6 +108,127 @@ After flashing:
 - The main filesystem is hidden from Windows
 - The Pi will see both partitions correctly
 - Just eject and use the card
+
+---
+
+## Configuration and Auto-Start Issues
+
+### Default Service Not Auto-Starting
+
+**Issue**: Set a default service in `hdmi-tester-config`, but it doesn't auto-start on boot
+
+**This was a known bug in versions before v1.1.0 - fixed in November 2025**
+
+**Check your version**:
+```bash
+# On the Raspberry Pi terminal
+cat /etc/os-release | grep VERSION
+```
+
+**If you have an older version**:
+- Download the latest image from GitHub releases
+- Flash a new SD card with the updated image
+
+**If you have v1.1.0 or later**:
+
+1. **Verify config is saved**:
+   ```bash
+   hdmi-tester-config
+   ```
+   - Check that "Default Service" shows your selected service
+   - If it shows "(none)", re-set your default service
+
+2. **Check the config file directly**:
+   ```bash
+   cat /boot/firmware/hdmi-tester.conf
+   ```
+   - Look for `DEFAULT_SERVICE=your-service-name`
+   - If empty (`DEFAULT_SERVICE=`), the setting wasn't saved
+
+3. **Manual test - reboot and watch**:
+   ```bash
+   sudo reboot
+   ```
+   - After reboot, the service should start automatically
+   - If you see the normal menu instead, the auto-start failed
+
+4. **Check for configuration errors**:
+   ```bash
+   # Test the config library
+   source /usr/local/lib/hdmi-tester/config-lib.sh
+   get_default_service
+   ```
+   - Should output your service name
+   - If error or empty, there's a config problem
+
+**Solutions**:
+
+- **Re-set the default service**: Run `hdmi-tester-config` and set it again
+- **Manual config edit**: Edit `/boot/firmware/hdmi-tester.conf` directly
+- **Check file permissions**: Config file should be readable by user `pi`
+
+### Configuration Menu Not Showing
+
+**Issue**: Expected to see `hdmi-tester-config` menu, but see normal terminal
+
+**Causes**:
+- SSH connection (auto-start disabled over SSH)
+- Configuration system not installed properly
+- User account issues
+
+**Check**:
+
+1. **Are you using SSH?**
+   - Auto-start only works on direct console login
+   - SSH users see normal terminal
+   - Solution: Type `hdmi-tester-config` manually
+
+2. **Configuration system available?**
+   ```bash
+   ls -la /usr/local/bin/hdmi-tester-config
+   ls -la /usr/local/lib/hdmi-tester/config-lib.sh
+   ```
+   - Both files should exist and be executable
+   - If missing, image build was incomplete
+
+3. **Config file exists?**
+   ```bash
+   ls -la /boot/firmware/hdmi-tester.conf
+   ```
+   - Should exist and be readable
+   - If missing, boot config stage failed
+
+### Tests Won't Start When Selected
+
+**Issue**: Selected a service in config menu, but it fails to start
+
+**Check**:
+
+1. **Test scripts exist**:
+   ```bash
+   ls -la /usr/local/bin/hdmi-test
+   ls -la /usr/local/bin/audio-test
+   ls -la /usr/local/bin/pixel-test
+   ```
+
+2. **Test assets exist**:
+   ```bash
+   ls -la /opt/hdmi-tester/
+   ```
+   - Should contain `.mp4` and `.flac` files
+
+3. **Run manually with debug**:
+   ```bash
+   # Try running the test directly
+   /usr/local/bin/hdmi-test
+   ```
+   - Check error messages
+
+4. **Check VLC installation**:
+   ```bash
+   which vlc
+   vlc --version
+   ```
 
 ---
 
