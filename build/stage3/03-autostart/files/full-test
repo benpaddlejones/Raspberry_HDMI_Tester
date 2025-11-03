@@ -39,6 +39,8 @@ detect_video_format() {
 VIDEO_FORMAT=$(detect_video_format)
 IMAGE_VIDEO="/opt/hdmi-tester/image-test.${VIDEO_FORMAT}"
 COLOR_VIDEO="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
+STEREO_FILE="/opt/hdmi-tester/stereo.flac"
+SURROUND_FILE="/opt/hdmi-tester/surround51.flac"
 
 # Use VLC auto-detect for video output
 # VLC will automatically select the best available output
@@ -60,7 +62,9 @@ echo ""
 echo "Sequence:"
 echo "  1. Image test (optimized resolution)"
 echo "  2. Color test (fullscreen stretched)"
-echo "  3. Loop forever"
+echo "  3. Audio test - Stereo (2.0)"
+echo "  4. Audio test - 5.1 Surround"
+echo "  5. Loop forever"
 echo ""
 echo "Press Ctrl+C to stop"
 echo ""
@@ -94,6 +98,23 @@ echo ""
     fi
     echo "✓ Color video exists: $(ls -lh "${COLOR_VIDEO}" | awk '{print $5}')"
     echo "  MD5: $(md5sum "${COLOR_VIDEO}" | cut -d' ' -f1)"
+    echo ""
+
+    # Check if audio files exist
+    echo "=== Audio File Validation ==="
+    if [ ! -f "${STEREO_FILE}" ]; then
+        echo "❌ ERROR: Stereo audio file not found at ${STEREO_FILE}"
+        exit 1
+    fi
+    echo "✓ Stereo FLAC exists: $(ls -lh "${STEREO_FILE}" | awk '{print $5}')"
+    echo "  MD5: $(md5sum "${STEREO_FILE}" | cut -d' ' -f1)"
+
+    if [ ! -f "${SURROUND_FILE}" ]; then
+        echo "❌ ERROR: Surround audio file not found at ${SURROUND_FILE}"
+        exit 1
+    fi
+    echo "✓ 5.1 Surround FLAC exists: $(ls -lh "${SURROUND_FILE}" | awk '{print $5}')"
+    echo "  MD5: $(md5sum "${SURROUND_FILE}" | cut -d' ' -f1)"
     echo ""
 
     # Display and audio info
@@ -135,9 +156,10 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: image-test.${VIDEO_FORMAT} (optimized resolution with aspect ratio)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${IMAGE_VIDEO}"
-        cvlc --play-and-exit --no-video-title-show --no-osd \
+        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --no-video-title-show --aout=alsa ${VLC_FLAGS} ${IMAGE_VIDEO}"
+        cvlc --play-and-exit --no-video-title-show \
             ${VIDEO_FLAGS} --aout=alsa \
+            --audio-resampler=soxr --audio-filter=normvol \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${IMAGE_VIDEO}" 2>&1
         VLC_EXIT=$?
@@ -147,12 +169,35 @@ echo ""
 
         echo "[${LOOP_COUNT}] Playing: color-test.${VIDEO_FORMAT} (fullscreen stretched for pixel testing)..."
         echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
-        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --fullscreen --no-video-title-show --no-osd --aout=alsa ${VLC_FLAGS} ${COLOR_VIDEO}"
+        echo "Command: cvlc ${VIDEO_FLAGS} --play-and-exit --fullscreen --no-video-title-show --aout=alsa ${VLC_FLAGS} ${COLOR_VIDEO}"
         cvlc --play-and-exit --fullscreen --no-autoscale \
-            --no-video-title-show --no-osd \
+            --no-video-title-show \
             ${VIDEO_FLAGS} --aout=alsa \
+            --audio-resampler=soxr --audio-filter=normvol \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${COLOR_VIDEO}" 2>&1
+        VLC_EXIT=$?
+        echo "Exit code: ${VLC_EXIT}"
+        echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        echo ""
+
+        echo "[${LOOP_COUNT}] Playing: Stereo Audio Test (2.0)..."
+        echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${STEREO_FILE}"
+        cvlc --play-and-exit --no-video --aout=alsa \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
+            "${STEREO_FILE}" 2>&1
+        VLC_EXIT=$?
+        echo "Exit code: ${VLC_EXIT}"
+        echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        echo ""
+
+        echo "[${LOOP_COUNT}] Playing: 5.1 Surround Audio Test..."
+        echo "Start: $(date '+%Y-%m-%d %H:%M:%S.%N')"
+        echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${SURROUND_FILE}"
+        cvlc --play-and-exit --no-video --aout=alsa \
+            --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
+            "${SURROUND_FILE}" 2>&1
         VLC_EXIT=$?
         echo "Exit code: ${VLC_EXIT}"
         echo "End: $(date '+%Y-%m-%d %H:%M:%S.%N')"
