@@ -42,10 +42,11 @@ set -x  # Enable command tracing
 
 # Trap handler to ensure logs are flushed on exit/error
 cleanup() {
-    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    local exit_code="$1"
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: ${exit_code}) ==="
     sync  # Flush filesystem buffers
 }
-trap cleanup EXIT INT TERM
+trap 'cleanup "$?"' EXIT INT TERM
 
 # Use VLC auto-detect for video output
 # VLC will automatically select the best available output
@@ -65,7 +66,7 @@ IMAGES=(
 echo "==========================================="
 echo "Image Rotation Test - Started $(date '+%Y-%m-%d %H:%M:%S')"
 echo "==========================================="
-echo "Video Output: ${VOUT_METHOD}"
+echo "Video Output: auto-detect (VLC chooses best available)"
 echo "Display Time: ${DISPLAY_TIME} seconds per image"
 echo "Total Images: ${#IMAGES[@]}"
 echo "Log: ${LOG_FILE}"
@@ -162,12 +163,13 @@ echo "User: $(whoami)"
             # Use timeout to kill VLC after display time
             # Capture exit code to detect failures
             # VLC auto-detects video output (no --vout needed)
-            if timeout ${DISPLAY_TIME}s cvlc --fullscreen --no-video-title-show \
+            cvlc --fullscreen --no-video-title-show \
                 --no-osd --play-and-exit --no-audio \
-                --image-duration=${DISPLAY_TIME} ${VLC_FLAGS} "${img}" 2>&1; then
+                --image-duration=${DISPLAY_TIME} ${VLC_FLAGS} "${img}" 2>&1
+            VLC_EXIT=$?
+            if [ ${VLC_EXIT} -eq 0 ]; then
                 echo "✓ Finished displaying ${IMAGE_NAME}"
             else
-                VLC_EXIT=$?
                 echo "⚠ VLC exited with code ${VLC_EXIT} for ${IMAGE_NAME}"
             fi
             echo ""

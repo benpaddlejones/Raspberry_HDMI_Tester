@@ -1,7 +1,4 @@
 #!/bin/bash
-# Test Script 2 (VLC): Play color test fullscreen (stretched to fill all pixels)
-
-#!/bin/bash
 # Test Script 2 (VLC): Loop color test pattern video (fullscreen stretched)
 
 # Source configuration library
@@ -36,16 +33,19 @@ rotate_logs() {
 rotate_logs "${LOG_FILE}"
 
 # Setup unbuffered logging (survives crashes)
-exec > >(tee -a "${LOG_FILE}") 2>&1# Trap handler to ensure logs are flushed on exit/error
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# Trap handler to ensure logs are flushed on exit/error
 cleanup() {
-    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    local exit_code="$1"
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: ${exit_code}) ==="
     # Kill VLC if it's still running
     if [ -n "${VLC_PID}" ] && kill -0 "${VLC_PID}" 2>/dev/null; then
         kill -TERM "${VLC_PID}" 2>/dev/null
     fi
     sync  # Flush filesystem buffers
 }
-trap cleanup EXIT INT TERM
+trap 'cleanup "$?"' EXIT INT TERM
 
 # Detect Raspberry Pi model and choose appropriate video format
 # Pi 4 and higher: Use WebM (VP9 with hardware support)

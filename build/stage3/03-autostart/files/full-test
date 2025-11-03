@@ -1,7 +1,4 @@
 #!/bin/bash
-# Test Script 3 (VLC): Play both videos in sequence and loop
-
-#!/bin/bash
 # Full Test: Combined image-test + color-test videos
 
 # Source configuration library
@@ -18,10 +15,11 @@ exec > >(tee -a "${LOG_FILE}") 2>&1
 
 # Trap handler to ensure logs are flushed on exit/error
 cleanup() {
-    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    local exit_code="$1"
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: ${exit_code}) ==="
     sync  # Flush filesystem buffers
 }
-trap cleanup EXIT INT TERM
+trap 'cleanup "$?"' EXIT INT TERM
 
 # Detect Raspberry Pi model and choose appropriate video format
 # Pi 4 and higher: Use WebM (VP9 with hardware support)

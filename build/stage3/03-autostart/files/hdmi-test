@@ -17,9 +17,11 @@ rotate_logs() {
 
     # If current log exists and is larger than 5MB, rotate it
     if [ -f "${base_log}" ]; then
-        local size=$(stat -f%z "${base_log}" 2>/dev/null || stat -c%s "${base_log}" 2>/dev/null || echo 0)
+        local size
+        size=$(stat -f%z "${base_log}" 2>/dev/null || stat -c%s "${base_log}" 2>/dev/null || echo 0)
         if [ "${size}" -gt 5242880 ]; then  # 5MB
-            local timestamp=$(date '+%Y%m%d_%H%M%S')
+            local timestamp
+            timestamp=$(date '+%Y%m%d_%H%M%S')
             mv "${base_log}" "${base_log}.${timestamp}"
         fi
     fi
@@ -35,14 +37,15 @@ exec > >(tee -a "${LOG_FILE}") 2>&1
 
 # Trap handler to ensure logs are flushed on exit/error
 cleanup() {
-    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: $?) ==="
+    local exit_code="$1"
+    echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: ${exit_code}) ==="
     # Kill VLC if it's still running
     if [ -n "${VLC_PID}" ] && kill -0 "${VLC_PID}" 2>/dev/null; then
         kill -TERM "${VLC_PID}" 2>/dev/null
     fi
     sync  # Flush filesystem buffers
 }
-trap cleanup EXIT INT TERM
+trap 'cleanup "$?"' EXIT INT TERM
 
 # Detect Raspberry Pi model and choose appropriate video format
 # Pi 4 and higher: Use WebM (VP9 with hardware support)
