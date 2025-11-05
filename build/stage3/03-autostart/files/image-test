@@ -38,7 +38,14 @@ DISPLAY_TIME=10  # seconds per image
 
 # Setup unbuffered logging (survives crashes)
 exec > >(tee -a "${LOG_FILE}") 2>&1
-set -x  # Enable command tracing
+
+# Cache debug flag once and enable tracing only when requested
+if is_debug_enabled; then
+    DEBUG_ENABLED=true
+    set -x
+else
+    DEBUG_ENABLED=false
+fi
 
 # Trap handler to ensure logs are flushed on exit/error
 cleanup() {
@@ -72,14 +79,14 @@ echo "Total Images: ${#IMAGES[@]}"
 echo "Log: ${LOG_FILE}"
 echo "PID: $$"
 echo "User: $(whoami)"
-    echo "Working Directory: $(pwd)"
-    echo ""
+echo "Working Directory: $(pwd)"
+echo ""
 
-    # System information
+if [ "${DEBUG_ENABLED}" = true ]; then
     echo "=== System Information ==="
     echo "Hostname: $(hostname)"
     echo "Kernel: $(uname -r)"
-    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
     echo "Architecture: $(uname -m)"
     echo "CPU: $(cat /proc/cpuinfo | grep "Model" | head -1 | cut -d: -f2 | xargs)"
     echo "CPU Cores: $(nproc)"
@@ -90,7 +97,6 @@ echo "User: $(whoami)"
     echo "Uptime: $(uptime -p)"
     echo ""
 
-    # Boot configuration
     echo "=== Boot Configuration ==="
     if [ -f /boot/firmware/config.txt ]; then
         echo "HDMI Config:"
@@ -101,7 +107,6 @@ echo "User: $(whoami)"
     fi
     echo ""
 
-    # Display information
     echo "=== Display Information ==="
     echo "Connected Displays:"
     for display in /sys/class/drm/card*/status; do
@@ -115,40 +120,44 @@ echo "User: $(whoami)"
     echo "HDMI Status:"
     tvservice -s 2>/dev/null || echo "tvservice not available"
     echo ""
+fi
 
-    # Check all images exist
-    echo "=== Image File Check ==="
-    MISSING_FILES=0
-    for img in "${IMAGES[@]}"; do
-        if [ ! -f "${img}" ]; then
-            echo "❌ ERROR: Image file not found at ${img}"
-            ((MISSING_FILES++))
-        else
+echo "=== Image File Check ==="
+MISSING_FILES=0
+for img in "${IMAGES[@]}"; do
+    if [ ! -f "${img}" ]; then
+        echo "❌ ERROR: Image file not found at ${img}"
+        ((MISSING_FILES++))
+    else
+        if [ "${DEBUG_ENABLED}" = true ]; then
             echo "✓ Found: ${img} ($(stat -c%s "${img}" | numfmt --to=iec-i)B)"
+        else
+            echo "✓ Found: $(basename "${img}")"
         fi
-    done
-    echo ""
-
-    if [ ${MISSING_FILES} -gt 0 ]; then
-        echo "❌ ERROR: ${MISSING_FILES} image file(s) missing. Exiting."
-        exit 1
     fi
+done
+echo ""
 
-    # Environment variables
+if [ ${MISSING_FILES} -gt 0 ]; then
+    echo "❌ ERROR: ${MISSING_FILES} image file(s) missing. Exiting."
+    exit 1
+fi
+
+if [ "${DEBUG_ENABLED}" = true ]; then
     echo "=== Environment Variables ==="
     echo "DISPLAY=${DISPLAY:-not set}"
     echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-not set}"
     echo "TERM=${TERM:-not set}"
     echo ""
 
-    # Check VLC version
     echo "=== VLC Version ==="
     cvlc --version 2>&1 | head -5
     echo ""
+fi
 
-    echo "=== Starting Image Rotation ==="
-    echo "Starting infinite loop at $(date '+%Y-%m-%d %H:%M:%S')"
-    echo ""
+echo "=== Starting Image Rotation ==="
+echo "Starting infinite loop at $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
 
     # Get debug flags from config
     VLC_FLAGS=$(get_vlc_flags)

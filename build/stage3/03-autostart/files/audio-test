@@ -49,6 +49,13 @@ cleanup() {
 }
 trap 'cleanup "$?"' EXIT INT TERM
 
+# Cache debug flag once to avoid repeated config reads
+if is_debug_enabled; then
+    DEBUG_ENABLED=true
+else
+    DEBUG_ENABLED=false
+fi
+
 # Log startup info
 echo "==========================================="
 echo "Audio Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
@@ -62,46 +69,44 @@ echo "User: $(whoami)"
 echo "Working Directory: $(pwd)"
 echo ""
 
-    # System information
-    echo "=== System Information ==="
-    echo "Hostname: $(hostname)"
-    echo "Kernel: $(uname -r)"
-    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
-    echo "Architecture: $(uname -m)"
-    echo "CPU: $(cat /proc/cpuinfo | grep "Model" | head -1 | cut -d: -f2 | xargs)"
-    echo "CPU Cores: $(nproc)"
-    echo "Memory Total: $(free -h | awk '/^Mem:/ {print $2}')"
-    echo "Memory Available: $(free -h | awk '/^Mem:/ {print $7}')"
-    echo "GPU Memory: $(vcgencmd get_mem gpu 2>/dev/null || echo 'N/A')"
-    echo "CPU Temperature: $(vcgencmd measure_temp 2>/dev/null || echo 'N/A')"
-    echo "CPU Frequency: $(vcgencmd measure_clock arm 2>/dev/null || echo 'N/A')"
-    echo "Uptime: $(uptime -p)"
-    echo ""
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        # System information (debug)
+        echo "=== System Information ==="
+        echo "Hostname: $(hostname)"
+        echo "Kernel: $(uname -r)"
+        echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
+        echo "Architecture: $(uname -m)"
+        echo "CPU: $(cat /proc/cpuinfo | grep "Model" | head -1 | cut -d: -f2 | xargs)"
+        echo "CPU Cores: $(nproc)"
+        echo "Memory Total: $(free -h | awk '/^Mem:/ {print $2}')"
+        echo "Memory Available: $(free -h | awk '/^Mem:/ {print $7}')"
+        echo "GPU Memory: $(vcgencmd get_mem gpu 2>/dev/null || echo 'N/A')"
+        echo "CPU Temperature: $(vcgencmd measure_temp 2>/dev/null || echo 'N/A')"
+        echo "CPU Frequency: $(vcgencmd measure_clock arm 2>/dev/null || echo 'N/A')"
+        echo "Uptime: $(uptime -p)"
+        echo ""
 
-    # Boot configuration
-    echo "=== Boot Configuration ==="
-    if [ -f /boot/firmware/config.txt ]; then
-        echo "HDMI Config:"
-        grep -E "^hdmi_|^gpu_mem" /boot/firmware/config.txt 2>/dev/null || echo "No HDMI config found"
-    elif [ -f /boot/config.txt ]; then
-        echo "HDMI Config:"
-        grep -E "^hdmi_|^gpu_mem" /boot/config.txt 2>/dev/null || echo "No HDMI config found"
+        # Boot configuration (debug)
+        echo "=== Boot Configuration ==="
+        if [ -f /boot/firmware/config.txt ]; then
+            echo "HDMI Config:"
+            grep -E "^hdmi_|^gpu_mem" /boot/firmware/config.txt 2>/dev/null || echo "No HDMI config found"
+        elif [ -f /boot/config.txt ]; then
+            echo "HDMI Config:"
+            grep -E "^hdmi_|^gpu_mem" /boot/config.txt 2>/dev/null || echo "No HDMI config found"
+        fi
+        echo ""
     fi
-    echo ""
 
     # Audio devices
     echo "=== Audio Devices ==="
-
-    # Always show multi-output status
     if [ -f /etc/asound.conf ]; then
-        echo "Audio Output: Multi-output enabled (HDMI + 3.5mm jack)"
+        echo "Audio Output: Custom /etc/asound.conf detected (check configuration)"
     else
-        echo "Audio Output: HDMI only"
+        echo "Audio Output: HDMI (default ALSA device)"
     fi
-    echo ""
-
-    # Detailed audio device info (debug mode only)
-    if is_debug_enabled; then
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo ""
         echo "ALSA Devices (Debug):"
         aplay -l 2>&1 || echo "No ALSA devices found"
         echo ""
@@ -111,6 +116,18 @@ echo ""
         echo "Audio Sinks (Debug):"
         pactl list sinks short 2>&1 || echo "PulseAudio not available"
         echo ""
+    else
+        if aplay -l >/dev/null 2>&1; then
+            echo "✓ ALSA playback device detected"
+        else
+            echo "❌ No ALSA playback devices detected"
+        fi
+        if pactl list sinks short >/dev/null 2>&1; then
+            echo "✓ PulseAudio available"
+        else
+            echo "ℹ️ PulseAudio not available (expected on Lite builds)"
+        fi
+        echo ""
     fi
 
     # Check audio files
@@ -119,67 +136,79 @@ echo ""
         echo "❌ ERROR: Stereo audio file not found at ${STEREO_FILE}"
         exit 1
     fi
-    echo "✓ Stereo FLAC exists: $(ls -lh "${STEREO_FILE}" | awk '{print $5}')"
-    echo "  Path: ${STEREO_FILE}"
-    echo "  File Details:"
-    file "${STEREO_FILE}" 2>&1 | sed 's/^/    /'
-    echo "  MD5 Checksum: $(md5sum "${STEREO_FILE}" | cut -d' ' -f1)"
-    echo ""
+    echo "✓ Stereo FLAC verified"
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo "  Path: ${STEREO_FILE}"
+        echo "  Size: $(ls -lh "${STEREO_FILE}" | awk '{print $5}')"
+        echo "  Details:"
+        file "${STEREO_FILE}" 2>&1 | sed 's/^/    /'
+        echo "  MD5: $(md5sum "${STEREO_FILE}" | cut -d' ' -f1)"
+        echo ""
+    else
+        echo ""
+    fi
 
     if [ ! -f "${SURROUND_FILE}" ]; then
         echo "❌ ERROR: Surround audio file not found at ${SURROUND_FILE}"
         exit 1
     fi
-    echo "✓ 5.1 Surround FLAC exists: $(ls -lh "${SURROUND_FILE}" | awk '{print $5}')"
-    echo "  Path: ${SURROUND_FILE}"
-    echo "  File Details:"
-    file "${SURROUND_FILE}" 2>&1 | sed 's/^/    /'
-    echo "  MD5 Checksum: $(md5sum "${SURROUND_FILE}" | cut -d' ' -f1)"
-    echo ""
-
-    echo "Audio Metadata (ffprobe):"
-    if command -v ffprobe &> /dev/null; then
-        echo "Stereo FLAC:"
-        ffprobe -v quiet -show_format -show_streams "${STEREO_FILE}" 2>&1 | head -30 | sed 's/^/  /'
+    echo "✓ 5.1 Surround FLAC verified"
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo "  Path: ${SURROUND_FILE}"
+        echo "  Size: $(ls -lh "${SURROUND_FILE}" | awk '{print $5}')"
+        echo "  Details:"
+        file "${SURROUND_FILE}" 2>&1 | sed 's/^/    /'
+        echo "  MD5: $(md5sum "${SURROUND_FILE}" | cut -d' ' -f1)"
         echo ""
-        echo "5.1 Surround FLAC:"
-        ffprobe -v quiet -show_format -show_streams "${SURROUND_FILE}" 2>&1 | head -30 | sed 's/^/  /'
     else
-        echo "ffprobe not available"
+        echo ""
     fi
-    echo ""
 
-    # Environment variables
-    echo "=== Environment Variables ==="
-    echo "DISPLAY=${DISPLAY:-not set}"
-    echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-not set}"
-    echo "TERM=${TERM:-not set}"
-    echo "PATH=${PATH}"
-    echo ""
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo "Audio Metadata (ffprobe):"
+        if command -v ffprobe &> /dev/null; then
+            echo "Stereo FLAC:"
+            ffprobe -v quiet -show_format -show_streams "${STEREO_FILE}" 2>&1 | head -30 | sed 's/^/  /'
+            echo ""
+            echo "5.1 Surround FLAC:"
+            ffprobe -v quiet -show_format -show_streams "${SURROUND_FILE}" 2>&1 | head -30 | sed 's/^/  /'
+        else
+            echo "ffprobe not available"
+        fi
+        echo ""
+    fi
 
-    # Check VLC version and capabilities
-    echo "=== VLC Version and Capabilities ==="
-    cvlc --version 2>&1
-    echo ""
-    echo "VLC Audio Outputs:"
-    cvlc --list | grep -A 50 "aout" 2>&1 | head -60
-    echo ""
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo "=== Environment Variables ==="
+        echo "DISPLAY=${DISPLAY:-not set}"
+        echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-not set}"
+        echo "TERM=${TERM:-not set}"
+        echo "PATH=${PATH}"
+        echo ""
 
-    # System resources before start
-    echo "=== System Resources (Before Start) ==="
-    echo "Load Average: $(cat /proc/loadavg)"
-    echo "Memory:"
-    free -h
-    echo ""
-    echo "Disk Space:"
-    df -h / /boot 2>/dev/null
-    echo ""
+        echo "=== VLC Version and Capabilities ==="
+        cvlc --version 2>&1
+        echo ""
+        echo "VLC Audio Outputs:"
+        cvlc --list | grep -A 50 "aout" 2>&1 | head -60
+        echo ""
+    fi
 
-    # Process information
-    echo "=== Process Information ==="
-    echo "Running audio processes:"
-    ps aux | grep -E "vlc|aplay|paplay" | grep -v grep || echo "None"
-    echo ""
+    if [ "${DEBUG_ENABLED}" = true ]; then
+        echo "=== System Resources (Before Start) ==="
+        echo "Load Average: $(cat /proc/loadavg)"
+        echo "Memory:"
+        free -h
+        echo ""
+        echo "Disk Space:"
+        df -h / /boot 2>/dev/null
+        echo ""
+
+        echo "=== Process Information ==="
+        echo "Running audio processes:"
+        ps aux | grep -E "vlc|aplay|paplay" | grep -v grep || echo "None"
+        echo ""
+    fi
 
     echo "=== Starting VLC Audio Loop (Verbose Mode) ==="
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
@@ -192,7 +221,9 @@ echo ""
     while true; do
         # --- Play Stereo Test ---
         echo "--- Playing Stereo Test ---"
-        echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${STEREO_FILE}"
+        if [ "${DEBUG_ENABLED}" = true ]; then
+            echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${STEREO_FILE}"
+        fi
         cvlc --play-and-exit --no-video --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${STEREO_FILE}" 2>&1
@@ -202,7 +233,9 @@ echo ""
 
         # --- Play 5.1 Surround Test ---
         echo "--- Playing 5.1 Surround Test ---"
-        echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${SURROUND_FILE}"
+        if [ "${DEBUG_ENABLED}" = true ]; then
+            echo "Command: cvlc --play-and-exit --no-video --aout=alsa ${VLC_FLAGS} ${SURROUND_FILE}"
+        fi
         cvlc --play-and-exit --no-video --aout=alsa \
             --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
             "${SURROUND_FILE}" 2>&1

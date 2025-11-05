@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test Script 2 (VLC): Loop color test pattern video (fullscreen stretched)
+# Pixel Test: Loop the color test pattern video (fullscreen stretched)
 
 # Source configuration library
 source /usr/local/lib/hdmi-tester/config-lib.sh
@@ -10,62 +10,64 @@ LOG_FILE="${LOG_DIR}/pixel-test.log"
 # Ensure log directory exists
 mkdir -p "${LOG_DIR}"
 
-# Log rotation: Keep only 10 most recent logs
+# Log rotation: keep only 10 most recent logs and cap size
 rotate_logs() {
     local base_log="$1"
     local max_logs=10
 
-    # If current log exists and is larger than 5MB, rotate it
     if [ -f "${base_log}" ]; then
         local size
         size=$(stat -f%z "${base_log}" 2>/dev/null || stat -c%s "${base_log}" 2>/dev/null || echo 0)
-        if [ "${size}" -gt 5242880 ]; then  # 5MB
+        if [ "${size}" -gt 5242880 ]; then
             local timestamp
             timestamp=$(date '+%Y%m%d_%H%M%S')
             mv "${base_log}" "${base_log}.${timestamp}"
         fi
     fi
 
-    # Remove old rotated logs, keep only most recent 10
     ls -t "${base_log}".* 2>/dev/null | tail -n +$((max_logs + 1)) | xargs -r rm -f
 }
 
 rotate_logs "${LOG_FILE}"
 
-# Setup unbuffered logging (survives crashes)
+# Setup unbuffered logging (persist even if the script is terminated)
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
-# Trap handler to ensure logs are flushed on exit/error
+VLC_PID=""
+
+# Trap handler to clean up VLC on exit or interruption
 cleanup() {
     local exit_code="$1"
     echo "=== Script terminated at $(date '+%Y-%m-%d %H:%M:%S') (exit code: ${exit_code}) ==="
-    # Kill VLC if it's still running
     if [ -n "${VLC_PID}" ] && kill -0 "${VLC_PID}" 2>/dev/null; then
-        kill -TERM "${VLC_PID}" 2>/dev/null
+        kill -TERM "${VLC_PID}" 2>/dev/null || true
     fi
-    sync  # Flush filesystem buffers
+    sync
 }
 trap 'cleanup "$?"' EXIT INT TERM
 
+# Cache debug flag once
+if is_debug_enabled; then
+    DEBUG_ENABLED=true
+else
+    DEBUG_ENABLED=false
+fi
+
 # Detect Raspberry Pi model and choose appropriate video format
-# Pi 4 and higher: Use WebM (VP9 with hardware support)
-# Pi 3 and lower: Use H.264 (hardware accelerated)
 detect_video_format() {
     local model_info
-    model_info=$(cat /proc/cpuinfo | grep "Model" | head -1)
+    model_info=$(grep 'Model' /proc/cpuinfo | head -1)
 
-    # Extract Pi version (look for "Raspberry Pi 4" or "Raspberry Pi 5", etc.)
-    if echo "${model_info}" | grep -qE "Raspberry Pi [45678]"; then
-        echo "webm"  # Pi 4+ has VP9 support
+    if echo "${model_info}" | grep -qE 'Raspberry Pi [45678]'; then
+        echo "webm"
     else
-        echo "mp4"   # Pi 3 and earlier: use H.264
+        echo "mp4"
     fi
 }
 
 VIDEO_FORMAT=$(detect_video_format)
 VIDEO_FILE="/opt/hdmi-tester/color-test.${VIDEO_FORMAT}"
 
-# Log startup info
 echo "==========================================="
 echo "Pixel Test Loop (VLC) - Started $(date '+%Y-%m-%d %H:%M:%S')"
 echo "==========================================="
@@ -77,13 +79,31 @@ echo "User: $(whoami)"
 echo "Working Directory: $(pwd)"
 echo ""
 
-    # System information
+echo "=== Video File Check ==="
+if [ ! -f "${VIDEO_FILE}" ]; then
+    echo "❌ ERROR: Video file not found at ${VIDEO_FILE}"
+    exit 1
+fi
+
+if [ "${DEBUG_ENABLED}" = true ]; then
+    echo "  Path: ${VIDEO_FILE}"
+    echo "  Size: $(ls -lh "${VIDEO_FILE}" | awk '{print $5}')"
+    echo "  MD5: $(md5sum "${VIDEO_FILE}" | cut -d' ' -f1)"
+    echo "  Details:"
+    file "${VIDEO_FILE}"
+    echo ""
+else
+    echo "✓ Video asset verified"
+    echo ""
+fi
+
+if [ "${DEBUG_ENABLED}" = true ]; then
     echo "=== System Information ==="
     echo "Hostname: $(hostname)"
     echo "Kernel: $(uname -r)"
-    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+    echo "OS: $(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"')"
     echo "Architecture: $(uname -m)"
-    echo "CPU: $(cat /proc/cpuinfo | grep "Model" | head -1 | cut -d: -f2 | xargs)"
+    echo "CPU: $(grep 'Model' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs)"
     echo "CPU Cores: $(nproc)"
     echo "Memory Total: $(free -h | awk '/^Mem:/ {print $2}')"
     echo "Memory Available: $(free -h | awk '/^Mem:/ {print $7}')"
@@ -93,25 +113,23 @@ echo ""
     echo "Uptime: $(uptime -p)"
     echo ""
 
-    # Boot configuration
     echo "=== Boot Configuration ==="
     if [ -f /boot/firmware/config.txt ]; then
         echo "HDMI Config:"
-        grep -E "^hdmi_|^gpu_mem" /boot/firmware/config.txt 2>/dev/null || echo "No HDMI config found"
+        grep -E '^hdmi_|^gpu_mem' /boot/firmware/config.txt 2>/dev/null || echo "No HDMI config found"
     elif [ -f /boot/config.txt ]; then
         echo "HDMI Config:"
-        grep -E "^hdmi_|^gpu_mem" /boot/config.txt 2>/dev/null || echo "No HDMI config found"
+        grep -E '^hdmi_|^gpu_mem' /boot/config.txt 2>/dev/null || echo "No HDMI config found"
     fi
     echo ""
 
-    # Display information
     echo "=== Display Information ==="
     echo "Connected Displays:"
     for display in /sys/class/drm/card*/status; do
-        if [ -f "$display" ]; then
-            card=$(echo "$display" | cut -d/ -f5)
-            status=$(cat "$display")
-            echo "  $card: $status"
+        if [ -f "${display}" ]; then
+            local_name=$(echo "${display}" | cut -d/ -f5)
+            status=$(cat "${display}")
+            echo "  ${local_name}: ${status}"
         fi
     done
     echo ""
@@ -119,19 +137,17 @@ echo ""
     tvservice -s 2>/dev/null || echo "tvservice not available"
     echo ""
 
-    # Check DRM devices
     echo "=== DRM Devices ==="
     if [ -d /dev/dri/ ]; then
         ls -lah /dev/dri/ 2>&1
         echo ""
         echo "DRM Device Ownership:"
-        stat -c "%A %U:%G %n" /dev/dri/* 2>&1
+        stat -c '%A %U:%G %n' /dev/dri/* 2>&1
     else
         echo "No /dev/dri/ found"
     fi
     echo ""
 
-    # Audio devices
     echo "=== Audio Devices ==="
     echo "ALSA Devices:"
     aplay -l 2>&1 || echo "No ALSA devices found"
@@ -140,33 +156,6 @@ echo ""
     pactl list sinks short 2>&1 || echo "PulseAudio not available"
     echo ""
 
-    # Check video file
-    echo "=== Video File Check ==="
-    if [ ! -f "${VIDEO_FILE}" ]; then
-        echo "❌ ERROR: Video file not found at ${VIDEO_FILE}"
-        exit 1
-    fi
-
-    ls -lh "${VIDEO_FILE}"
-    echo ""
-    echo "File Details:"
-    file "${VIDEO_FILE}"
-    echo ""
-    echo "File Stats:"
-    stat "${VIDEO_FILE}"
-    echo ""
-    echo "MD5 Checksum: $(md5sum "${VIDEO_FILE}" | cut -d' ' -f1)"
-    echo ""
-
-    echo "Video Metadata (ffprobe):"
-    if command -v ffprobe &> /dev/null; then
-        ffprobe -v quiet -show_format -show_streams "${VIDEO_FILE}" 2>&1 | head -50
-    else
-        echo "ffprobe not available"
-    fi
-    echo ""
-
-    # Environment variables
     echo "=== Environment Variables ==="
     echo "DISPLAY=${DISPLAY:-not set}"
     echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-not set}"
@@ -174,21 +163,19 @@ echo ""
     echo "PATH=${PATH}"
     echo ""
 
-    # Check VLC version and capabilities
     echo "=== VLC Version and Capabilities ==="
     cvlc --version 2>&1
     echo ""
     echo "VLC Video Outputs:"
-    cvlc --list | grep -A 50 "vout" 2>&1 | head -60
+    cvlc --list | grep -A 50 'vout' 2>&1 | head -60
     echo ""
     echo "VLC Audio Outputs:"
-    cvlc --list | grep -A 50 "aout" 2>&1 | head -60
+    cvlc --list | grep -A 50 'aout' 2>&1 | head -60
     echo ""
     echo "VLC Modules:"
     cvlc --list 2>&1 | head -100
     echo ""
 
-    # System resources before start
     echo "=== System Resources (Before Start) ==="
     echo "Load Average: $(cat /proc/loadavg)"
     echo "Memory:"
@@ -198,37 +185,47 @@ echo ""
     df -h / /boot 2>/dev/null
     echo ""
 
-    # Process information
     echo "=== Process Information ==="
     echo "Running video processes:"
-    ps aux | grep -E "vlc|ffmpeg" | grep -v grep || echo "None"
+    ps aux | grep -E 'vlc|ffmpeg' | grep -v grep || echo "None"
     echo ""
+else
+    echo "Pixel Test: HDMI color pattern playback (debug disabled)"
+    echo "Verbose diagnostics are available when DEBUG_MODE=true"
+    echo ""
+fi
 
-    # Use VLC auto-detect for video output
-    # VLC will automatically select the best available output
+# Get debug flags from configuration
+VLC_FLAGS=$(get_vlc_flags)
 
+if [ "${DEBUG_ENABLED}" = true ]; then
     echo "=== Starting VLC (Verbose Mode) ==="
     echo "Video Output: auto-detect (VLC will choose best available)"
-    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none -vv ${VIDEO_FILE}"
+    echo "Command: cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd --aout=alsa --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} ${VIDEO_FILE}"
     echo "Start Time: $(date '+%Y-%m-%d %H:%M:%S.%N')"
     echo ""
     echo "--- VLC Output Below ---"
     echo ""
+else
+    echo "Starting pixel test loop at $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+fi
 
-    # Run VLC with verbose output (use -vv for detailed debugging until stable)
-    # Use --alsa-audio-device to explicitly set HDMI device (AUDIODEV env var doesn't work)
-    # Let VLC auto-detect video output
+# Run VLC in the background to allow trap-based cleanup
+cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
+    --aout=alsa \
+    --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
+    "${VIDEO_FILE}" 2>&1 &
 
-    # Get debug flags from config
-    VLC_FLAGS=$(get_vlc_flags)
+VLC_PID=$!
 
-    # Run in background so we can catch Ctrl+C and properly kill VLC
-    cvlc --loop --fullscreen --no-autoscale --no-video-title-show --no-osd \
-        --aout=alsa \
-        --no-audio-time-stretch --audio-replay-gain-mode=none ${VLC_FLAGS} \
-        "${VIDEO_FILE}" 2>&1 &
+# Wait for VLC to finish (normally runs indefinitely)
+wait ${VLC_PID}
+EXIT_CODE=$?
+VLC_PID=""
 
-    VLC_PID=$!
-
-    # Wait for VLC to complete (or be interrupted)
-    wait ${VLC_PID}
+if [ "${DEBUG_ENABLED}" = true ]; then
+    echo "VLC exited with code ${EXIT_CODE}"
+elif [ ${EXIT_CODE} -ne 0 ]; then
+    echo "⚠️  VLC exited unexpectedly with code ${EXIT_CODE}"
+fi
