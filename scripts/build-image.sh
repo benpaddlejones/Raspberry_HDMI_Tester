@@ -370,6 +370,13 @@ log_info "✓ All required custom stage files validated"
 # Override stage2 to fix Trixie-only package issues for Bookworm builds
 log_info "Copying stage2 override (Bookworm compatibility fix)..."
 cp -r "${PROJECT_ROOT}/build/stage2/01-sys-tweaks" "${WORK_DIR}/stage2/"
+# Upstream 02-swap.diff patches /etc/dphys-swapfile, which our package override doesn't install
+PATCH_SERIES="${WORK_DIR}/stage2/01-sys-tweaks/00-patches/series"
+if [ -f "${PATCH_SERIES}" ]; then
+    sed -i '/^02-swap\.diff$/d' "${PATCH_SERIES}"
+    rm -f "${WORK_DIR}/stage2/01-sys-tweaks/00-patches/02-swap.diff"
+    log_info "✓ Removed upstream 02-swap.diff (dphys-swapfile not installed)"
+fi
 log_info "✓ stage2/01-sys-tweaks override installed (removes rpi-swap, rpi-loop-utils, rpi-usb-gadget)"
 
 log_info "Copying stage3 (custom HDMI tester stage)..."
