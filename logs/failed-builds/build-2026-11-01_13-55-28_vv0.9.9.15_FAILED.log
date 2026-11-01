@@ -1,0 +1,466 @@
+==================================================================
+  RASPBERRY PI HDMI TESTER - BUILD LOG
+==================================================================
+
+Build Started: 2026-11-01 13:55:28 UTC
+Build ID: 41313545760
+Build Number: 134
+Commit: 989e6bcc1d6c94b724e454988d4c7011759a7b58
+Branch: main
+
+==================================================================
+  RASPBERRY PI HDMI TESTER - BUILD LOG
+==================================================================
+
+Build Started: 2026-11-01 13:55:28 UTC
+Build ID: 41313545760
+Build Number: 134
+Commit: 989e6bcc1d6c94b724e454988d4c7011759a7b58
+Branch: main
+
+
+==================================================================
+  Build Environment
+==================================================================
+Timestamp: 2026-11-01 13:55:28 UTC
+
+=== System Information ===
+Hostname: runnervm48cm3
+OS: Ubuntu 24.04.5 LTS
+Kernel: 7.0.0-1017-azure
+Architecture: x86_64
+
+=== CPU Information ===
+Processor: AMD EPYC 9V45 96-Core Processor
+CPU Cores: 4
+CPU Architecture: x86_64
+
+=== Memory Information ===
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       992Mi        13Gi        46Mi       1.6Gi        14Gi
+Swap:          3.0Gi          0B       3.0Gi
+
+=== Disk Space ===
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        145G   60G   86G  41% /
+tmpfs            7.9G   84K  7.9G   1% /dev/shm
+tmpfs            3.2G  1.0M  3.2G   1% /run
+tmpfs            5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p16  881M   85M  735M  11% /boot
+/dev/nvme0n1p15  105M  6.2M   99M   6% /boot/efi
+tmpfs            1.6G   12K  1.6G   1% /run/user/1001
+tmpfs            7.9G     0  7.9G   0% /run/qemu
+
+=== Available Disk Space in Working Directory ===
+/dev/root       145G   60G   86G  41% /
+
+=== Tool Versions ===
+Git: git version 2.56.0
+QEMU ARM: qemu-arm version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+Debootstrap: debootstrap 1.0.134ubuntu2
+Kpartx: multipath-tools v0.9.4 (12/19, 2022)
+kpartx installed
+Parted: parted (GNU parted) 3.6
+Zip: This is Zip 3.0 (July 5th 2008), by Info-ZIP.
+JQ: jq-1.7
+Bash: 5.2.21(1)-release
+
+=== Environment Variables ===
+USER: root
+HOME: /home/runner
+SHELL: /bin/bash
+PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+PWD: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester
+GITHUB_WORKSPACE: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester
+GITHUB_ACTOR: benpaddlejones
+GITHUB_WORKFLOW: Build and Release
+
+✅ Environment captured
+
+==================================================================
+  STAGE: Asset Validation
+==================================================================
+Started: 2026-11-01 13:55:28 UTC
+
+🚀 Starting: Asset Validation
+
+=== Asset Validation: Image Test Video ===
+Path: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/image-test.webm
+Status: ✅ Found
+Size: 817K
+Modified: 2026-11-01 13:55:00.188788250 +0000
+Type: WebM
+SHA256: 8331dcc81f4a667cd775c8df49f2978b555481dd2639fbb06b604f36144b33e1
+
+
+=== Asset Validation: Color Test Video ===
+Path: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/color-test.webm
+Status: ✅ Found
+Size: 608K
+Modified: 2026-11-01 13:55:00.186788259 +0000
+Type: WebM
+SHA256: 488d51bd8650a6cf50a5e4ac2417b1f41d2f4cfcf4250969d6b44c734c845247
+
+
+Completed: 2026-11-01 13:55:28 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Asset Validation (00:00:00)
+
+=== Disk Usage at: After Asset Validation ===
+Timestamp: 2026-11-01 13:55:28 UTC
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        145G   60G   86G  41% /
+tmpfs            7.9G   84K  7.9G   1% /dev/shm
+tmpfs            3.2G  1.0M  3.2G   1% /run
+tmpfs            5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p16  881M   85M  735M  11% /boot
+/dev/nvme0n1p15  105M  6.2M   99M   6% /boot/efi
+tmpfs            1.6G   12K  1.6G   1% /run/user/1001
+tmpfs            7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+14M	.
+
+
+==================================================================
+  STAGE: Prerequisites Check
+==================================================================
+Started: 2026-11-01 13:55:28 UTC
+
+🚀 Starting: Prerequisites Check
+
+--- Checking System Resources ---
+
+[INFO] Available disk space: 85GB
+[INFO] Required disk space: 10GB
+[INFO] ✓ Sufficient disk space available
+[INFO] Available memory: 14GB
+[INFO] ✓ Sufficient memory available
+
+--- Checking Required Tools ---
+
+[INFO] Checking disk space for build directory...
+[INFO] Build directory: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build
+[INFO] Available space: 87214MB
+[INFO] Required space: 10240MB
+[INFO] ✓ Sufficient disk space for build
+[INFO] Checking for qemu-arm-static...
+[INFO] ✓ qemu-arm-static found
+[INFO] Checking for pi-gen directory...
+[INFO] ✓ pi-gen directory found
+
+--- Validating Asset Files ---
+
+[INFO] Checking WebM test videos (Pi 4+ format)...
+[INFO] ✓ image-test.webm exists (817KiB)
+[INFO] ✓ color-test.webm exists (608KiB)
+[INFO] Checking MP4 test videos (Pi 3 and earlier format)...
+[INFO] ✓ image-test.mp4 exists (605KiB)
+[INFO] ✓ color-test.mp4 exists (921KiB)
+[INFO] ℹ️  ffprobe not available, skipping codec validation
+
+Completed: 2026-11-01 13:55:28 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Prerequisites Check (00:00:00)
+
+=== Disk Usage at: After Prerequisites Check ===
+Timestamp: 2026-11-01 13:55:28 UTC
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        145G   60G   86G  41% /
+tmpfs            7.9G   84K  7.9G   1% /dev/shm
+tmpfs            3.2G  1.0M  3.2G   1% /run
+tmpfs            5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p16  881M   85M  735M  11% /boot
+/dev/nvme0n1p15  105M  6.2M   99M   6% /boot/efi
+tmpfs            1.6G   12K  1.6G   1% /run/user/1001
+tmpfs            7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+14M	.
+
+
+=== Memory Usage at: After Prerequisites Check ===
+Timestamp: 2026-11-01 13:55:28 UTC
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       990Mi        13Gi        46Mi       1.6Gi        14Gi
+Swap:          3.0Gi          0B       3.0Gi
+
+
+==================================================================
+  STAGE: Build Directory Setup
+==================================================================
+Started: 2026-11-01 13:55:28 UTC
+
+🚀 Starting: Build Directory Setup
+
+--- Copying pi-gen ---
+
+[INFO] Copying pi-gen from /opt/pi-gen to /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work...
+[INFO] ✓ pi-gen copied
+
+--- Removing original stage3, stage4, stage5 and stage2 EXPORT_IMAGE ---
+
+[INFO] Removing pi-gen's original stage3, stage4, stage5 directories to prevent conflicts...
+[INFO] ✓ Original stage directories removed
+[INFO] Removing stage2/EXPORT_IMAGE to prevent building unwanted lite image...
+[INFO] ✓ stage2/EXPORT_IMAGE removed - only stage3 image will be built
+
+Completed: 2026-11-01 13:55:28 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Build Directory Setup (00:00:00)
+
+=== Disk Usage at: After Build Directory Setup ===
+Timestamp: 2026-11-01 13:55:28 UTC
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        145G   60G   86G  41% /
+tmpfs            7.9G   84K  7.9G   1% /dev/shm
+tmpfs            3.2G  1.0M  3.2G   1% /run
+tmpfs            5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p16  881M   85M  735M  11% /boot
+/dev/nvme0n1p15  105M  6.2M   99M   6% /boot/efi
+tmpfs            1.6G   12K  1.6G   1% /run/user/1001
+tmpfs            7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+17M	.
+
+
+==================================================================
+  STAGE: Custom Stage Installation
+==================================================================
+Started: 2026-11-01 13:55:28 UTC
+
+🚀 Starting: Custom Stage Installation
+
+--- Installing Custom Stages ---
+
+[INFO] Validating custom stage files...
+[INFO] ✓ All required custom stage files validated
+[INFO] Copying stage2 override (Bookworm compatibility fix)...
+[INFO] ✓ stage2/01-sys-tweaks override installed (removes rpi-swap, rpi-loop-utils, rpi-usb-gadget)
+[INFO] Copying stage3 (custom HDMI tester stage)...
+[INFO] ✓ stage3 copied
+[INFO] Skipping stages 4, 5...
+[INFO] ✓ Stage skip files installed
+
+Completed: 2026-11-01 13:55:29 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Custom Stage Installation (00:00:00)
+
+==================================================================
+  STAGE: Configuration Setup
+==================================================================
+Started: 2026-11-01 13:55:29 UTC
+
+🚀 Starting: Configuration Setup
+
+==================================================================
+  Build Configuration
+==================================================================
+Timestamp: 2026-11-01 13:55:29 UTC
+
+Configuration file: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/config
+
+=== Configuration Contents ===
+# Raspberry Pi HDMI Tester - pi-gen Build Configuration
+IMG_NAME="RPi_HDMI_Tester_PiOS"
+
+# Base OS release (bookworm is the base for the latest Raspberry Pi OS)
+RELEASE="bookworm"
+
+# Target hostname
+TARGET_HOSTNAME="hdmi-tester"
+
+# Default user credentials
+FIRST_USER_NAME="pi"
+FIRST_USER_PASS="raspberry"
+
+# Disable SSH for hardened field image
+ENABLE_SSH=0
+
+# Stage list: Build up to our custom stage3
+STAGE_LIST="stage0 stage1 stage2 stage3"
+
+# Compression for the final image
+DEPLOY_COMPRESSION="zip"
+
+✅ Configuration logged
+[INFO] Copying config to work directory...
+[INFO] ✓ Configuration copied
+
+Completed: 2026-11-01 13:55:29 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Configuration Setup (00:00:00)
+
+==================================================================
+  STAGE: Asset Deployment
+==================================================================
+Started: 2026-11-01 13:55:29 UTC
+
+🚀 Starting: Asset Deployment
+
+--- Verifying WebM Video Files ---
+
+Image Test Video:
+  File: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/image-test.webm
+  Size: 817K
+  SHA256: 8331dcc81f4a667cd775c8df49f2978b555481dd2639fbb06b604f36144b33e1
+[INFO] Checksum logged for /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/image-test.webm
+Color Test Video:
+  File: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/color-test.webm
+  Size: 608K
+  SHA256: 488d51bd8650a6cf50a5e4ac2417b1f41d2f4cfcf4250969d6b44c734c845247
+[INFO] Checksum logged for /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/stage3/01-test-image/files/color-test.webm
+[INFO] ✓ Both WebM video files verified
+
+Completed: 2026-11-01 13:55:29 UTC
+Duration: 00:00:00 (0s)
+Status: ✅ SUCCESS
+==================================================================
+
+✅ Completed: Asset Deployment (00:00:00)
+
+=== Disk Usage at: After Asset Deployment ===
+Timestamp: 2026-11-01 13:55:29 UTC
+Filesystem       Size  Used Avail Use% Mounted on
+/dev/root        145G   60G   86G  41% /
+tmpfs            7.9G   84K  7.9G   1% /dev/shm
+tmpfs            3.2G  1.0M  3.2G   1% /run
+tmpfs            5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p16  881M   85M  735M  11% /boot
+/dev/nvme0n1p15  105M  6.2M   99M   6% /boot/efi
+tmpfs            1.6G   12K  1.6G   1% /run/user/1001
+tmpfs            7.9G     0  7.9G   0% /run/qemu
+
+Working Directory Usage:
+21M	.
+
+
+=== Memory Usage at: Before pi-gen Build ===
+Timestamp: 2026-11-01 13:55:29 UTC
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       988Mi        13Gi        46Mi       1.6Gi        14Gi
+Swap:          3.0Gi          0B       3.0Gi
+
+[INFO] Creating deploy directory: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/deploy
+[INFO] ✓ Deploy directory ready and writable
+
+==================================================================
+  STAGE: pi-gen Build
+==================================================================
+Started: 2026-11-01 13:55:29 UTC
+
+🚀 Starting: pi-gen Build
+🚀 Starting pi-gen build (this will take 30-60 minutes)...
+[INFO] Build will download packages, bootstrap Debian, and create custom image
+[INFO] Working directory: /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work
+
+--- Executing pi-gen build.sh ---
+
+[INFO] Command: sudo ./build.sh
+Checking native armhf executable support...
+armhf: not supported on this machine/kernel
+WARNING: Only a native build environment is supported. Checking emulated support...
+armhf: ok
+[13:55:29] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work
+[13:55:29] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage0
+[13:55:29] Begin /home/runner/work/Raspberry_HDMI_Tester/Raspberry_HDMI_Tester/build/pi-gen-work/stage0/prerun.sh
+WARNING: RELEASE does not match the intended option for this branch.
+         Please check the relevant README.md section.
+I: Target architecture can be executed
+I: Retrieving InRelease 
+I: Checking Release signature
+I: Valid Release signature (key id A0DA38D0D76E8B5D638872819165938D90FDDD2E)
+I: Retrieving Packages 
+I: Validating Packages 
+I: Retrieving Packages 
+I: Validating Packages 
+I: Retrieving Packages 
+I: Validating Packages 
+I: Resolving dependencies of required packages...
+I: Resolving dependencies of base packages...
+I: Checking component main on http://raspbian.raspberrypi.com/raspbian...
+I: Retrieving adduser 3.134
+I: Validating adduser 3.134
+I: Retrieving apt 2.6.1
+I: Validating apt 2.6.1
+I: Retrieving apt-utils 2.6.1
+I: Validating apt-utils 2.6.1
+I: Retrieving base-files 12.4+rpi1+deb12u14
+I: Validating base-files 12.4+rpi1+deb12u14
+I: Retrieving base-passwd 3.6.1
+I: Validating base-passwd 3.6.1
+I: Retrieving bash 5.2.15-2
+I: Validating bash 5.2.15-2
+I: Retrieving bsdextrautils 2.38.1-5+deb12u3
+I: Validating bsdextrautils 2.38.1-5+deb12u3
+I: Retrieving bsdutils 1:2.38.1-5+deb12u3
+I: Validating bsdutils 1:2.38.1-5+deb12u3
+I: Retrieving ca-certificates 20250419~deb12u2
+I: Validating ca-certificates 20250419~deb12u2
+I: Retrieving coreutils 9.1-1
+I: Validating coreutils 9.1-1
+I: Retrieving cpio 2.13+dfsg-7.1
+I: Validating cpio 2.13+dfsg-7.1
+I: Retrieving cron 3.0pl1-162
+I: Validating cron 3.0pl1-162
+I: Retrieving cron-daemon-common 3.0pl1-162
+I: Validating cron-daemon-common 3.0pl1-162
+I: Retrieving dash 0.5.12-2
+I: Validating dash 0.5.12-2
+I: Retrieving debconf 1.5.82
+I: Validating debconf 1.5.82
+I: Retrieving debconf-i18n 1.5.82
+I: Validating debconf-i18n 1.5.82
+I: Retrieving debianutils 5.7-0.5~deb12u1
+I: Validating debianutils 5.7-0.5~deb12u1
+I: Retrieving diffutils 1:3.8-4
+I: Validating diffutils 1:3.8-4
+I: Retrieving dirmngr 2.2.40-1.1+deb12u2
+I: Validating dirmngr 2.2.40-1.1+deb12u2
+I: Retrieving dmidecode 3.4-1
+I: Validating dmidecode 3.4-1
+I: Retrieving dmsetup 2:1.02.185-2
+I: Validating dmsetup 2:1.02.185-2
+I: Retrieving dpkg 1.21.23+rpi1
+I: Validating dpkg 1.21.23+rpi1
+I: Retrieving e2fsprogs 1.47.0-2
+I: Validating e2fsprogs 1.47.0-2
+I: Retrieving fdisk 2.38.1-5+deb12u3
+I: Validating fdisk 2.38.1-5+deb12u3
+I: Retrieving findutils 4.9.0-4
+I: Validating findutils 4.9.0-4
+I: Retrieving gcc-10-base 10.4.0-7+rpi1
+I: Validating gcc-10-base 10.4.0-7+rpi1
+I: Retrieving gcc-12-base 12.2.0-14+rpi1+deb12u1
+I: Validating gcc-12-base 12.2.0-14+rpi1+deb12u1
+I: Retrieving gcc-7-base 7.5.0-6+rpi1+b2
+I: Validating gcc-7-base 7.5.0-6+rpi1+b2
+I: Retrieving gcc-8-base 8.4.0-7+rpi1
+I: Validating gcc-8-base 8.4.0-7+rpi1
+I: Retrieving gcc-9-base 9.4.0-2+rpi1
+I: Validating gcc-9-base 9.4.0-2+rpi1
+I: Retrieving gnupg 2.2.40-1.1+deb12u2
+I: Validating gnupg 2.2.40-1.1+deb12u2
+I: Retrieving gnupg-l10n 2.2.40-1.1+deb12u2
+I: Validating gnupg-l10n 2.2.40-1.1+deb12u2
+I: Retrieving gnupg-utils 2.2.40-1.1+deb12u2
+I: Validating gnupg-utils 2.2.40-1.1+deb12u2
+I: Retrieving gpg 2.2.40-1.1+deb12u2
+I: Validating gpg 2.2.40-1.1+deb12u2
+I: Retrieving gpg-agent 2.2.40-1.1+deb12u2
