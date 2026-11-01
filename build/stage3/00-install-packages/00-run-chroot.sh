@@ -68,5 +68,7 @@ apt-get clean
 # Ensure pi user is in necessary groups for audio/video/framebuffer access
 usermod -a -G audio pi || true
 usermod -a -G video pi || true
+# KMS (Pi 5) exposes /dev/dri/renderD* to the render group
+usermod -a -G render pi || true
 
 echo "✅ Console-mode packages installed and user groups configured"

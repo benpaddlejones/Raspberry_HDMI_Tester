@@ -284,6 +284,9 @@ echo ""
     # Get debug flags from config
     VLC_FLAGS=$(get_vlc_flags)
 
+    # Route ALSA default to the HDMI port with a display (Pi 5 KMS has one card per port)
+    echo "ALSA card: $(configure_hdmi_audio)"
+
     # Force integer PCM format (S16LE) instead of float to fix "no supported sample format" error
     # Pi 3's vc4-hdmi driver requires integer formats, not float (f32l)
     # Run in background so we can catch Ctrl+C and properly kill VLC

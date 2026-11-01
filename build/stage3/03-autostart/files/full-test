@@ -193,6 +193,9 @@ VIDEO_FLAGS=""
 # Get debug flags from config
 VLC_FLAGS=$(get_vlc_flags)
 
+# Route ALSA default to the HDMI port with a display (Pi 5 KMS has one card per port)
+echo "ALSA card: $(configure_hdmi_audio)"
+
 while true; do
     LOOP_COUNT=$((LOOP_COUNT + 1))
 

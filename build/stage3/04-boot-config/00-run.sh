@@ -44,9 +44,9 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     sed -i '/^dtoverlay=vc4-kms-v3d$/d' "${CONFIG_FILE}"
     sed -i '/^dtoverlay=vc6-kms-v3d$/d' "${CONFIG_FILE}"
 
-    # Skip when V2 block already present, otherwise clean out older block
-    if grep -q "HDMI Tester Configuration V2" "${CONFIG_FILE}"; then
-        echo "  ✓ HDMI Tester Configuration V2 already present"
+    # Skip when V3 block already present, otherwise clean out older block
+    if grep -q "HDMI Tester Configuration V3" "${CONFIG_FILE}"; then
+        echo "  ✓ HDMI Tester Configuration V3 already present"
         continue
     fi
 
@@ -65,15 +65,27 @@ for CONFIG_FILE in "${CONFIG_FILES[@]}"; do
     # Append configuration (dtparam=audio=on is already in base image, so we skip it)
     cat >> "${CONFIG_FILE}" << 'EOF'
 
-# --- HDMI Tester Configuration V2 ---
-# This version includes critical fixes for HDMI audio failures (ENODEV -19)
-# on Raspberry Pi 3B+ and some Pi 4 models.
+# --- HDMI Tester Configuration V3 ---
+# V2 fixed HDMI audio failures (ENODEV -19) on Pi 3B+/some Pi 4 via FKMS.
+# V3 adds Pi 5 support: Pi 5 firmware has no display stack, so FKMS yields
+# no HDMI output and no HDMI audio device there. Pi 5 must use full KMS.
 
 # --- Display & Audio Driver Configuration ---
-# Use the FKMS (Fake KMS) driver instead of the full KMS driver.
-# This is the primary fix for the vc4-hdmi audio bug where the audio device
-# fails to register. FKMS is more compatible with a wider range of displays.
+# Pi 0-4: FKMS (firmware display + snd_bcm2835 HDMI audio, most compatible).
+[pi0]
 dtoverlay=vc4-fkms-v3d
+[pi1]
+dtoverlay=vc4-fkms-v3d
+[pi2]
+dtoverlay=vc4-fkms-v3d
+[pi3]
+dtoverlay=vc4-fkms-v3d
+[pi4]
+dtoverlay=vc4-fkms-v3d
+# Pi 5: full KMS only (HDMI audio comes from the vc4-hdmi ALSA cards).
+[pi5]
+dtoverlay=vc4-kms-v3d
+[all]
 
 # Force the kernel to read EDID audio data, even if the display reports none.
 # This resolves issues where displays have faulty EDID information.
@@ -91,6 +103,7 @@ hdmi_group=0
 hdmi_mode=0
 
 # Allocate sufficient GPU memory for smooth 1080p/4K video playback.
+# (hdmi_*/gpu_mem are firmware-display settings; ignored on Pi 5, harmless.)
 gpu_mem=256
 
 # --- Boot Experience ---
@@ -106,12 +119,10 @@ avoid_warnings=1
 # --- Overclocking (Conservative) ---
 # Model-specific overclocks for faster boot and better performance.
 # These are mild and safe for continuous operation.
-# Pi 5 (BCM2712): Default 2400MHz, overclock to 2600MHz (+8%)
+# Pi 5: no overclock (already ample headroom; 2600MHz needs extra voltage on many boards).
 # Pi 4 (BCM2711): Default 1500MHz, overclock to 1800MHz (+20%)
 # Pi 3 (BCM2837): Default 1200MHz, overclock to 1350MHz (+12.5%)
 # Pi 2/Zero 2 (BCM2836/2837): Default 900MHz, overclock to 1000MHz (+11%)
-[pi5]
-arm_freq=2600
 [pi4]
 arm_freq=1800
 [pi3]

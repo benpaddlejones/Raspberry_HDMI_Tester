@@ -138,3 +138,51 @@ get_log_level() {
         echo "info"
     fi
 }
+
+# Point ALSA's "default" device at the HDMI port that has a display attached.
+# Only relevant on the KMS driver (Pi 5), where each HDMI port is its own
+# vc4hdmiN sound card and card 0 is always HDMI0 regardless of cabling.
+# On FKMS/snd_bcm2835 (Pi 0-4) the stock defaults are correct, so no override.
+# Usage: configure_hdmi_audio
+# Prints the selected card name (or "default")
+configure_hdmi_audio() {
+    local asoundrc="${HOME}/.asoundrc"
+    local cards
+    cards=$(grep -oE '\[vc4hdmi[0-9]+' /proc/asound/cards 2>/dev/null | tr -d '[')
+
+    if [ -z "${cards}" ]; then
+        rm -f "${asoundrc}"
+        echo "default"
+        return 0
+    fi
+
+    local card="" connector idx candidate
+    # vc4.force_hotplug marks every port "connected", so a non-empty EDID is
+    # the only reliable sign that a display is actually plugged in.
+    for connector in /sys/class/drm/card*-HDMI-A-*; do
+        [ -d "${connector}" ] || continue
+        idx="${connector##*HDMI-A-}"
+        candidate="vc4hdmi$((idx - 1))"
+        echo "${cards}" | grep -qx "${candidate}" || continue
+        if [ -s "${connector}/edid" ]; then
+            card="${candidate}"
+            break
+        fi
+    done
+    if [ -z "${card}" ]; then
+        for connector in /sys/class/drm/card*-HDMI-A-*; do
+            [ -f "${connector}/status" ] || continue
+            idx="${connector##*HDMI-A-}"
+            candidate="vc4hdmi$((idx - 1))"
+            echo "${cards}" | grep -qx "${candidate}" || continue
+            if [ "$(cat "${connector}/status")" = "connected" ]; then
+                card="${candidate}"
+                break
+            fi
+        done
+    fi
+    [ -n "${card}" ] || card=$(echo "${cards}" | head -1)
+
+    printf 'defaults.pcm.card %s\ndefaults.ctl.card %s\n' "${card}" "${card}" > "${asoundrc}"
+    echo "${card}"
+}

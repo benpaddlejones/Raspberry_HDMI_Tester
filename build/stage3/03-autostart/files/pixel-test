@@ -198,6 +198,9 @@ fi
 # Get debug flags from configuration
 VLC_FLAGS=$(get_vlc_flags)
 
+# Route ALSA default to the HDMI port with a display (Pi 5 KMS has one card per port)
+echo "ALSA card: $(configure_hdmi_audio)"
+
 if [ "${DEBUG_ENABLED}" = true ]; then
     echo "=== Starting VLC (Verbose Mode) ==="
     echo "Video Output: auto-detect (VLC will choose best available)"

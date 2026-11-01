@@ -41,6 +41,9 @@ if [ -f "${CONFIG_FILE}" ]; then
     echo "✅ Backup created: ${CONFIG_FILE}.backup"
 fi
 
+# Drop the stock KMS overlay; the model-specific block below replaces it
+sed -i '/^dtoverlay=vc4-kms-v3d$/d' "${CONFIG_FILE}"
+
 # Append HDMI configuration
 cat >> "${CONFIG_FILE}" << 'EOF'
 
@@ -72,15 +75,28 @@ boot_delay=0
 # Hide low voltage and overtemperature warning overlays
 avoid_warnings=1
 
-# Enable vc4-fkms-v3d for broad compatibility (Mesa GPU driver)
+# Pi 0-4: FKMS for broad compatibility. Pi 5 has no firmware display stack
+# and must use full KMS, otherwise there is no HDMI video or audio.
+[pi0]
 dtoverlay=vc4-fkms-v3d
+[pi1]
+dtoverlay=vc4-fkms-v3d
+[pi2]
+dtoverlay=vc4-fkms-v3d
+[pi3]
+dtoverlay=vc4-fkms-v3d
+[pi4]
+dtoverlay=vc4-fkms-v3d
+[pi5]
+dtoverlay=vc4-kms-v3d
+[all]
 EOF
 
 echo "✅ Boot configuration complete"
 echo ""
 echo "HDMI Settings Applied:"
-echo "  • Resolution: 1920x1080 @ 60Hz"
+echo "  • Resolution: auto-detect"
 echo "  • Audio: HDMI (not 3.5mm)"
 echo "  • Force hotplug: Enabled"
-echo "  • GPU memory: 256MB (Wayland)"
-echo "  • Graphics: vc4-kms-v3d (Mesa)"
+echo "  • GPU memory: 256MB"
+echo "  • Graphics: vc4-fkms-v3d (Pi 0-4), vc4-kms-v3d (Pi 5)"
