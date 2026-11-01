@@ -392,6 +392,23 @@ log_info "Copying config to work directory..."
 cp "${CONFIG_FILE}" "${WORK_DIR}/config"
 log_info "✓ Configuration copied"
 
+# debootstrap refuses to install into a nodev/noexec mount (Codespaces mounts
+# /workspaces with nodev), so move pi-gen's rootfs work dir elsewhere when needed.
+PIGEN_ROOTFS_WORK_DIR="${PIGEN_ROOTFS_WORK_DIR:-}"
+if [ -z "${PIGEN_ROOTFS_WORK_DIR}" ]; then
+    BUILD_MOUNT_OPTS=$(findmnt -n -o OPTIONS -T "${WORK_DIR}" 2>/dev/null || echo "")
+    if echo ",${BUILD_MOUNT_OPTS}," | grep -qE ",(nodev|noexec),"; then
+        PIGEN_ROOTFS_WORK_DIR="/tmp/pi-gen-work"
+        log_event "ℹ️" "Build dir mounted with nodev/noexec; using ${PIGEN_ROOTFS_WORK_DIR} for rootfs work"
+    fi
+fi
+if [ -n "${PIGEN_ROOTFS_WORK_DIR}" ]; then
+    sudo rm -rf "${PIGEN_ROOTFS_WORK_DIR}"
+    mkdir -p "${PIGEN_ROOTFS_WORK_DIR}"
+    echo "WORK_DIR=\"${PIGEN_ROOTFS_WORK_DIR}\"" >> "${WORK_DIR}/config"
+    log_info "✓ pi-gen WORK_DIR overridden: ${PIGEN_ROOTFS_WORK_DIR}"
+fi
+
 end_stage_timer "Configuration Setup" 0
 
 # Copy assets to custom stages
