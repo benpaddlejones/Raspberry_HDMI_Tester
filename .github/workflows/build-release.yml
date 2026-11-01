@@ -52,6 +52,7 @@ jobs:
             parted \
             coreutils \
             qemu-user-static \
+            qemu-user \
             debootstrap \
             zerofree \
             zip \
