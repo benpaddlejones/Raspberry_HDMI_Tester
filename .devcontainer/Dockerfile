@@ -116,7 +116,8 @@ RUN mkdir -p /workspace/build /workspace/output \
 WORKDIR /workspace
 
 # Clone pi-gen repository (official Raspberry Pi OS image builder)
-RUN git clone https://github.com/RPi-Distro/pi-gen.git /opt/pi-gen \
+# bookworm branch: master targets trixie and breaks RELEASE=bookworm builds
+RUN git clone --depth 1 --branch bookworm https://github.com/RPi-Distro/pi-gen.git /opt/pi-gen \
     && chown -R vscode:vscode /opt/pi-gen
 
 # Create symlink for easy access

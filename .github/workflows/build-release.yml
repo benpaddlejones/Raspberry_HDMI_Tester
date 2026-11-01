@@ -147,8 +147,9 @@ jobs:
       - name: Install pi-gen
         run: |
           echo "📥 Installing pi-gen..."
-          sudo git clone https://github.com/RPi-Distro/pi-gen /opt/pi-gen
-          echo "✅ pi-gen installed at /opt/pi-gen"
+          # master now targets trixie (adds stage2/04-cloud-init); build/config uses bookworm
+          sudo git clone --depth 1 --branch bookworm https://github.com/RPi-Distro/pi-gen /opt/pi-gen
+          echo "✅ pi-gen installed at /opt/pi-gen ($(git -C /opt/pi-gen rev-parse --short HEAD))"
 
       - name: Clean build directory and cache
         run: |
